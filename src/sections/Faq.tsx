@@ -6,8 +6,9 @@ export function Faq() {
     <section className="faq" aria-labelledby="faq-title">
       <div className="wrap faq__grid">
         <div className="reveal">
+          <p className="eyebrow eyebrow--dark">Dúvidas</p>
           <h2 id="faq-title" className="h2">
-            Perguntas frequentes
+            Perguntas práticas
           </h2>
         </div>
         <div>

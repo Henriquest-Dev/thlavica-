@@ -73,7 +73,7 @@ export default function Contact() {
 
   return (
     <div className="page">
-      <PageHead title="Pedir cotação" lead="Diga-nos o local, o uso e o que precisa. Respondemos com uma proposta." />
+      <PageHead kicker="Contacto" title={<>Pedir <em>cotação</em></>} lead="Diga-nos o local, o uso e o que precisa. Respondemos com uma proposta." />
       <div className="wrap contact">
         <form className="form reveal" onSubmit={submit} noValidate>
           <div className="form__grid">
@@ -152,7 +152,6 @@ export default function Contact() {
             {contact.phone}
           </a>
           <a href={`mailto:${contact.email}`}>{contact.email}</a>
-          <p className="contact__addr">{contact.address}</p>
           <a href={contact.facebook} target="_blank" rel="noopener noreferrer">
             Facebook
           </a>

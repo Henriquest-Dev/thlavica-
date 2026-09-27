@@ -27,6 +27,7 @@ export interface Solution {
   image: string
   /** Recorte de produto em /img/produtos. */
   product: string
+  icon: 'sun' | 'droplets' | 'flame'
   imageAlt: string
   includes: string[]
   uses: string[]
@@ -43,6 +44,7 @@ export const solutions: Solution[] = [
     lead: 'Sistemas fotovoltaicos que convertem a luz do sol em eletricidade para a casa ou o negócio. Com baterias, parte dessa energia fica guardada para a noite ou para falhas de rede.',
     image: 'hero',
     product: 'painel-astronergy',
+    icon: 'sun',
     imageAlt: 'Paisagem com campo de painéis solares junto a um reservatório de água',
     includes: ['Painéis solares fotovoltaicos', 'Inversores', 'Baterias', 'Estruturas e acessórios'],
     uses: ['Casas', 'Lojas e escritórios', 'Alojamentos', 'Pequenas unidades de produção'],
@@ -62,6 +64,7 @@ export const solutions: Solution[] = [
     lead: 'Bombas para tirar água de furos e poços, encher depósitos, dar pressão às torneiras ou regar a machamba. As bombas solares funcionam diretamente com painéis, através de um controlador.',
     image: 'agua',
     product: 'bomba-4sds',
+    icon: 'droplets',
     imageAlt: 'Machamba com depósito elevado, painel solar e canal de rega',
     includes: ['Bombas pressurizadoras (superfície)', 'Bombas submersíveis para furos', 'Bombas solares com controlador', 'Motores e acessórios'],
     uses: ['Abastecimento de casas', 'Rega e agricultura', 'Depósitos elevados', 'Drenagem'],
@@ -81,6 +84,7 @@ export const solutions: Solution[] = [
     lead: 'Termoacumuladores que aquecem água com o calor do sol, através de tubos de vácuo, e a guardam num depósito isolado. É tecnologia solar térmica: aquece água, não produz eletricidade.',
     image: 'foto-17',
     product: 'termoacumulador',
+    icon: 'flame',
     imageAlt: 'Termoacumulador solar com tubos de vácuo instalado numa cobertura',
     includes: ['Termoacumuladores de alta pressão', 'Termoacumuladores híbridos (com apoio elétrico)', 'Acessórios de instalação'],
     uses: ['Banhos e cozinha em casa', 'Alojamentos', 'Restaurantes e lavandarias'],

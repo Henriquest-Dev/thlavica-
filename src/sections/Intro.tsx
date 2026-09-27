@@ -1,41 +1,40 @@
-import { Link } from 'react-router-dom'
-import { contact, wa } from '../data/site'
-import { products } from '../data/products'
+import { useRef } from 'react'
+import { useProgress } from '../lib/useProgress'
+import { SolutionIcon } from '../components/Icon'
+import { solutions } from '../data/site'
 
-/** Apresentação curta e factual: quem é, onde está, como se pede. */
+const TEXT =
+  'Da energia para a casa à água para a machamba: a Tlhavika fornece equipamento solar e bombas de água, e ajuda a escolher o que serve o seu consumo.'
+
+/** Declaração que acende palavra a palavra (referência Maya). */
 export function Intro() {
+  const ref = useRef<HTMLElement>(null)
+  useProgress(ref)
+  const words = TEXT.split(' ')
   return (
-    <section className="intro" aria-labelledby="intro-title">
-      <div className="wrap intro__grid">
-        <h2 id="intro-title" className="intro__text reveal">
-          Equipamento solar e bombas de água, escolhido a partir do que a sua casa, loja ou machamba realmente consome.
-        </h2>
-        <div className="intro__side reveal" style={{ '--d': '120ms' } as React.CSSProperties}>
-          <p>
-            A Tlhavika fornece painéis, inversores, baterias, bombas e termoacumuladores solares. Diga-nos o que precisa de alimentar ou
-            bombear e preparamos uma proposta.
-          </p>
-          <dl className="intro__facts">
-            <div>
-              <dt>Morada</dt>
-              <dd>{contact.address}</dd>
-            </div>
-            <div>
-              <dt>Pedidos</dt>
-              <dd>
-                <a href={wa('Olá Tlhavika, gostaria de uma cotação.')} target="_blank" rel="noopener noreferrer">
-                  WhatsApp {contact.phone}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt>Catálogo</dt>
-              <dd>
-                <Link to="/produtos">Ver os {products.length} produtos</Link>
-              </dd>
-            </div>
-          </dl>
-        </div>
+    <section ref={ref} className="intro" aria-label="Sobre a Tlhavika">
+      <div className="intro__sticky">
+        <p className="intro__text" style={{ '--n': words.length } as React.CSSProperties}>
+          {words.map((w, i) => (
+            <span key={i} style={{ '--i': i } as React.CSSProperties}>
+              {w}{' '}
+            </span>
+          ))}
+        </p>
+        <ul className="intro__pillars">
+          {solutions.map((s, i) => (
+            <li key={s.id} style={{ '--k': i } as React.CSSProperties}>
+              <span className="intro__icon">
+                <SolutionIcon name={s.icon} size={20} />
+              </span>
+              <span>
+                <strong>{s.name}</strong>
+                <br />
+                {s.short}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   )

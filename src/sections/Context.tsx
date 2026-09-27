@@ -1,6 +1,7 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useProgress } from '../lib/useProgress'
 import { img } from '../lib/asset'
-import { Arrow } from '../components/Arrow'
 
 export const PHOTOS = [
   { src: 'foto-16', alt: 'Técnico junto a um termoacumulador solar Tlhavika num telhado de telha', caption: 'Termoacumulador em telhado de telha' },
@@ -9,31 +10,27 @@ export const PHOTOS = [
   { src: 'foto-34', alt: 'Vista aérea de uma torre com depósitos de água e painéis solares', caption: 'Depósitos elevados e painéis solares' },
 ]
 
-/** Fotografias reais publicadas pela Tlhavika, em grelha editorial. */
+/** "Em contexto": título grande que encolhe e dá lugar às fotografias (referência Maya). */
 export function Context() {
+  const ref = useRef<HTMLElement>(null)
+  useProgress(ref)
   return (
-    <section className="ctx" aria-labelledby="ctx-title">
-      <div className="wrap">
-        <div className="ctx__head reveal">
-          <h2 id="ctx-title" className="h2">
-            No terreno
-          </h2>
-          <Link to="/aplicacoes" className="ctx__link">
-            Aplicações <Arrow size={16} />
-          </Link>
-        </div>
-        <ul className="ctx__grid">
+    <section ref={ref} className="ctx" aria-labelledby="ctx-title">
+      <div className="ctx__sticky">
+        <h2 id="ctx-title" className="ctx__title">
+          Em contexto
+        </h2>
+        <ul className="ctx__row">
           {PHOTOS.map((p, i) => (
-            <li key={p.src} className="ctx__item reveal" style={{ '--d': `${i * 80}ms` } as React.CSSProperties}>
-              <figure>
-                <span className="ctx__img">
-                  <img src={img(p.src)} alt={p.alt} loading="lazy" width={900} height={900} />
-                </span>
-                <figcaption>{p.caption}</figcaption>
-              </figure>
+            <li key={p.src} className="ctx__item" style={{ '--k': i } as React.CSSProperties}>
+              <img src={img(p.src)} alt={p.alt} loading="lazy" width={900} height={900} />
+              <span>{p.caption}</span>
             </li>
           ))}
         </ul>
+        <p className="ctx__note">
+          Fotografias publicadas pela Tlhavika. <Link to="/aplicacoes">Ver aplicações</Link>
+        </p>
       </div>
     </section>
   )

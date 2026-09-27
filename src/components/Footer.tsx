@@ -39,7 +39,7 @@ export function Footer() {
       </div>
       <div className="wrap ft__legal">
         <p>© {new Date().getFullYear()} Tlhavika</p>
-        <p>{contact.address}</p>
+        <p>As marcas de equipamentos pertencem aos respetivos fabricantes. Preços e disponibilidade na cotação.</p>
       </div>
     </footer>
   )

@@ -16,9 +16,7 @@ export function Layout() {
       </a>
       <Header />
       <main id="main" tabIndex={-1}>
-        <div key={pathname} className="route">
-          <Outlet />
-        </div>
+        <Outlet />
       </main>
       <Footer />
     </>

@@ -3,14 +3,13 @@ import { img } from '../lib/asset'
 import { useReveal } from '../lib/useReveal'
 import { useMeta } from '../lib/useMeta'
 import { PageHead } from '../components/PageHead'
-import { Arrow } from '../components/Arrow'
 import { PHOTOS } from '../sections/Context'
 
 const USES = [
   { t: 'Casa', d: 'Energia para iluminação e eletrodomésticos, pressão nas torneiras e água quente para banhos.' },
   { t: 'Comércio', d: 'Lojas, escritórios e alojamentos que precisam de energia estável durante o dia e à noite.' },
   { t: 'Agricultura', d: 'Bombagem solar para rega e abeberamento, com depósitos elevados.' },
-  { t: 'Instaladores', d: 'Profissionais e revendedores que precisam de equipamento e de apoio na escolha.' },
+  { t: 'Instalação profissional', d: 'Instaladores e revendedores que precisam de equipamento e de apoio na escolha.' },
 ]
 
 export default function Applications() {
@@ -18,10 +17,11 @@ export default function Applications() {
   useReveal()
   return (
     <div className="page">
-      <PageHead title="Aplicações" lead="Onde o equipamento solar e de água é usado, e o que resolve em cada caso." />
+      <PageHead kicker="Aplicações" title={<>Em <em>contexto</em></>} lead="Onde os equipamentos solares e de água são usados." />
       <section className="wrap app__uses">
         {USES.map((u, i) => (
           <article key={u.t} className="reveal" style={{ '--d': `${i * 60}ms` } as React.CSSProperties}>
+            <span className="muted">0{i + 1}</span>
             <h2 className="h3">{u.t}</h2>
             <p>{u.d}</p>
           </article>
@@ -36,11 +36,11 @@ export default function Applications() {
             </li>
           ))}
         </ul>
+        <p className="fine">
+          Fotografias publicadas pela Tlhavika na sua página. Local, cliente e características da instalação por confirmar.
+        </p>
         <Link to="/contacto" className="pill pill--dark app__cta">
           Falar do meu caso
-          <span className="pill__icon">
-            <Arrow size={12} />
-          </span>
         </Link>
       </section>
     </div>
