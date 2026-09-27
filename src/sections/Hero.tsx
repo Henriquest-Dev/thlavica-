@@ -1,15 +1,17 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { Sparkle } from 'lucide-react'
 import { useProgress } from '../lib/useProgress'
 import { img } from '../lib/asset'
 import { Arrow } from '../components/Arrow'
+import { SolutionIcon } from '../components/Icon'
 import { solutions } from '../data/site'
 
 /**
- * Hero: composição da referência Solix (fotografia numa moldura de cantos
- * suaves sobre a mesma imagem desfocada, título à esquerda, faixa inferior)
- * com o movimento da referência Nicolai (aproximação lenta e névoa em duas
- * camadas). Ao fazer scroll, a moldura recolhe-se numa faixa e sobe (Maya).
+ * Hero com a composição da referência Solix: fotografia numa moldura de
+ * cantos suaves, título à esquerda, cápsula com seta e recorte inferior
+ * com as três soluções. Movimento subtil (referência Nicolai): aproximação
+ * muito lenta e uma névoa leve. Ao descer, a moldura recua ligeiramente.
  */
 export function Hero() {
   const ref = useRef<HTMLElement>(null)
@@ -17,8 +19,6 @@ export function Hero() {
   return (
     <section ref={ref} className="hero" aria-labelledby="hero-title">
       <div className="hero__sticky">
-        <img className="hero__blur" src={img('hero-blur')} alt="" aria-hidden="true" />
-        <div className="hero__dim" aria-hidden="true" />
         <div className="hero__frame">
           <div className="hero__media">
             <img
@@ -26,36 +26,42 @@ export function Hero() {
               src={img('hero', 1672)}
               srcSet={`${img('hero', 960)} 960w, ${img('hero', 1672)} 1672w`}
               sizes="100vw"
-              alt="Paisagem verde com campo de painéis solares junto a um reservatório de água"
+              alt="Paisagem com campo de painéis solares junto a um reservatório de água"
               fetchPriority="high"
             />
-            <div className="hero__mist hero__mist--1" aria-hidden="true" />
-            <div className="hero__mist hero__mist--2" aria-hidden="true" />
+            <div className="hero__haze" aria-hidden="true" />
             <div className="hero__shade" aria-hidden="true" />
           </div>
 
           <div className="hero__content">
-            <p className="hero__kicker">Soluções solares em Moçambique</p>
+            <p className="hero__kicker">
+              Energia solar e água em Moçambique <Sparkle size={14} strokeWidth={2} aria-hidden="true" />
+            </p>
             <h1 id="hero-title" className="hero__title">
-              <span>Energia solar e água,</span>{' '}
-              <span>do telhado ao furo</span>
+              Energia do sol, água onde precisa
             </h1>
             <p className="hero__lead">
-              Painéis, inversores, baterias, bombas de água e termoacumuladores. Ajudamos a escolher o equipamento
-              certo para o seu consumo.
+              Painéis, inversores, baterias, bombas de água e termoacumuladores solares para casas, negócios e machambas.
             </p>
-            <Link to="/contacto" className="pill pill--light">
-              Pedir cotação
-              <span className="pill__icon">
-                <Arrow size={12} />
-              </span>
-            </Link>
+            <div className="hero__ctas">
+              <Link to="/produtos" className="pill pill--light">
+                Ver produtos
+                <span className="pill__icon">
+                  <Arrow size={14} />
+                </span>
+              </Link>
+              <Link to="/contacto" className="pill pill--ghost">
+                Pedir cotação
+              </Link>
+            </div>
           </div>
 
           <nav className="hero__band" aria-label="Soluções">
             {solutions.map((s) => (
               <Link key={s.id} to={`/solucoes/${s.id}`} className="hero__entry">
-                <span className="hero__entry-n">{s.n}</span>
+                <span className="hero__entry-icon">
+                  <SolutionIcon name={s.icon} size={18} />
+                </span>
                 <span className="hero__entry-name">{s.name}</span>
                 <span className="hero__entry-text">{s.short}</span>
               </Link>

@@ -1,16 +1,23 @@
+import { Plus } from 'lucide-react'
 import { faqs } from '../data/site'
 
 export function Faq() {
   return (
     <section className="faq" aria-labelledby="faq-title">
       <div className="wrap faq__grid">
-        <h2 id="faq-title" className="h2 reveal">
-          Perguntas <em>práticas</em>
-        </h2>
+        <div className="reveal">
+          <p className="eyebrow eyebrow--dark">Dúvidas</p>
+          <h2 id="faq-title" className="h2">
+            Perguntas práticas
+          </h2>
+        </div>
         <div>
           {faqs.map((f) => (
             <details key={f.q} className="faq__item reveal">
-              <summary>{f.q}</summary>
+              <summary>
+                {f.q}
+                <Plus size={20} strokeWidth={1.6} aria-hidden="true" />
+              </summary>
               <p>{f.a}</p>
             </details>
           ))}

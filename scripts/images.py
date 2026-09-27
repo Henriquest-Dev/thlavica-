@@ -19,20 +19,25 @@ def save(im, name, width=None, q=82):
 hero = Image.open(A / "cenas_ilustrativas/01_hero_paisagem_solar.webp").convert("RGB")
 save(hero, "hero-1672.webp")
 save(hero, "hero-960.webp", 960)
-# Fundo da moldura: mesma cena, desfocada e ligeiramente escurecida.
-bg = hero.resize((640, 360), Image.LANCZOS).filter(ImageFilter.GaussianBlur(10))
-save(Image.blend(bg, Image.new("RGB", bg.size, (24, 30, 20)), 0.25), "hero-blur.webp", q=70)
 
 agua = Image.open(A / "cenas_ilustrativas/02_agua_paisagem.webp").convert("RGB")
 save(agua, "agua-1672.webp")
 save(agua, "agua-960.webp", 960)
 
+# Fotografias do Facebook ampliadas x4 (Real-ESRGAN) em source-assets/ampliadas.
+UP = ROOT / "source-assets" / "ampliadas"
 for n in ("15", "16", "17", "34"):
-    save(Image.open(A / f"fotos_reais_selecionadas/facebook_{n}.jpg").convert("RGB"), f"foto-{n}.webp", q=86)
+    save(Image.open(UP / f"facebook_{n}.jpg").convert("RGB"), f"foto-{n}.webp", 1200, q=84)
 
-pump = Image.open(A / "recorte_existente/bomba_ilustrativa.png").convert("RGBA")
-pump = pump.crop(pump.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox())
-save(pump, "bomba.webp", 1100, q=86)
+# Produtos recortados (BiRefNet) a partir dos anúncios ampliados, em source-assets/produtos.
+(OUT / "produtos").mkdir(exist_ok=True)
+for f in sorted((ROOT / "source-assets" / "produtos").glob("*.png")):
+    im = Image.open(f).convert("RGBA")
+    k = min(1.0, 900 / max(im.size))
+    im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
+    im.save(OUT / "produtos" / f"{f.stem}.webp", "WEBP", quality=88, method=6)
+    print("produtos/" + f.stem, im.size)
+
 
 # Névoa: duas camadas de ruído fractal (movimento da hero ao estilo da referência).
 rng = np.random.default_rng(3)
@@ -46,11 +51,11 @@ def fractal(w, h):
     return (acc - acc.min()) / (acc.max() - acc.min())
 
 
-for i, (lo, gain) in enumerate([(0.52, 2.2), (0.58, 2.6)]):
+for i, (lo, gain) in [(1, (0.58, 2.6))]:
     W, H = 2400, 1000
     n = fractal(W, H)
     y = np.linspace(0, 1, H)[:, None]
-    band = np.exp(-((y - (0.72 if i == 0 else 0.45)) ** 2) / 0.05)  # névoa concentrada numa faixa
+    band = np.exp(-((y - 0.45) ** 2) / 0.05)  # névoa concentrada numa faixa
     a = np.clip((n - lo) * gain, 0, 1) * band
     img = np.zeros((H, W, 4), "uint8")
     img[..., :3] = 246

@@ -9,6 +9,7 @@ export const contact = {
   phone: '+258 87 119 1481',
   whatsapp: '258871191481',
   email: 'Tlhavika.solar@gmail.com',
+  address: 'Av. de Moçambique, km 9,2 — Bairro do Zimpeto, Maputo',
   facebook: 'https://www.facebook.com/people/Tlhavika/61560557742444/',
   confirmed: false,
 }
@@ -24,6 +25,9 @@ export interface Solution {
   short: string
   lead: string
   image: string
+  /** Recorte de produto em /img/produtos. */
+  product: string
+  icon: 'sun' | 'droplets' | 'flame'
   imageAlt: string
   imageNote: string
   includes: string[]
@@ -40,6 +44,8 @@ export const solutions: Solution[] = [
     short: 'Painéis, inversores e baterias',
     lead: 'Sistemas fotovoltaicos que convertem a luz do sol em eletricidade para a casa ou o negócio. Com baterias, parte dessa energia fica guardada para a noite ou para falhas de rede.',
     image: 'hero',
+    product: 'painel-astronergy',
+    icon: 'sun',
     imageAlt: 'Paisagem com campo de painéis solares junto a um reservatório de água',
     imageNote: 'Imagem ilustrativa',
     includes: ['Painéis solares fotovoltaicos', 'Inversores', 'Baterias', 'Estruturas e acessórios'],
@@ -59,6 +65,8 @@ export const solutions: Solution[] = [
     short: 'Superfície, submersíveis e solares',
     lead: 'Bombas para tirar água de furos e poços, encher depósitos, dar pressão às torneiras ou regar a machamba. As bombas solares funcionam diretamente com painéis, através de um controlador.',
     image: 'agua',
+    product: 'bomba-4sds',
+    icon: 'droplets',
     imageAlt: 'Machamba com depósito elevado, painel solar e canal de rega',
     imageNote: 'Imagem ilustrativa',
     includes: ['Bombas pressurizadoras (superfície)', 'Bombas submersíveis para furos', 'Bombas solares com controlador', 'Motores e acessórios'],
@@ -78,6 +86,8 @@ export const solutions: Solution[] = [
     short: 'Termoacumuladores solares',
     lead: 'Termoacumuladores que aquecem água com o calor do sol, através de tubos de vácuo, e a guardam num depósito isolado. É tecnologia solar térmica: aquece água, não produz eletricidade.',
     image: 'foto-17',
+    product: 'termoacumulador',
+    icon: 'flame',
     imageAlt: 'Termoacumulador solar com tubos de vácuo instalado numa cobertura',
     imageNote: 'Fotografia publicada pela Tlhavika',
     includes: ['Termoacumuladores de alta pressão', 'Termoacumuladores híbridos (com apoio elétrico)', 'Acessórios de instalação'],
@@ -110,35 +120,6 @@ export const categories: { id: CategoryId; name: string; solution: SolutionId; t
   { id: 'bombas-solares', name: 'Bombas solares', solution: 'bombagem', text: 'Alimentadas por painéis.' },
   { id: 'termoacumuladores', name: 'Termoacumuladores', solution: 'aquecimento-solar', text: 'Água quente solar.' },
   { id: 'acessorios', name: 'Acessórios', solution: 'energia-solar', text: 'Cabos, estruturas, motores.' },
-]
-
-/**
- * Modelos vistos em anúncios públicos da Tlhavika. Ainda sem ficha confirmada:
- * as especificações ficam ocultas (verified: false) e o site pede a ficha na cotação.
- */
-export interface Model {
-  id: string
-  name: string
-  brand?: string
-  category: CategoryId
-  verified: boolean
-  /** Só mostradas quando verified = true. */
-  specs?: { label: string; value: string }[]
-}
-
-export const models: Model[] = [
-  { id: 'astronergy-astron7', name: 'Painel bifacial ASTRON 7 2.0', brand: 'Astronergy', category: 'paineis', verified: false },
-  { id: 'dongyin-pkm60', name: 'Bomba pressurizadora PKM60 com controlador DSK1', brand: 'Dongyin', category: 'bombas-superficie', verified: false },
-  { id: 'dongyin-pkm80', name: 'Bomba pressurizadora PKM80 com controlador DSK1', brand: 'Dongyin', category: 'bombas-superficie', verified: false },
-  { id: 'dongyin-3sdm2-8', name: 'Bomba submersível 3" 3SDM2/8', brand: 'Dongyin', category: 'bombas-submersiveis', verified: false },
-  { id: 'dongyin-3sdm2-11', name: 'Bomba submersível 3" 3SDM2/11', brand: 'Dongyin', category: 'bombas-submersiveis', verified: false },
-  { id: 'dongyin-3sdm2-15', name: 'Bomba submersível 3" 3SDM2/15', brand: 'Dongyin', category: 'bombas-submersiveis', verified: false },
-  { id: 'dongyin-3sdm3-16', name: 'Bomba submersível 3" 3SDM3/16', brand: 'Dongyin', category: 'bombas-submersiveis', verified: false },
-  { id: 'dongyin-3sdm3-21', name: 'Bomba submersível 3" 3SDM3/21', brand: 'Dongyin', category: 'bombas-submersiveis', verified: false },
-  { id: 'dongyin-3sds', name: 'Bomba submersível solar híbrida 3"', brand: 'Dongyin', category: 'bombas-solares', verified: false },
-  { id: 'dongyin-4sds', name: 'Bombas submersíveis solares 4"', brand: 'Dongyin', category: 'bombas-solares', verified: false },
-  { id: 'termo-alta-pressao', name: 'Termoacumulador solar de alta pressão', category: 'termoacumuladores', verified: false },
-  { id: 'termo-hibrido', name: 'Termoacumulador solar híbrido', category: 'termoacumuladores', verified: false },
 ]
 
 export const faqs = [

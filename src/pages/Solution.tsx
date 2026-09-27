@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
-import { categories, models, solutions, wa } from '../data/site'
+import { categories, solutions, wa } from '../data/site'
+import { products as models } from '../data/products'
 import { img } from '../lib/asset'
 import { useReveal } from '../lib/useReveal'
 import { useMeta } from '../lib/useMeta'
@@ -73,7 +74,7 @@ export default function Solution() {
               <li key={c.id} className="reveal">
                 <Link to={`/produtos?categoria=${c.id}`}>
                   <span>{c.name}</span>
-                  <span className="muted">{n ? `${n} modelos anunciados` : 'Sob consulta'}</span>
+                  <span className="muted">{n ? `${n} ${n === 1 ? 'produto' : 'produtos'}` : 'Sob consulta'}</span>
                   <Arrow />
                 </Link>
               </li>

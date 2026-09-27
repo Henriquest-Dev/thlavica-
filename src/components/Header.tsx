@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Wordmark } from './Wordmark'
+import { Logo } from './Logo'
 import { Arrow } from './Arrow'
 import { smooth } from '../lib/smooth'
 
@@ -45,7 +45,7 @@ export function Header() {
     <header className={`hd${compact ? ' hd--compact' : ''}${open ? ' hd--open' : ''}`}>
       <div className="hd__bar">
         <Link to="/" className="hd__logo" aria-label="Tlhavika — início">
-          <Wordmark />
+          <Logo />
         </Link>
         <nav className="hd__nav" aria-label="Principal">
           {LINKS.map((l) => (

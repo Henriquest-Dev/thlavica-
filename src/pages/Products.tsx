@@ -1,70 +1,78 @@
-import { Link, useSearchParams } from 'react-router-dom'
-import { categories, models, wa, type CategoryId } from '../data/site'
+import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Search } from 'lucide-react'
+import { categories, type CategoryId } from '../data/site'
+import { products } from '../data/products'
 import { useReveal } from '../lib/useReveal'
 import { useMeta } from '../lib/useMeta'
 import { PageHead } from '../components/PageHead'
-import { Arrow } from '../components/Arrow'
+import { ProductCard } from '../components/ProductCard'
+
+const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
 export default function Products() {
   const [params, setParams] = useSearchParams()
   const cat = (params.get('categoria') ?? '') as CategoryId | ''
+  const [q, setQ] = useState('')
   const current = categories.find((c) => c.id === cat)
   useMeta(current ? current.name : 'Produtos')
-  useReveal(cat)
-  const list = cat ? models.filter((m) => m.category === cat) : models
+  const list = useMemo(
+    () =>
+      products.filter(
+        (p) =>
+          (!cat || p.category === cat) &&
+          (!q || norm(`${p.name} ${p.brand ?? ''} ${p.model ?? ''} ${p.specs.map((s) => s.value).join(' ')}`).includes(norm(q))),
+      ),
+    [cat, q],
+  )
+  useReveal(`${cat}-${q}`)
 
   return (
     <div className="page">
       <PageHead
-        kicker="Produtos"
-        title={current ? current.name : 'Catálogo'}
-        lead="Modelos anunciados pela Tlhavika. As fichas técnicas são enviadas com a cotação, depois de confirmadas a especificação e a disponibilidade."
+        kicker="Catálogo"
+        title={current ? current.name : 'Produtos'}
+        lead="Equipamento apresentado pela Tlhavika. As especificações são as dos anúncios; preço, disponibilidade e ficha técnica são confirmados na cotação."
       />
       <div className="wrap">
-        <div className="tabs" role="tablist" aria-label="Categorias">
-          <button role="tab" aria-selected={!cat} onClick={() => setParams({}, { replace: true })}>
-            Todos
-          </button>
-          {categories.map((c) => (
-            <button key={c.id} role="tab" aria-selected={cat === c.id} onClick={() => setParams({ categoria: c.id }, { replace: true })}>
-              {c.name}
+        <div className="cat-bar">
+          <div className="tabs" role="tablist" aria-label="Categorias">
+            <button role="tab" aria-selected={!cat} onClick={() => setParams({}, { replace: true })}>
+              Todos <span>{products.length}</span>
             </button>
-          ))}
+            {categories.map((c) => {
+              const n = products.filter((p) => p.category === c.id).length
+              return (
+                <button key={c.id} role="tab" aria-selected={cat === c.id} onClick={() => setParams({ categoria: c.id }, { replace: true })}>
+                  {c.name} <span>{n}</span>
+                </button>
+              )
+            })}
+          </div>
+          <label className="search">
+            <Search size={16} aria-hidden="true" />
+            <span className="visually-hidden">Pesquisar</span>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Modelo, marca, potência…" />
+          </label>
         </div>
 
-        {list.length > 0 ? (
-          <ul className="plist">
-            {list.map((m) => (
-              <li key={m.id} className="plist__row reveal">
-                <span className="plist__cat">{categories.find((c) => c.id === m.category)?.name}</span>
-                <span className="plist__name">
-                  {m.name}
-                  {m.brand && <span className="muted"> · {m.brand}</span>}
-                </span>
-                {m.verified && m.specs ? (
-                  <span className="plist__specs">{m.specs.map((s) => `${s.label}: ${s.value}`).join(' · ')}</span>
-                ) : (
-                  <span className="plist__specs muted">Ficha técnica em confirmação</span>
-                )}
-                <a className="pill pill--line-dark pill--sm" href={wa(`Olá Tlhavika, gostaria de uma cotação para: ${m.name}${m.brand ? ` (${m.brand})` : ''}.`)} target="_blank" rel="noopener noreferrer">
-                  Pedir cotação <Arrow size={12} />
-                </a>
+        {list.length ? (
+          <ul className="pgrid">
+            {list.map((p, i) => (
+              <li key={p.id} className="reveal" style={{ '--d': `${(i % 4) * 50}ms` } as React.CSSProperties}>
+                <ProductCard p={p} />
               </li>
             ))}
           </ul>
         ) : (
-          <div className="empty reveal">
-            <p className="h3">Gama em atualização</p>
-            <p className="muted">Ainda não publicámos modelos nesta categoria. Diga-nos o que procura.</p>
-            <Link to={`/contacto?categoria=${cat}`} className="pill pill--dark">
-              Pedir cotação
-              <span className="pill__icon">
-                <Arrow size={12} />
-              </span>
-            </Link>
+          <div className="empty">
+            <p className="h3">Sem resultados</p>
+            <p className="muted">
+              {cat === 'baterias' ? 'Ainda não publicámos baterias em separado. Veja o sistema Hanchus ou peça uma cotação.' : 'Experimente outro termo ou categoria.'}
+            </p>
           </div>
         )}
-        <p className="fine">As marcas pertencem aos respetivos fabricantes. Preços e stock não são publicados no site.</p>
+        <p className="fine">As marcas pertencem aos respetivos fabricantes. Preços antigos dos anúncios não são publicados.</p>
       </div>
     </div>
   )

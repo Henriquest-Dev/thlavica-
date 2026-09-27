@@ -1,9 +1,9 @@
 import { Hero } from '../sections/Hero'
-import { Statement } from '../sections/Statement'
-import { Paths } from '../sections/Paths'
-import { Services } from '../sections/Services'
+import { Intro } from '../sections/Intro'
+import { Solutions } from '../sections/Solutions'
+import { Featured } from '../sections/Featured'
+import { Brands } from '../sections/Brands'
 import { Context } from '../sections/Context'
-import { Categories } from '../sections/Categories'
 import { Faq } from '../sections/Faq'
 import { Closing } from '../sections/Closing'
 import { useReveal } from '../lib/useReveal'
@@ -15,11 +15,11 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <Statement />
-      <Paths />
-      <Services />
+      <Intro />
+      <Solutions />
+      <Featured />
+      <Brands />
       <Context />
-      <Categories />
       <Faq />
       <Closing />
     </>

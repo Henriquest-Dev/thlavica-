@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Wordmark } from './Wordmark'
+import { Logo } from './Logo'
 import { contact, solutions, wa } from '../data/site'
 
 export function Footer() {
@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="ft">
       <div className="wrap ft__grid">
         <div>
-          <Wordmark className="ft__mark" />
+          <Logo className="ft__mark" />
           <p className="ft__lead">Energia solar e soluções de água em Moçambique.</p>
         </div>
         <nav aria-label="Soluções">

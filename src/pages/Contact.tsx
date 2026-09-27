@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { categories, contact, solutions, wa } from '../data/site'
+import { products } from '../data/products'
 import { useReveal } from '../lib/useReveal'
 import { useMeta } from '../lib/useMeta'
 import { PageHead } from '../components/PageHead'
@@ -18,7 +19,7 @@ export default function Contact() {
   const [params] = useSearchParams()
   useMeta('Contacto', 'Peça uma cotação à Tlhavika: energia solar, bombas de água e aquecimento solar.')
   useReveal()
-  const pre = params.get('solucao') ?? (params.get('categoria') ? `categoria:${params.get('categoria')}` : '')
+  const pre = params.get('solucao') ?? (params.get('produto') ? `produto:${params.get('produto')}` : params.get('categoria') ? `categoria:${params.get('categoria')}` : '')
   const [v, setV] = useState({ nome: '', telefone: '', local: '', uso: '', interesse: pre, mensagem: '' })
   const [err, setErr] = useState<Record<string, string>>({})
   const [sent, setSent] = useState<null | { url: string; opened: boolean }>(null)
@@ -29,7 +30,7 @@ export default function Contact() {
   }
 
   const label = (val: string) =>
-    solutions.find((s) => s.id === val)?.name ?? categories.find((c) => `categoria:${c.id}` === val)?.name ?? val
+    solutions.find((s) => s.id === val)?.name ?? products.find((p) => `produto:${p.id}` === val)?.name ?? categories.find((c) => `categoria:${c.id}` === val)?.name ?? val
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,6 +98,13 @@ export default function Contact() {
                   {solutions.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Produtos">
+                  {products.map((p) => (
+                    <option key={p.id} value={`produto:${p.id}`}>
+                      {p.name}
                     </option>
                   ))}
                 </optgroup>
