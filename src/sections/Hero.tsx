@@ -1,30 +1,43 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Sparkle } from 'lucide-react'
 import { useProgress } from '../lib/useProgress'
 import { img } from '../lib/asset'
 import { Arrow } from '../components/Arrow'
-import { SolutionIcon } from '../components/Icon'
-import { solutions } from '../data/site'
+import { solutions, type SolutionId } from '../data/site'
+
+/** Palavra grande de cada solução no recorte inferior (à maneira dos números da referência). */
+const WORD: Record<SolutionId, string> = {
+  'energia-solar': 'Solar',
+  bombagem: 'Bombas',
+  'aquecimento-solar': 'Água quente',
+}
 
 /**
- * Hero com a composição da referência Solix: fotografia numa moldura de
- * cantos suaves, título à esquerda, cápsula com seta e recorte inferior
- * com as três soluções. Movimento subtil (referência Nicolai): aproximação
- * muito lenta e uma névoa leve. Ao descer, a moldura recua ligeiramente.
+ * Hero com a composição da referência Solix: a fotografia ocupa o ecrã todo,
+ * escurecida e desfocada fora de uma moldura branca fina; dentro da moldura
+ * fica nítida. Menu dentro da moldura, título à esquerda, uma cápsula com
+ * seta e, no canto inferior esquerdo, um recorte com as três soluções.
+ * Movimento subtil (referência Nicolai): aproximação muito lenta e névoa leve.
  */
 export function Hero() {
   const ref = useRef<HTMLElement>(null)
   useProgress(ref)
+  const src = img('hero', 1672)
+  const srcSet = `${img('hero', 960)} 960w, ${img('hero', 1672)} 1672w`
   return (
     <section ref={ref} className="hero" aria-labelledby="hero-title">
       <div className="hero__sticky">
+        <div className="hero__media hero__media--outer" aria-hidden="true">
+          <img className="hero__img" src={src} srcSet={srcSet} sizes="100vw" alt="" />
+          <div className="hero__haze" />
+        </div>
+
         <div className="hero__frame">
-          <div className="hero__media">
+          <div className="hero__media hero__media--inner">
             <img
               className="hero__img"
-              src={img('hero', 1672)}
-              srcSet={`${img('hero', 960)} 960w, ${img('hero', 1672)} 1672w`}
+              src={src}
+              srcSet={srcSet}
               sizes="100vw"
               alt="Paisagem com campo de painéis solares junto a um reservatório de água"
               fetchPriority="high"
@@ -34,9 +47,7 @@ export function Hero() {
           </div>
 
           <div className="hero__content">
-            <p className="hero__kicker">
-              Energia solar e água em Moçambique <Sparkle size={14} strokeWidth={2} aria-hidden="true" />
-            </p>
+            <p className="hero__kicker">Energia solar e água em Moçambique</p>
             <h1 id="hero-title" className="hero__title">
               Energia do sol, água onde precisa
             </h1>
@@ -50,25 +61,20 @@ export function Hero() {
                   <Arrow size={14} />
                 </span>
               </Link>
-              <Link to="/contacto" className="pill pill--ghost">
-                Pedir cotação
-              </Link>
             </div>
           </div>
 
           <nav className="hero__band" aria-label="Soluções">
             {solutions.map((s) => (
-              <Link key={s.id} to={`/solucoes/${s.id}`} className="hero__entry">
-                <span className="hero__entry-icon">
-                  <SolutionIcon name={s.icon} size={18} />
-                </span>
-                <span className="hero__entry-name">{s.name}</span>
-                <span className="hero__entry-text">{s.short}</span>
+              <Link key={s.id} to={`/solucoes/${s.id}`} className="hero__stat">
+                <span className="hero__stat-big">{WORD[s.id]}</span>
+                <span className="hero__stat-text">{s.short}</span>
               </Link>
             ))}
           </nav>
-          <p className="hero__note">Imagem ilustrativa</p>
         </div>
+
+        <p className="hero__credit">Imagem ilustrativa</p>
       </div>
     </section>
   )
