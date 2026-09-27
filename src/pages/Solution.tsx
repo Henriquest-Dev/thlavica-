@@ -24,7 +24,6 @@ export default function Solution() {
 
       <figure className={`sol__figure wrap reveal${photo ? ' sol__figure--photo' : ''}`}>
         <img src={img(s.image, photo ? undefined : 1672)} alt={s.imageAlt} />
-        <figcaption>{s.imageNote}</figcaption>
       </figure>
 
       <section className="wrap sol__grid">

@@ -30,7 +30,6 @@ export default function ProductPage() {
         <div className="pdp__grid">
           <div className="pdp__media reveal">
             <img src={asset(`img/produtos/${p.img}.webp`)} alt={p.name} />
-            <span className="pdp__imgnote">{p.illustrative ? 'Imagem ilustrativa' : 'Imagem da publicação da Tlhavika'}</span>
           </div>
           <div className="pdp__info reveal">
             <p className="eyebrow eyebrow--dark">

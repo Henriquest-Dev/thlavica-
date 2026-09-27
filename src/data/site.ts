@@ -29,7 +29,6 @@ export interface Solution {
   product: string
   icon: 'sun' | 'droplets' | 'flame'
   imageAlt: string
-  imageNote: string
   includes: string[]
   uses: string[]
   askUs: string[]
@@ -47,7 +46,6 @@ export const solutions: Solution[] = [
     product: 'painel-astronergy',
     icon: 'sun',
     imageAlt: 'Paisagem com campo de painéis solares junto a um reservatório de água',
-    imageNote: 'Imagem ilustrativa',
     includes: ['Painéis solares fotovoltaicos', 'Inversores', 'Baterias', 'Estruturas e acessórios'],
     uses: ['Casas', 'Lojas e escritórios', 'Alojamentos', 'Pequenas unidades de produção'],
     askUs: [
@@ -68,7 +66,6 @@ export const solutions: Solution[] = [
     product: 'bomba-4sds',
     icon: 'droplets',
     imageAlt: 'Machamba com depósito elevado, painel solar e canal de rega',
-    imageNote: 'Imagem ilustrativa',
     includes: ['Bombas pressurizadoras (superfície)', 'Bombas submersíveis para furos', 'Bombas solares com controlador', 'Motores e acessórios'],
     uses: ['Abastecimento de casas', 'Rega e agricultura', 'Depósitos elevados', 'Drenagem'],
     askUs: [
@@ -89,7 +86,6 @@ export const solutions: Solution[] = [
     product: 'termoacumulador',
     icon: 'flame',
     imageAlt: 'Termoacumulador solar com tubos de vácuo instalado numa cobertura',
-    imageNote: 'Fotografia publicada pela Tlhavika',
     includes: ['Termoacumuladores de alta pressão', 'Termoacumuladores híbridos (com apoio elétrico)', 'Acessórios de instalação'],
     uses: ['Banhos e cozinha em casa', 'Alojamentos', 'Restaurantes e lavandarias'],
     askUs: [

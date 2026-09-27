@@ -33,7 +33,6 @@ export function Closing() {
               </a>
             </div>
           </div>
-          <p className="hero__note">Imagem ilustrativa</p>
         </div>
       </div>
     </section>
