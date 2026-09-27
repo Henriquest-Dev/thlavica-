@@ -1,0 +1,1 @@
+import{n as e}from"./useMeta-B5mFXAfk.js";var t=e();function n({kicker:e,title:n,lead:r,children:i}){return(0,t.jsxs)(`header`,{className:`ph wrap`,children:[(0,t.jsx)(`p`,{className:`ph__kicker reveal`,children:e}),(0,t.jsx)(`h1`,{className:`ph__title reveal`,children:n}),r&&(0,t.jsx)(`p`,{className:`ph__lead reveal`,children:r}),i]})}export{n as t};
