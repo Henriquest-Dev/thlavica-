@@ -30,9 +30,9 @@ export default function Products() {
   return (
     <div className="page">
       <PageHead
-        kicker="Catálogo"
+        trail={current ? [{ to: '/produtos', label: 'Produtos' }] : []}
         title={current ? current.name : 'Produtos'}
-        lead="Equipamento apresentado pela Tlhavika. As especificações são as dos anúncios; preço, disponibilidade e ficha técnica são confirmados na cotação."
+        lead="Painéis, inversores, bombas de água e termoacumuladores solares. Preço e disponibilidade sob consulta."
       />
       <div className="wrap">
         <div className="cat-bar">
@@ -44,7 +44,7 @@ export default function Products() {
               const n = products.filter((p) => p.category === c.id).length
               return (
                 <button key={c.id} role="tab" aria-selected={cat === c.id} onClick={() => setParams({ categoria: c.id }, { replace: true })}>
-                  {c.name} <span>{n}</span>
+                  {c.name} {n > 0 && <span>{n}</span>}
                 </button>
               )
             })}
@@ -68,11 +68,10 @@ export default function Products() {
           <div className="empty">
             <p className="h3">Sem resultados</p>
             <p className="muted">
-              {cat === 'baterias' ? 'Ainda não publicámos baterias em separado. Veja o sistema Hanchus ou peça uma cotação.' : 'Experimente outro termo ou categoria.'}
+              {cat === 'baterias' ? 'Baterias sob consulta. O kit Hanchus ESS inclui bateria de lítio.' : 'Experimente outro termo ou categoria.'}
             </p>
           </div>
         )}
-        <p className="fine">As marcas pertencem aos respetivos fabricantes. Preços antigos dos anúncios não são publicados.</p>
       </div>
     </div>
   )

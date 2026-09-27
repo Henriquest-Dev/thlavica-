@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { Check, MessageCircle, Info } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { categories, wa } from '../data/site'
 import { productById, products } from '../data/products'
 import { asset } from '../lib/asset'
@@ -8,8 +8,6 @@ import { useReveal } from '../lib/useReveal'
 import { ProductCard } from '../components/ProductCard'
 import { Arrow } from '../components/Arrow'
 import NotFound from './NotFound'
-
-const FB = 'https://www.facebook.com/people/Tlhavika/61560557742444/'
 
 export default function ProductPage() {
   const { id = '' } = useParams()
@@ -25,7 +23,11 @@ export default function ProductPage() {
     <div className="page">
       <div className="wrap pdp">
         <nav className="crumbs" aria-label="Localização">
-          <Link to="/produtos">Produtos</Link> / <Link to={`/produtos?categoria=${p.category}`}>{cat?.name}</Link>
+          <Link to="/">Início</Link>
+          <span aria-hidden="true">/</span>
+          <Link to="/produtos">Produtos</Link>
+          <span aria-hidden="true">/</span>
+          <Link to={`/produtos?categoria=${p.category}`}>{cat?.name}</Link>
         </nav>
         <div className="pdp__grid">
           <div className="pdp__media reveal">
@@ -57,23 +59,18 @@ export default function ProductPage() {
                 ))}
               </ul>
             )}
-            <p className="pdp__note">
-              <Info size={15} strokeWidth={1.8} aria-hidden="true" /> Dados do anúncio da Tlhavika. Confirme a ficha técnica, o preço e a disponibilidade na cotação.
-            </p>
+            <p className="pdp__note">Preço e disponibilidade sob consulta.</p>
             <div className="pdp__ctas">
               <a className="pill pill--dark" href={wa(text)} target="_blank" rel="noopener noreferrer">
-                Pedir cotação
+                Pedir pelo WhatsApp
                 <span className="pill__icon">
                   <Arrow size={14} />
                 </span>
               </a>
               <Link className="pill pill--line-dark" to={`/contacto?produto=${p.id}`}>
-                <MessageCircle size={16} strokeWidth={1.8} aria-hidden="true" /> Formulário
+                Usar o formulário
               </Link>
             </div>
-            <a className="pdp__src" href={FB} target="_blank" rel="noopener noreferrer">
-              Ver publicações na página da Tlhavika
-            </a>
           </div>
         </div>
 

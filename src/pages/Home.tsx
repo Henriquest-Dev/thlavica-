@@ -2,7 +2,6 @@ import { Hero } from '../sections/Hero'
 import { Intro } from '../sections/Intro'
 import { Solutions } from '../sections/Solutions'
 import { Featured } from '../sections/Featured'
-import { Brands } from '../sections/Brands'
 import { Context } from '../sections/Context'
 import { Faq } from '../sections/Faq'
 import { Closing } from '../sections/Closing'
@@ -18,7 +17,6 @@ export default function Home() {
       <Intro />
       <Solutions />
       <Featured />
-      <Brands />
       <Context />
       <Faq />
       <Closing />

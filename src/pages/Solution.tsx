@@ -20,7 +20,7 @@ export default function Solution() {
 
   return (
     <div className="page">
-      <PageHead kicker={`${s.n} · Solução`} title={s.name} lead={s.lead} />
+      <PageHead title={s.name} lead={s.lead} />
 
       <figure className={`sol__figure wrap reveal${photo ? ' sol__figure--photo' : ''}`}>
         <img src={img(s.image, photo ? undefined : 1672)} alt={s.imageAlt} />
@@ -85,7 +85,7 @@ export default function Solution() {
       <nav className="wrap sol__next" aria-label="Outras soluções">
         {others.map((o) => (
           <Link key={o.id} to={`/solucoes/${o.id}`} className="reveal">
-            <span className="muted">{o.n}</span>
+            <span className="muted">Solução</span>
             <span className="sol__next-name">{o.name}</span>
             <Arrow size={18} />
           </Link>

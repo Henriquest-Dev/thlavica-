@@ -5,6 +5,8 @@ import { products } from '../data/products'
 import { ProductCard } from '../components/ProductCard'
 import { Arrow } from '../components/Arrow'
 
+const BRANDS = ['Dongyin', 'Astronergy', 'JA Solar', 'Hanchus', 'Zjlmet']
+
 /** Produtos em destaque: faixa horizontal comandada pelo scroll (computador) ou deslizável (telemóvel). */
 export function Featured() {
   const ref = useRef<HTMLElement>(null)
@@ -14,12 +16,9 @@ export function Featured() {
     <section ref={ref} className="feat" aria-labelledby="feat-title" style={{ '--count': list.length } as React.CSSProperties}>
       <div className="feat__sticky">
         <div className="feat__head wrap">
-          <div>
-            <p className="eyebrow eyebrow--dark">Catálogo</p>
-            <h2 id="feat-title" className="h2">
-              Produtos em destaque
-            </h2>
-          </div>
+          <h2 id="feat-title" className="h2">
+            Produtos em destaque
+          </h2>
           <Link to="/produtos" className="pill pill--dark">
             Ver os {products.length} produtos
             <span className="pill__icon">
@@ -36,7 +35,10 @@ export function Featured() {
             ))}
           </ul>
         </div>
-        <p className="feat__note wrap">Imagens dos produtos a partir das publicações da Tlhavika. Preço e disponibilidade na cotação.</p>
+        <p className="feat__brands wrap">
+          <span>Marcas</span>
+          {BRANDS.join('  ·  ')}
+        </p>
       </div>
     </section>
   )

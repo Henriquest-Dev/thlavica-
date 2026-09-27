@@ -17,7 +17,6 @@ export function Closing() {
           <img src={img('agua', 1672)} srcSet={`${img('agua', 960)} 960w, ${img('agua', 1672)} 1672w`} sizes="100vw" alt="" loading="lazy" />
           <div className="cls__shade" />
           <div className="cls__content">
-            <p className="hero__kicker">Pedido de cotação</p>
             <h2 id="cls-title" className="cls__title">
               Diga-nos o que precisa. Ajudamos a escolher.
             </h2>
