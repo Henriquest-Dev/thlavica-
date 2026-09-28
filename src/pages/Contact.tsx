@@ -1,123 +1,160 @@
-import { useRef } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { LeadForm } from '../components/forms/LeadForm'
-import { FORMS, type FormKind } from '../components/forms/formDefs'
-import { site, telLink, whatsappLink } from '../config/site'
-import { productById } from '../data/products'
-import { usePageMeta } from '../hooks/usePageMeta'
+import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { categories, contact, solutions, wa } from '../data/site'
+import { products } from '../data/products'
+import { useReveal } from '../lib/useReveal'
+import { useMeta } from '../lib/useMeta'
+import { PageHead } from '../components/PageHead'
+import { Arrow } from '../components/Arrow'
 
-const KINDS: FormKind[] = ['cotacao', 'grosso', 'fornecedor']
+const USES = ['Casa', 'Comércio', 'Agricultura', 'Instalação profissional']
+const PHONE_RE = /^(\+?258)?\s?8[2-7]\s?\d{3}\s?\d{4}$|^\+\d[\d\s]{7,16}$/
 
+/**
+ * Pedido de cotação. Não há servidor: o formulário abre o WhatsApp com a
+ * mensagem preenchida para o utilizador rever e enviar. Nunca se mostra
+ * "enviado" — o pedido só chega quando o utilizador o envia no WhatsApp.
+ */
 export default function Contact() {
-  const [params, setParams] = useSearchParams()
-  const raw = params.get('tipo') as FormKind | null
-  const kind: FormKind = raw && KINDS.includes(raw) ? raw : 'cotacao'
-  const produto = params.get('produto') ?? ''
-  const uso = params.get('uso') ?? ''
-  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
-  const product = productById(produto)
-  const c = site.contactos
+  const [params] = useSearchParams()
+  useMeta('Contacto', 'Peça uma cotação à Tlhavika: energia solar, bombas de água e aquecimento solar.')
+  useReveal()
+  const pre = params.get('solucao') ?? (params.get('produto') ? `produto:${params.get('produto')}` : params.get('categoria') ? `categoria:${params.get('categoria')}` : '')
+  const [v, setV] = useState({ nome: '', telefone: '', local: '', uso: '', interesse: pre, mensagem: '' })
+  const [err, setErr] = useState<Record<string, string>>({})
+  const [sent, setSent] = useState<null | { url: string; opened: boolean }>(null)
 
-  usePageMeta('Contacto', 'Peça uma cotação à Tlhavika, faça um pedido de compra a grosso ou apresente-se como fornecedor.')
-
-  const select = (k: FormKind) => {
-    const next = new URLSearchParams(params)
-    next.set('tipo', k)
-    if (k !== 'cotacao') {
-      next.delete('produto')
-      next.delete('uso')
-    }
-    setParams(next, { replace: true })
+  const set = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setV({ ...v, [k]: e.target.value })
+    setErr({ ...err, [k]: '' })
   }
 
-  const onKey = (e: React.KeyboardEvent, i: number) => {
-    let n = -1
-    if (e.key === 'ArrowRight') n = (i + 1) % KINDS.length
-    if (e.key === 'ArrowLeft') n = (i - 1 + KINDS.length) % KINDS.length
-    if (e.key === 'Home') n = 0
-    if (e.key === 'End') n = KINDS.length - 1
-    if (n < 0) return
+  const label = (val: string) =>
+    solutions.find((s) => s.id === val)?.name ?? products.find((p) => `produto:${p.id}` === val)?.name ?? categories.find((c) => `categoria:${c.id}` === val)?.name ?? val
+
+  const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    select(KINDS[n])
-    tabRefs.current[KINDS[n]]?.focus()
+    const n: Record<string, string> = {}
+    if (!v.nome.trim()) n.nome = 'Indique o seu nome.'
+    if (!PHONE_RE.test(v.telefone.trim())) n.telefone = 'Indique um número válido, ex.: 84 123 4567.'
+    if (!v.local.trim()) n.local = 'Indique a cidade ou província.'
+    if (!v.uso) n.uso = 'Escolha uma opção.'
+    setErr(n)
+    const first = Object.keys(n)[0]
+    if (first) {
+      document.getElementById(`f-${first}`)?.focus()
+      return
+    }
+    const text = [
+      'Olá Tlhavika, gostaria de uma cotação.',
+      '',
+      `Nome: ${v.nome}`,
+      `Telefone: ${v.telefone}`,
+      `Local: ${v.local}`,
+      `Uso: ${v.uso}`,
+      v.interesse && `Interesse: ${label(v.interesse)}`,
+      v.mensagem && `Detalhes: ${v.mensagem}`,
+    ]
+      .filter(Boolean)
+      .join('\n')
+    const url = wa(text)
+    const w = window.open(url, '_blank')
+    if (w) w.opener = null
+    setSent({ url, opened: Boolean(w) })
   }
 
-  const initial: Record<string, string> = {}
-  if (kind === 'cotacao') {
-    if (produto) initial.produto = produto
-    if (uso) initial.uso = uso
-    else if (product) initial.uso = product.aplicacoes[0]
-  }
+  const field = (k: keyof typeof v, lab: string, input: React.ReactNode) => (
+    <div className={`field${err[k] ? ' has-err' : ''}`}>
+      <label htmlFor={`f-${k}`}>{lab}</label>
+      {input}
+      {err[k] && <p className="field__err">{err[k]}</p>}
+    </div>
+  )
 
   return (
     <div className="page">
-      <header className="page-hero">
-        <div className="container">
-          <nav className="breadcrumbs" aria-label="Localização">
-            <Link to="/">Início</Link> <span aria-hidden="true">/</span> <span aria-current="page">Contacto</span>
-          </nav>
-          <h1 className="page-title">Fale connosco</h1>
-          <p className="page-lede">Escolha o tipo de pedido. Respondemos pelo contacto que indicar.</p>
-        </div>
-      </header>
-
-      <div className="container contact">
-        <div className="contact__main">
-          <div className="tabs" role="tablist" aria-label="Tipo de pedido">
-            {KINDS.map((k, i) => (
-              <button
-                key={k}
-                ref={(el) => {
-                  tabRefs.current[k] = el
-                }}
-                id={`tab-${k}`}
-                role="tab"
-                type="button"
-                aria-selected={kind === k}
-                aria-controls={`panel-${k}`}
-                tabIndex={kind === k ? 0 : -1}
-                className="tabs__tab"
-                onClick={() => select(k)}
-                onKeyDown={(e) => onKey(e, i)}
-              >
-                {FORMS[k].titulo}
-              </button>
-            ))}
-          </div>
-          <div id={`panel-${kind}`} role="tabpanel" aria-labelledby={`tab-${kind}`} className="tabs__panel">
-            {product && kind === 'cotacao' && (
-              <p className="contact__product">
-                Pedido para: <strong>{product.nome}</strong>
-              </p>
+      <PageHead kicker="Contacto" title={<>Pedir <em>cotação</em></>} lead="Diga-nos o local, o uso e o que precisa. Respondemos com uma proposta." />
+      <div className="wrap contact">
+        <form className="form reveal" onSubmit={submit} noValidate>
+          <div className="form__grid">
+            {field('nome', 'Nome *', <input id="f-nome" value={v.nome} onChange={set('nome')} autoComplete="name" />)}
+            {field('telefone', 'Telefone / WhatsApp *', <input id="f-telefone" value={v.telefone} onChange={set('telefone')} inputMode="tel" autoComplete="tel" placeholder="+258 8X XXX XXXX" />)}
+            {field('local', 'Local *', <input id="f-local" value={v.local} onChange={set('local')} placeholder="Cidade ou província" />)}
+            {field(
+              'uso',
+              'Uso *',
+              <select id="f-uso" value={v.uso} onChange={set('uso')}>
+                <option value="">Escolher…</option>
+                {USES.map((u) => (
+                  <option key={u}>{u}</option>
+                ))}
+              </select>,
             )}
-            <LeadForm key={`${kind}-${produto}-${uso}`} kind={kind} initial={initial} />
+            <div className="field field--wide">
+              <label htmlFor="f-interesse">Interesse</label>
+              <select id="f-interesse" value={v.interesse} onChange={set('interesse')}>
+                <option value="">Ainda não sei</option>
+                <optgroup label="Soluções">
+                  {solutions.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Produtos">
+                  {products.map((p) => (
+                    <option key={p.id} value={`produto:${p.id}`}>
+                      {p.name}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Categorias">
+                  {categories.map((c) => (
+                    <option key={c.id} value={`categoria:${c.id}`}>
+                      {c.name}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+            </div>
+            <div className="field field--wide">
+              <label htmlFor="f-mensagem">Detalhes</label>
+              <textarea id="f-mensagem" rows={4} value={v.mensagem} onChange={set('mensagem')} placeholder="Ex.: aparelhos e horas de uso, profundidade do furo, pessoas em casa…" />
+            </div>
           </div>
-        </div>
 
-        <aside className="contact__aside" aria-label="Contactos diretos">
-          <div className="contact-card">
-            <h2>Contactos diretos</h2>
-            <ul>
-              <li>
-                <span>Telefone</span>
-                <a href={telLink(c.telefone)}>{c.telefone.valor}</a>
-                <a href={telLink(c.telefoneAlternativo)}>{c.telefoneAlternativo.valor}</a>
-              </li>
-              <li>
-                <span>Email</span>
-                <a href={`mailto:${c.email.valor}`}>{c.email.valor}</a>
-              </li>
-              <li>
-                <span>Morada</span>
-                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.morada.valor + ', Moçambique')}`} target="_blank" rel="noopener noreferrer">
-                  {c.morada.valor}
-                </a>
-              </li>
-            </ul>
-            <a className="btn btn--whatsapp btn--block" href={whatsappLink('Olá Tlhavika, gostaria de mais informações.')} target="_blank" rel="noopener noreferrer">
-              Falar pelo WhatsApp
-            </a>
+          {sent && (
+            <div className="notice" role="status">
+              <p>
+                <strong>{sent.opened ? 'Mensagem preparada no WhatsApp.' : 'Abra o WhatsApp para enviar.'}</strong> O pedido só chega à
+                Tlhavika depois de carregar em Enviar no WhatsApp.
+              </p>
+              <a href={sent.url} target="_blank" rel="noopener noreferrer">
+                Abrir WhatsApp
+              </a>
+            </div>
+          )}
+
+          <div className="form__foot">
+            <button type="submit" className="pill pill--dark">
+              Continuar no WhatsApp
+              <span className="pill__icon">
+                <Arrow size={12} />
+              </span>
+            </button>
+            <p className="muted">Abre o WhatsApp com o pedido escrito, para rever e enviar.</p>
           </div>
+        </form>
+
+        <aside className="contact__side reveal">
+          <p className="sol__h">Contacto direto</p>
+          <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="contact__big">
+            {contact.phone}
+          </a>
+          <a href={`mailto:${contact.email}`}>{contact.email}</a>
+          <a href={contact.facebook} target="_blank" rel="noopener noreferrer">
+            Facebook
+          </a>
         </aside>
       </div>
     </div>
