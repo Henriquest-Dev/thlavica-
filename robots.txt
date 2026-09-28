@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://henriquest-dev.github.io/thlavica-/sitemap.xml
