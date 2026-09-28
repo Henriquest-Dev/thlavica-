@@ -1,39 +1,34 @@
-import { StrictMode, lazy, Suspense } from 'react'
+import { StrictMode, lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import '@fontsource-variable/plus-jakarta-sans'
-import './styles.css'
-import { initSmooth } from './lib/smooth'
-import { Layout } from './components/Layout'
+import './styles/global.css'
+import { Layout } from './components/layout/Layout'
 import Home from './pages/Home'
 
-const Solution = lazy(() => import('./pages/Solution'))
-const Products = lazy(() => import('./pages/Products'))
-const ProductPage = lazy(() => import('./pages/ProductPage'))
-const Applications = lazy(() => import('./pages/Applications'))
+const Solutions = lazy(() => import('./pages/Solutions'))
+const Catalog = lazy(() => import('./pages/Catalog'))
+const Product = lazy(() => import('./pages/Product'))
+const Projects = lazy(() => import('./pages/Projects'))
 const About = lazy(() => import('./pages/About'))
 const Contact = lazy(() => import('./pages/Contact'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
-initSmooth()
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-      <Suspense fallback={<div className="loading" />}>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="solucoes/:id" element={<Solution />} />
-            <Route path="produtos" element={<Products />} />
-            <Route path="produtos/:id" element={<ProductPage />} />
-            <Route path="aplicacoes" element={<Applications />} />
-            <Route path="sobre" element={<About />} />
-            <Route path="contacto" element={<Contact />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </Suspense>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="solucoes" element={<Solutions />} />
+          <Route path="catalogo" element={<Catalog />} />
+          <Route path="produto/:id" element={<Product />} />
+          <Route path="projetos" element={<Projects />} />
+          <Route path="sobre" element={<About />} />
+          <Route path="contacto" element={<Contact />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   </StrictMode>,
 )

@@ -1,15 +1,21 @@
 import { Link } from 'react-router-dom'
-import { useMeta } from '../lib/useMeta'
+import { EmptyState } from '../components/States'
+import { usePageMeta } from '../hooks/usePageMeta'
 
 export default function NotFound() {
-  useMeta('Página não encontrada')
+  usePageMeta('Página não encontrada')
   return (
-    <div className="page wrap nf">
-      <p className="ph__kicker">404</p>
-      <h1 className="ph__title">Página não encontrada</h1>
-      <Link to="/" className="pill pill--dark">
-        Voltar ao início
-      </Link>
+    <div className="page container page--narrow">
+      <EmptyState title="Página não encontrada" text="O endereço pode estar incorreto ou a página foi removida.">
+        <div className="state__actions">
+          <Link className="btn btn--primary" to="/">
+            Ir para o início
+          </Link>
+          <Link className="btn btn--outline" to="/catalogo">
+            Ver catálogo
+          </Link>
+        </div>
+      </EmptyState>
     </div>
   )
 }
