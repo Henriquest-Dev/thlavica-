@@ -13,7 +13,7 @@ npm run images         # regenera public/img a partir de source-assets/ (Python 
 
 ## O que tem
 
-- **Início:** cartaz da Tlhavika (`public/img/banner-*.webp`) a toda a largura; no telemóvel mostra-se em duas metades deslizáveis. Por baixo, título, três áreas, passos do pedido, fotografia que se divide em três cartões (computador) ou cartões empilhados (telemóvel), produtos em destaque, simuladores, marcas e carrossel de fotografias e vídeos.
+- **Início:** cartaz da Tlhavika (`public/img/banner-*.webp`) a toda a largura; as três áreas (Solar, Bombas, Água quente) ficam por cima do cartaz, com fade; no telemóvel o cartaz desliza para o lado. Por baixo: título, passos do pedido, fotografia que se divide em três cartões (computador) ou cartões empilhados (telemóvel), produtos em destaque, simuladores, marcas e perguntas frequentes.
 - **Menu:** Catálogo, Serviços, Aplicações, Sobre, Pedir cotação; pesquisa rápida (tecla `/` ou `Ctrl+K`) e lista de cotação.
 - **Serviços:** as três áreas de trabalho e dois simuladores (energia solar; bomba de água). Os resultados são estimativas orientativas e seguem para o pedido de cotação.
 - **Lista de cotação:** o visitante junta produtos e envia por WhatsApp ou formulário. O pedido também fica guardado para o painel (neste dispositivo).
@@ -54,7 +54,7 @@ Cores das publicações da Tlhavika: azul-marinho `#0e2f57`, azul `#124e97`, âm
 
 | Ficheiro | Origem |
 |---|---|
-| `banner-*` | Cartaz enviado pela Tlhavika (versão completa, 1200, 800 e duas metades para telemóvel) |
+| `banner-*` | Cartaz enviado pela Tlhavika (completo, 1200, 800 e a metade esquerda) |
 | `foto-15/16/17/34` | Facebook Tlhavika, ampliadas x4 com Real-ESRGAN (`source-assets/ampliadas`) |
 | `produtos/*` | Produtos recortados (BiRefNet) dos anúncios ampliados (`source-assets/produtos`) |
 
