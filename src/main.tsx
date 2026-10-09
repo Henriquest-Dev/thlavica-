@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import '@fontsource-variable/plus-jakarta-sans'
 import './styles.css'
 import { initSmooth } from './lib/smooth'
+import { startSync } from './lib/sync'
 import { Layout } from './components/Layout'
 import Home from './pages/Home'
 
@@ -24,6 +25,7 @@ const MediaAdmin = lazy(() => import('./admin/MediaAdmin'))
 const Settings = lazy(() => import('./admin/Settings'))
 
 initSmooth()
+startSync()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

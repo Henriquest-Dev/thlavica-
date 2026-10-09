@@ -34,6 +34,24 @@ Entrada com utilizador e palavra-passe verificados no navegador (só o hash est�
 
 Para ligar ao Supabase: trocar `readRaw`/`writeStored` em `src/lib/store.ts` por chamadas à base de dados (os hooks `useStored`, `useCatalog`, `useMedia`, `usePromos` e `useQuoteList` mantêm-se) e passar os dados com "Exportar dados".
 
+## Ligação ao Supabase
+
+Sem variáveis de ambiente, tudo funciona só neste navegador (protótipo). Com `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` (ver `.env.example`), o site lê e o painel grava no Supabase.
+
+Preparar o projeto (uma vez):
+
+1. **Esquema e segurança:** `supabase login`, `supabase link --project-ref ezmbcwaxcjumgucbatpg` e `supabase db push` (a pasta `supabase/` já existe: não correr `supabase init`). Ou colar `supabase/migrations/20261009000000_inicio.sql` no SQL Editor.
+2. **Utilizador do painel:** Authentication → Users → Add user → Create new user, com email `<utilizador>@admin.tlhavika.local`, a palavra-passe e "Auto Confirm User". O painel pede só o utilizador; o domínio é acrescentado por trás.
+3. **Torná-lo administrador:** colar `supabase/admin.sql` no SQL Editor.
+4. **Recomendado:** Authentication → Sign In / Providers → Email → desligar "Allow new users to sign up".
+5. Pôr as duas variáveis em `.env.ghpages` (ou `.env.local`) e voltar a compilar.
+
+O que o site pode ler sem conta: catálogo, promoções, vídeos e contactos. Qualquer visitante pode **enviar** um pedido de cotação, mas só administradores o leem. Propostas e escrita no site: só administradores (tabela `admins`). Imagens: balde público `site`, só administradores enviam. `supabase/tests/migracao.test.ts` confirma estas regras num Postgres em memória.
+
+Os dados do protótipo que estiverem no aparelho do administrador sobem para o Supabase na primeira entrada (se o servidor estiver vazio). Se um envio falhar (sem rede), fica marcado como "por guardar" e repete-se; os pedidos dos visitantes sem rede ficam numa caixa de saída e seguem na visita seguinte.
+
+Nunca pôr no código nem no repositório a palavra-passe da base de dados nem a chave `secret`/`service_role`.
+
 ## Estrutura (módulos em `src/lib`)
 
 Cada módulo tem uma interface pequena e esconde a lógica; os testes (`*.test.ts`) passam pela interface.
@@ -44,6 +62,9 @@ Cada módulo tem uma interface pequena e esconde a lógica; os testes (`*.test.t
 | `sizing.ts` | `sizeSolar`, `sizePump`, `matchPumps`, `solarMessage`, `pumpMessage` | Pressupostos e fórmulas dos simuladores |
 | `proposal.ts` | `newProposal`, `proposalTotals`, `proposalMessage`, `nextNumber` | Numeração, IVA e texto da cotação |
 | `catalog.ts` / `catalogEdit.ts` | `useCatalog`, `useCatalogEditor` | Como se juntam produtos de origem, edições e produtos criados no painel |
+| `sync.ts` / `supabase.ts` | `startSync`, `pullNow`, `submitQuote`, `setAdminSession`, `useSyncStatus` | Descarregar o servidor para as chaves de `store.ts`, enviar só a diferença do que o administrador grava, repetir o que falhou |
+| `images.ts` | `saveImage` | Reduzir a imagem e guardá-la no balde `site` (ou como data URL sem Supabase) |
+| `adminAuth.ts` | `signInAdmin`, `restoreAdmin`, `signOutAdmin` | Supabase Auth com verificação de `admins`, ou o resumo local sem Supabase |
 | `quotes.ts` | `useQuoteList`, `saveQuoteRequest` | Lista de cotação do visitante e caixa de entrada do painel |
 
 ## Identidade

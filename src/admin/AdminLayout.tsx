@@ -4,7 +4,11 @@ import { AdminLoginForm } from '../components/AdminLoginForm'
 import { Logo } from '../components/Logo'
 import { Ico, type IcoName } from '../components/Ico'
 import { useStored } from '../lib/store'
-import { isAdmin, signIn, signOut } from '../lib/adminSession'
+import { remoteEnabled } from '../lib/supabase'
+import { isAdmin } from '../lib/adminSession'
+import { restoreAdmin, signOutAdmin } from '../lib/adminAuth'
+import { useSyncStatus } from '../lib/useSyncStatus'
+import { retryNow } from '../lib/sync'
 import type { QuoteRequest } from '../data/admin'
 import { FeedbackProvider } from './feedback'
 import './admin.css'
@@ -48,7 +52,9 @@ function Gate({ onEnter }: { onEnter: () => void }) {
 }
 
 export default function AdminLayout() {
-  const [ok, setOk] = useState(isAdmin)
+  // com o Supabase, a sessão tem de ser confirmada no servidor antes de mostrar o painel
+  const [ok, setOk] = useState<boolean | null>(remoteEnabled ? null : isAdmin())
+  const sync = useSyncStatus()
   const [more, setMore] = useState(false)
   const [quotes] = useStored<QuoteRequest[]>('quotes', NO_QUOTES)
   const { pathname } = useLocation()
@@ -70,20 +76,31 @@ export default function AdminLayout() {
 
   useEffect(() => setMore(false), [pathname])
 
-  if (!ok)
+  useEffect(() => {
+    if (remoteEnabled) void restoreAdmin().then(setOk)
+  }, [])
+
+  if (ok === null)
     return (
-      <Gate
-        onEnter={() => {
-          signIn()
-          setOk(true)
-        }}
-      />
+      <div className="adm adm--gate">
+        <p className="adm__wait">A verificar a sessão…</p>
+      </div>
     )
 
+  if (!ok) return <Gate onEnter={() => setOk(true)} />
+
   const logout = () => {
-    signOut()
+    void signOutAdmin()
     setOk(false)
   }
+
+  const badge = !remoteEnabled
+    ? { cls: 'local', text: 'Protótipo · dados neste aparelho' }
+    : sync.state === 'saving'
+      ? { cls: 'saving', text: 'A guardar…' }
+      : sync.state === 'error' || sync.state === 'offline'
+        ? { cls: 'error', text: sync.state === 'offline' ? 'Sem ligação · por guardar' : 'Erro ao guardar' }
+        : { cls: 'ok', text: 'Guardado no Supabase' }
 
   const link = (n: Item) => (
     <NavLink key={n.to} to={n.to} end={n.end}>
@@ -109,7 +126,14 @@ export default function AdminLayout() {
             <button type="button" onClick={logout}>
               <Ico name="sair" size={20} /> Sair
             </button>
-            <p>Protótipo · os dados ficam neste aparelho</p>
+            <p className={`adm__sync adm__sync--${badge.cls}`}>
+              <i aria-hidden="true" /> {badge.text}
+              {badge.cls === 'error' && (
+                <button type="button" onClick={() => void retryNow()}>
+                  Tentar de novo
+                </button>
+              )}
+            </p>
           </div>
         </aside>
 
@@ -150,7 +174,14 @@ export default function AdminLayout() {
               <button type="button" onClick={logout}>
                 <Ico name="sair" size={22} /> Sair
               </button>
-              <p>Protótipo · os dados ficam neste aparelho</p>
+              <p className={`adm__sync adm__sync--${badge.cls}`}>
+                <i aria-hidden="true" /> {badge.text}
+                {badge.cls === 'error' && (
+                  <button type="button" onClick={() => void retryNow()}>
+                    Tentar de novo
+                  </button>
+                )}
+              </p>
             </div>
           </div>
         )}

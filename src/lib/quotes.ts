@@ -1,5 +1,7 @@
 import { useCallback } from 'react'
 import { useStored, updateStored, uid } from './store'
+import { remoteEnabled } from './supabase'
+import { submitQuote } from './sync'
 import type { QuoteRequest } from '../data/admin'
 
 export interface ListItem {
@@ -28,6 +30,11 @@ export function useQuoteList() {
 /** Guarda o pedido para o painel de administração (neste dispositivo, até ligar ao Supabase). */
 export function saveQuoteRequest(q: Omit<QuoteRequest, 'id' | 'criadoEm' | 'estado'>): boolean {
   const next: QuoteRequest = { ...q, id: uid(), criadoEm: new Date().toISOString(), estado: 'nova' }
+  if (remoteEnabled) {
+    // vai para o Supabase (ou para a caixa de saída, se não houver rede)
+    void submitQuote(next)
+    return true
+  }
   return updateStored<QuoteRequest[]>('quotes', EMPTY_QUOTES, (all) => [next, ...all])
 }
 

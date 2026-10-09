@@ -7,6 +7,8 @@ import { DEFAULT_MEDIA, FORMAT_LABEL, STATUS_LABEL, type MediaItem, type Promo, 
 import { Ico } from '../components/Ico'
 import { MediaCarousel } from '../components/MediaCarousel'
 import { money, proposalTotals } from '../lib/proposal'
+import { remoteEnabled } from '../lib/supabase'
+import { getSyncStatus, pullNow } from '../lib/sync'
 import { useFeedback } from './feedback'
 import { PageTitle, Panel, dateFmt, Empty } from './ui'
 
@@ -152,29 +154,52 @@ export default function Overview() {
         <MediaCarousel />
       </Panel>
 
-      <Panel title="Dados deste dispositivo">
+      <Panel title={remoteEnabled ? 'Dados e sincronização' : 'Dados deste dispositivo'}>
         <p className="muted">
-          Tudo o que cria aqui fica guardado neste navegador ({usageKb()} KB de cerca de 5 000 KB). Exporte uma cópia antes de limpar o navegador; ao ligar ao Supabase, esse ficheiro serve para passar os dados.
+          {remoteEnabled
+            ? `Tudo o que cria aqui fica guardado no Supabase e aparece em todos os aparelhos. Neste aparelho há uma cópia de ${usageKb()} KB que acelera o carregamento.`
+            : `Tudo o que cria aqui fica guardado neste navegador (${usageKb()} KB de cerca de 5 000 KB). Exporte uma cópia antes de limpar o navegador.`}
         </p>
         <div className="row">
+          {remoteEnabled && (
+            <button
+              type="button"
+              className="btn btn--line"
+              onClick={async () => {
+                await pullNow()
+                toast(getSyncStatus().state === 'idle' ? 'Dados atualizados' : 'Não foi possível atualizar. Verifique a ligação.', getSyncStatus().state === 'idle' ? 'ok' : 'erro')
+              }}
+            >
+              Atualizar agora
+            </button>
+          )}
           <button type="button" className="btn btn--line" onClick={exportAll}>
-            <Ico name="carregar" size={16} className="flip" /> Exportar dados
+            <Ico name="carregar" size={16} className="flip" /> Exportar cópia
           </button>
           <button type="button" className="btn btn--line" onClick={() => file.current?.click()}>
-            <Ico name="carregar" size={16} /> Importar dados
+            <Ico name="carregar" size={16} /> Importar cópia
           </button>
           <input ref={file} type="file" accept="application/json" hidden onChange={(e) => e.target.files?.[0] && importAll(e.target.files[0])} />
           <button
             type="button"
             className="btn btn--danger"
             onClick={async () => {
-              if (await confirm({ title: 'Apagar todos os dados?', text: 'Pedidos, propostas, promoções, vídeos, contactos e alterações ao catálogo deste aparelho. Exporte uma cópia antes, se precisar.', confirmLabel: 'Apagar tudo', danger: true })) {
+              if (
+                await confirm({
+                  title: remoteEnabled ? 'Limpar a cópia deste aparelho?' : 'Apagar todos os dados?',
+                  text: remoteEnabled
+                    ? 'Só apaga a cópia neste aparelho. Os dados no Supabase mantêm-se e voltam a carregar.'
+                    : 'Pedidos, propostas, promoções, vídeos, contactos e alterações ao catálogo deste aparelho. Exporte uma cópia antes, se precisar.',
+                  confirmLabel: remoteEnabled ? 'Limpar a cópia' : 'Apagar tudo',
+                  danger: true,
+                })
+              ) {
                 clearData()
-                toast('Dados apagados')
+                toast(remoteEnabled ? 'Cópia local limpa' : 'Dados apagados')
               }
             }}
           >
-            <Ico name="lixo" size={16} /> Apagar dados
+            <Ico name="lixo" size={16} /> {remoteEnabled ? 'Limpar cópia local' : 'Apagar dados'}
           </button>
         </div>
       </Panel>

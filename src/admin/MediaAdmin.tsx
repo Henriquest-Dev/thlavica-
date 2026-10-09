@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useMedia, youtubeId } from '../lib/promos'
-import { fileToDataUrl, uid } from '../lib/store'
+import { saveImage } from '../lib/images'
+import { uid } from '../lib/store'
 import { DEFAULT_MEDIA, type MediaItem, type MediaKind } from '../data/admin'
 import { MediaCarousel } from '../components/MediaCarousel'
 import { asset } from '../lib/asset'
@@ -123,7 +124,14 @@ export default function MediaAdmin() {
                     hidden
                     onChange={async (e) => {
                       const f = e.target.files?.[0]
-                      if (f) setUrl(await fileToDataUrl(f, 1400, 0.82))
+                      if (f) {
+                        try {
+                          setUrl(await saveImage(f, { max: 1400, quality: 0.82, folder: 'carrossel' }))
+                          setErr('')
+                        } catch (e2) {
+                          setErr(e2 instanceof Error ? e2.message : 'Não foi possível processar essa imagem.')
+                        }
+                      }
                       e.target.value = ''
                     }}
                   />

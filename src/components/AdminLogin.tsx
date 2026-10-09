@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signIn } from '../lib/adminSession'
 import { useUi } from './Ui'
 import { AdminLoginForm } from './AdminLoginForm'
 import { Logo } from './Logo'
@@ -34,7 +33,6 @@ export function AdminLogin() {
         <p className="muted">Entre para gerir o catálogo, as cotações, as promoções e os vídeos.</p>
         <AdminLoginForm
           onSuccess={() => {
-            signIn()
             closeLogin()
             nav('/admin')
           }}

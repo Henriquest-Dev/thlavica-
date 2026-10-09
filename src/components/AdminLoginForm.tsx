@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { checkCredentials } from '../lib/adminSession'
+import { signInAdmin } from '../lib/adminAuth'
 
 /**
  * Formulário de entrada do painel, usado no ecrã do /admin e na janela aberta pelo rodapé.
@@ -17,22 +17,22 @@ export function AdminLoginForm({ onSuccess, autoFocus = true }: { onSuccess: () 
     if (autoFocus) first.current?.focus()
   }, [autoFocus])
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (busy) return
     setBusy(true)
     setError('')
     // pequeno atraso, que cresce a cada falha, para tornar a tentativa em massa mais lenta
-    window.setTimeout(() => {
-      if (checkCredentials(user, pass)) {
-        onSuccess()
-        return
-      }
-      setFails((n) => n + 1)
-      setPass('')
-      setError('Utilizador ou palavra-passe incorretos.')
-      setBusy(false)
-    }, 350 + fails * 600)
+    await new Promise((r) => window.setTimeout(r, 250 + fails * 600))
+    const r = await signInAdmin(user, pass)
+    if (r.ok) {
+      onSuccess()
+      return
+    }
+    setFails((n) => n + 1)
+    setPass('')
+    setError(r.error)
+    setBusy(false)
   }
 
   return (

@@ -1518,3 +1518,51 @@
   align-self: start;
   margin-top: 3px;
 }
+.adm__wait {
+  margin: 0;
+  color: var(--white);
+  font-size: 17px;
+}
+.adm__sync {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 14px 0 !important;
+  font-size: 13px !important;
+}
+.adm__sync i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #9fb0c5;
+}
+.adm__sync--ok i {
+  background: #4cc38a;
+}
+.adm__sync--saving i {
+  background: var(--amber);
+  animation: nudge 1s ease-in-out infinite;
+}
+.adm__sync--error {
+  color: #ffb4ab !important;
+}
+.adm__sync--error i {
+  background: #ff6b5e;
+}
+.adm__sync button {
+  padding: 4px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.asheet .adm__sync {
+  margin: 14px 10px 0 !important;
+  color: var(--a-muted);
+}
+.asheet .adm__sync--error {
+  color: #b3261e !important;
+}

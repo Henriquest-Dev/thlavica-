@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { categories, type CategoryId } from '../data/site'
 import { blankDraft, draftFromProduct, useCatalogEditor, type ProductDraft } from '../lib/catalogEdit'
 import { asset } from '../lib/asset'
-import { fileToDataUrl } from '../lib/store'
+import { saveImage } from '../lib/images'
 import { Ico } from '../components/Ico'
 import { ProductThumb } from '../components/ProductThumb'
 import { useFeedback } from './feedback'
@@ -73,10 +73,10 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
                 if (!f) return
                 setBusy(true)
                 try {
-                  set('imgData', await fileToDataUrl(f))
+                  set('imgData', await saveImage(f, { folder: 'produtos' }))
                   setErr('')
-                } catch {
-                  setErr('Não foi possível ler essa imagem.')
+                } catch (e) {
+                  setErr(e instanceof Error ? e.message : 'Não foi possível processar essa imagem.')
                 }
                 setBusy(false)
                 e.target.value = ''

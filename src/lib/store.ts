@@ -66,6 +66,11 @@ export function memoryAdapter(initial: Record<string, string> = {}): Adapter {
 }
 
 let adapter: Adapter = local
+/** Chamado depois de cada gravação feita pela aplicação (não pelas de `hydrateStored`). Usado pela sincronização. */
+let writeHook: ((key: string) => void) | null = null
+export function setWriteHook(fn: ((key: string) => void) | null) {
+  writeHook = fn
+}
 const listeners = new Set<() => void>()
 const cache = new Map<string, { raw: string | null; value: unknown }>()
 
@@ -101,6 +106,16 @@ export function readStored<T>(key: string, fallback: T): T {
 /** Devolve false se o navegador recusou gravar (por exemplo, memória cheia). */
 export function writeStored<T>(key: string, value: T): boolean {
   const ok = adapter.set(key, JSON.stringify(value))
+  if (ok) {
+    emit()
+    writeHook?.(key)
+  }
+  return ok
+}
+
+/** Grava o que veio do servidor, sem o devolver ao servidor. */
+export function hydrateStored<T>(key: string, value: T): boolean {
+  const ok = adapter.set(key, JSON.stringify(value))
   if (ok) emit()
   return ok
 }
@@ -113,6 +128,7 @@ export function updateStored<T>(key: string, fallback: T, fn: (prev: T) => T): b
 export function removeStored(key: string) {
   adapter.remove(key)
   emit()
+  writeHook?.(key)
 }
 
 function subscribe(cb: () => void) {
@@ -160,6 +176,7 @@ export function importData(json: string): number {
   for (const k of DATA_KEYS) {
     if (k in data) {
       adapter.set(k, JSON.stringify(data[k]))
+      writeHook?.(k)
       n++
     }
   }
@@ -169,6 +186,7 @@ export function importData(json: string): number {
   return n
 }
 
+/** Limpa a cópia deste aparelho. Com o Supabase ligado, os dados do servidor mantêm-se e voltam a carregar. */
 export function clearData() {
   DATA_KEYS.forEach((k) => adapter.remove(k))
   cache.clear()
@@ -185,28 +203,3 @@ export function usageKb(): number {
 /* ---- Utilitários ---- */
 
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
-
-/** Reduz uma imagem enviada para caber no armazenamento local. */
-export function fileToDataUrl(file: File, max = 900, quality = 0.84): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file)
-    const img = new Image()
-    img.onload = () => {
-      const k = Math.min(1, max / Math.max(img.width, img.height))
-      const c = document.createElement('canvas')
-      c.width = Math.round(img.width * k)
-      c.height = Math.round(img.height * k)
-      const ctx = c.getContext('2d')
-      if (!ctx) return reject(new Error('Sem suporte de canvas'))
-      ctx.drawImage(img, 0, 0, c.width, c.height)
-      URL.revokeObjectURL(url)
-      const out = c.toDataURL('image/webp', quality)
-      resolve(out.startsWith('data:image/webp') ? out : c.toDataURL('image/jpeg', quality))
-    }
-    img.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('Não foi possível ler a imagem'))
-    }
-    img.src = url
-  })
-}

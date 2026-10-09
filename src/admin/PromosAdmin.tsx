@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { FORMAT_LABEL, type Promo, type PromoFormat } from '../data/admin'
 import { useCatalog } from '../lib/catalog'
 import { promoLive, usePromos } from '../lib/promos'
-import { fileToDataUrl, uid } from '../lib/store'
+import { saveImage } from '../lib/images'
+import { uid } from '../lib/store'
 import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
 import { Empty, Field, Modal, PageTitle, Panel, Switch } from './ui'
@@ -134,7 +135,13 @@ function PromoForm({ promo, onSave, onClose }: { promo: Promo; onSave: (p: Promo
                       hidden
                       onChange={async (e) => {
                         const f = e.target.files?.[0]
-                        if (f) set('imagem', await fileToDataUrl(f, 1100))
+                        if (f) {
+                          try {
+                            set('imagem', await saveImage(f, { max: 1100, folder: 'promocoes' }))
+                          } catch (err) {
+                            setErr(err instanceof Error ? err.message : 'Não foi possível processar essa imagem.')
+                          }
+                        }
                         e.target.value = ''
                       }}
                     />
