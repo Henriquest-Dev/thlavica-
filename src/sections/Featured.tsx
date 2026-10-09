@@ -16,7 +16,6 @@ export function Featured() {
       <div className="feat__sticky">
         <div className="feat__head wrap">
           <div>
-            <p className="eyebrow eyebrow--dark">Catálogo</p>
             <h2 id="feat-title" className="h2">
               Produtos em destaque
             </h2>

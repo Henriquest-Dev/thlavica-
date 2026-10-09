@@ -20,7 +20,7 @@ export default function Solution() {
 
   return (
     <div className="page">
-      <PageHead kicker={`${s.n} · Solução`} title={s.name} lead={s.lead} />
+      <PageHead back={{ to: '/servicos', label: 'Serviços' }} title={s.name} lead={s.lead} />
 
       <figure className="sol__figure wrap reveal">
         <img src={img(s.image)} alt={s.imageAlt} />

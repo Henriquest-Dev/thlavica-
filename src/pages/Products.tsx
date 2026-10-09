@@ -16,7 +16,7 @@ export default function Products() {
   const products = useCatalog()
   const [q, setQ] = useState('')
   const current = categories.find((c) => c.id === cat)
-  useMeta(current ? current.name : 'Produtos')
+  useMeta(current ? current.name : 'Catálogo')
   const list = useMemo(
     () =>
       products.filter(
@@ -31,8 +31,8 @@ export default function Products() {
   return (
     <div className="page">
       <PageHead
-        kicker="Catálogo"
-        title={current ? current.name : 'Produtos'}
+        back={current ? { to: '/produtos', label: 'Todo o catálogo' } : undefined}
+        title={current ? current.name : 'Catálogo'}
         lead="Equipamento apresentado pela Tlhavika. As especificações são as dos anúncios; preço, disponibilidade e ficha técnica são confirmados na cotação."
       />
       <div className="wrap">

@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
-import { categories } from '../data/site'
-import { CATEGORY_PICTO } from '../data/admin'
+import { categories, categoryPic } from '../data/site'
 import { productImage, type CatalogProduct } from '../lib/catalog'
 import { useQuoteList } from '../lib/quotes'
 import { Arrow } from './Arrow'
@@ -38,7 +37,7 @@ export function ProductCard({ p, size = 'md' }: { p: CatalogProduct; size?: 'md'
   return (
     <div className="pcw">
       <Link to={`/produtos/${p.id}`} className={`pc pc--${size}`}>
-        <span className="pc__media">{src ? <img src={src} alt={p.name} loading="lazy" /> : <Ico name={CATEGORY_PICTO[p.category]} size={96} className="pc__picto" />}</span>
+        <span className="pc__media">{src ? <img src={src} alt={p.name} loading="lazy" /> : <Ico name={categoryPic(p.category)} size={96} className="pc__picto" />}</span>
         {chip && <span className="pc__chip">{chip}</span>}
         <span className="pc__body">
           <span className="pc__cat">

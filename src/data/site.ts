@@ -107,15 +107,17 @@ export type CategoryId =
   | 'termoacumuladores'
   | 'acessorios'
 
-export const categories: { id: CategoryId; name: string; solution: SolutionId; text: string }[] = [
-  { id: 'paineis', name: 'Painéis solares', solution: 'energia-solar', text: 'Módulos fotovoltaicos.' },
-  { id: 'inversores', name: 'Inversores', solution: 'energia-solar', text: 'Conversão e gestão da energia.' },
-  { id: 'baterias', name: 'Baterias', solution: 'energia-solar', text: 'Armazenamento para a noite.' },
-  { id: 'bombas-superficie', name: 'Bombas de superfície', solution: 'bombagem', text: 'Pressão para a rede da casa.' },
-  { id: 'bombas-submersiveis', name: 'Bombas submersíveis', solution: 'bombagem', text: 'Extração de furos e poços.' },
-  { id: 'bombas-solares', name: 'Bombas solares', solution: 'bombagem', text: 'Alimentadas por painéis.' },
-  { id: 'termoacumuladores', name: 'Termoacumuladores', solution: 'aquecimento-solar', text: 'Água quente solar.' },
-  { id: 'acessorios', name: 'Acessórios', solution: 'energia-solar', text: 'Cabos, estruturas, motores.' },
+export type Picto = 'painel' | 'inversor' | 'bateria' | 'bomba' | 'submersivel' | 'bombasolar' | 'termo' | 'candeeiro'
+
+export const categories: { id: CategoryId; name: string; solution: SolutionId; text: string; pic: Picto }[] = [
+  { id: 'paineis', name: 'Painéis solares', solution: 'energia-solar', text: 'Módulos fotovoltaicos.', pic: 'painel' },
+  { id: 'inversores', name: 'Inversores', solution: 'energia-solar', text: 'Conversão e gestão da energia.', pic: 'inversor' },
+  { id: 'baterias', name: 'Baterias', solution: 'energia-solar', text: 'Armazenamento para a noite.', pic: 'bateria' },
+  { id: 'bombas-superficie', name: 'Bombas de superfície', solution: 'bombagem', text: 'Pressão para a rede da casa.', pic: 'bomba' },
+  { id: 'bombas-submersiveis', name: 'Bombas submersíveis', solution: 'bombagem', text: 'Extração de furos e poços.', pic: 'submersivel' },
+  { id: 'bombas-solares', name: 'Bombas solares', solution: 'bombagem', text: 'Alimentadas por painéis.', pic: 'bombasolar' },
+  { id: 'termoacumuladores', name: 'Termoacumuladores', solution: 'aquecimento-solar', text: 'Água quente solar.', pic: 'termo' },
+  { id: 'acessorios', name: 'Acessórios', solution: 'energia-solar', text: 'Cabos, estruturas, motores.', pic: 'candeeiro' },
 ]
 
 export const faqs = [
@@ -144,3 +146,5 @@ export const PHOTOS = [
   { src: 'foto-17', alt: 'Termoacumulador solar Tlhavika com tubos de vácuo numa cobertura', caption: 'Tubos de vácuo e depósito' },
   { src: 'foto-34', alt: 'Vista aérea de uma torre com depósitos de água e painéis solares', caption: 'Depósitos elevados e painéis solares' },
 ]
+
+export const categoryPic = (id: CategoryId): Picto => categories.find((c) => c.id === id)?.pic ?? 'candeeiro'

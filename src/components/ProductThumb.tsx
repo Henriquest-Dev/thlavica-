@@ -1,4 +1,4 @@
-import { CATEGORY_PICTO } from '../data/admin'
+import { categoryPic } from '../data/site'
 import { productImage, type CatalogProduct } from '../lib/catalog'
 import { Ico } from './Ico'
 
@@ -7,7 +7,7 @@ export function ProductThumb({ p, size = 56 }: { p: CatalogProduct; size?: numbe
   const src = productImage(p)
   return (
     <span className="thumb" style={{ width: size, height: size }}>
-      {src ? <img src={src} alt="" loading="lazy" /> : <Ico name={CATEGORY_PICTO[p.category]} size={size * 0.55} />}
+      {src ? <img src={src} alt="" loading="lazy" /> : <Ico name={categoryPic(p.category)} size={size * 0.55} />}
     </span>
   )
 }

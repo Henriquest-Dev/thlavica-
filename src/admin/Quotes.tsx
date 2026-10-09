@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useStored, uid } from '../lib/store'
 import { useCatalog } from '../lib/catalog'
 import { STATUS_LABEL, type Proposal, type ProposalLine, type QuoteRequest, type QuoteStatus } from '../data/admin'
+import { DEFAULT_IVA, lineFromProduct, newProposal, proposalMessage, proposalTotals } from '../lib/proposal'
 import { Ico } from '../components/Ico'
 import { Empty, Field, Modal, PageTitle, Panel, dateFmt, money } from './ui'
 
@@ -23,28 +24,11 @@ const digits = (s: string) => s.replace(/\D/g, '')
 function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onSave: (p: Proposal, send?: boolean) => void; onClose: () => void }) {
   const catalog = useCatalog(true)
   const [p, setP] = useState(proposal)
-  const [iva, setIva] = useState(16)
   const set = <K extends keyof Proposal>(k: K, v: Proposal[K]) => setP((x) => ({ ...x, [k]: v }))
   const setLine = (id: string, patch: Partial<ProposalLine>) => set('linhas', p.linhas.map((l) => (l.id === id ? { ...l, ...patch } : l)))
-  const sub = p.linhas.reduce((n, l) => n + l.qtd * l.preco, 0)
-  const tax = sub * (iva / 100)
-  const total = sub + tax
-
-  const text = () =>
-    [
-      `Proposta ${p.numero} — Tlhavika`,
-      `Cliente: ${p.cliente.nome}${p.cliente.local ? ` (${p.cliente.local})` : ''}`,
-      '',
-      ...p.linhas.map((l) => `• ${l.qtd} × ${l.descricao}: ${money(l.qtd * l.preco)}`),
-      '',
-      `Subtotal: ${money(sub)}`,
-      iva ? `IVA (${iva}%): ${money(tax)}` : '',
-      `Total: ${money(total)}`,
-      `Validade: ${p.validadeDias} dias.`,
-      p.notas ? `\n${p.notas}` : '',
-    ]
-      .filter((x) => x !== '')
-      .join('\n')
+  const { subtotal: sub, tax, total } = proposalTotals(p)
+  const iva = p.iva ?? DEFAULT_IVA
+  const text = () => proposalMessage(p)
 
   return (
     <Modal title={`Cotação ${p.numero}`} onClose={onClose} wide>
@@ -87,7 +71,7 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
               value=""
               onChange={(e) => {
                 const prod = catalog.find((c) => c.id === e.target.value)
-                if (prod) set('linhas', [...p.linhas, { id: uid(), produtoId: prod.id, descricao: prod.name + (prod.brand ? ` (${prod.brand})` : ''), qtd: 1, preco: 0 }])
+                if (prod) set('linhas', [...p.linhas, lineFromProduct(prod)])
               }}
               aria-label="Acrescentar produto do catálogo"
             >
@@ -105,7 +89,7 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
 
           <div className="grid2">
             <Field label="IVA (%)" hint="Ponha 0 para não mostrar IVA.">
-              <input type="number" min={0} max={100} value={iva} onChange={(e) => setIva(Math.max(0, Math.min(100, Number(e.target.value) || 0)))} />
+              <input type="number" min={0} max={100} value={iva} onChange={(e) => set('iva', Math.max(0, Math.min(100, Number(e.target.value) || 0)))} />
             </Field>
             <Field label="Validade (dias)">
               <input type="number" min={1} max={365} value={p.validadeDias} onChange={(e) => set('validadeDias', Math.max(1, Number(e.target.value) || 1))} />
@@ -197,34 +181,23 @@ export default function Quotes() {
   const [quotes, setQuotes] = useStored<QuoteRequest[]>('quotes', NO_Q)
   const [proposals, setProposals] = useStored<Proposal[]>('proposals', NO_PR)
   const [params, setParams] = useSearchParams()
+  const [q, setQ] = useState('')
   const [filter, setFilter] = useState<(typeof FILTERS)[number]['id']>('todas')
   const [editing, setEditing] = useState<Proposal | null>(null)
   const catalog = useCatalog(true)
 
-  const list = useMemo(() => quotes.filter((q) => !q.arquivada && (filter === 'todas' || q.estado === filter)), [quotes, filter])
+  const list = useMemo(() => {
+    const n = q.trim().toLowerCase()
+    return quotes.filter(
+      (r) => !r.arquivada && (filter === 'todas' || r.estado === filter) && (!n || `${r.nome} ${r.telefone} ${r.local} ${r.interesse ?? ''} ${(r.itens ?? []).map((i) => i.nome).join(' ')}`.toLowerCase().includes(n)),
+    )
+  }, [quotes, filter, q])
   const selId = params.get('id') ?? list[0]?.id
   const sel = quotes.find((q) => q.id === selId)
 
-  const nextNumber = () => `COT-${new Date().getFullYear()}-${String(proposals.length + 1).padStart(3, '0')}`
-
   const startProposal = (q?: QuoteRequest) => {
     const existing = q && proposals.find((p) => p.pedidoId === q.id)
-    if (existing) return setEditing(existing)
-    const linhas: ProposalLine[] = (q?.itens ?? []).map((i) => {
-      const prod = catalog.find((c) => c.id === i.produtoId)
-      return { id: uid(), produtoId: i.produtoId, descricao: prod ? prod.name + (prod.brand ? ` (${prod.brand})` : '') : i.nome, qtd: i.qtd, preco: 0 }
-    })
-    setEditing({
-      id: uid(),
-      numero: nextNumber(),
-      pedidoId: q?.id,
-      criadaEm: new Date().toISOString(),
-      cliente: { nome: q?.nome ?? '', telefone: q?.telefone ?? '', local: q?.local ?? '' },
-      linhas: linhas.length ? linhas : [{ id: uid(), descricao: '', qtd: 1, preco: 0 }],
-      validadeDias: 15,
-      notas: '',
-      estado: 'rascunho',
-    })
+    setEditing(existing ?? newProposal(proposals, catalog, q))
   }
 
   // abrir o editor vindo do atalho "Preparar uma cotação"
@@ -255,11 +228,18 @@ export default function Quotes() {
           </button>
         }
       />
+      <div className="toolbar">
+        <label className="asearch">
+          <Ico name="pesquisa" size={16} />
+          <span className="visually-hidden">Pesquisar pedidos</span>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Pesquisar por nome, telefone, local ou produto" />
+        </label>
+      </div>
       <div className="atabs" role="tablist" aria-label="Estado dos pedidos">
         {FILTERS.map((f) => (
           <button key={f.id} type="button" role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)}>
             {f.label}
-            <span>{quotes.filter((q) => !q.arquivada && (f.id === 'todas' || q.estado === f.id)).length}</span>
+            <span>{quotes.filter((r) => !r.arquivada && (f.id === 'todas' || r.estado === f.id)).length}</span>
           </button>
         ))}
       </div>
@@ -403,7 +383,7 @@ export default function Quotes() {
                 <tr key={p.id}>
                   <td>{p.numero}</td>
                   <td>{p.cliente.nome || '—'}</td>
-                  <td>{money(p.linhas.reduce((n, l) => n + l.qtd * l.preco, 0))}</td>
+                  <td>{money(proposalTotals(p).total)}</td>
                   <td>
                     <em className={`chip chip--${p.estado === 'enviada' ? 'enviada' : 'em-preparacao'}`}>{p.estado === 'enviada' ? 'Enviada' : 'Rascunho'}</em>
                   </td>

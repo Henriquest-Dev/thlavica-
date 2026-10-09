@@ -82,4 +82,4 @@ export function Empty({ title, text, action }: { title: string; text?: string; a
 export const dateFmt = (iso: string) =>
   new Date(iso).toLocaleString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
-export const money = (n: number) => `${n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MZN`
+export { money } from '../lib/proposal'

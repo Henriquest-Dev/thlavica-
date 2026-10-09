@@ -17,7 +17,7 @@ export default function Applications() {
   useReveal()
   return (
     <div className="page">
-      <PageHead kicker="Aplicações" title={<>Em <em>contexto</em></>} lead="Onde os equipamentos solares e de água são usados." />
+      <PageHead title="Aplicações" lead="Onde o equipamento solar e de água é usado, e o que resolve em cada caso." />
       <section className="wrap app__uses">
         {USES.map((u, i) => (
           <article key={u.t} className="reveal" style={{ '--d': `${i * 60}ms` } as React.CSSProperties}>

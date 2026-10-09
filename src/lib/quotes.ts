@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useStored, writeStored, uid } from './store'
+import { useStored, updateStored, uid } from './store'
 import type { QuoteRequest } from '../data/admin'
 
 export interface ListItem {
@@ -27,15 +27,8 @@ export function useQuoteList() {
 
 /** Guarda o pedido para o painel de administração (neste dispositivo, até ligar ao Supabase). */
 export function saveQuoteRequest(q: Omit<QuoteRequest, 'id' | 'criadoEm' | 'estado'>): boolean {
-  let all: QuoteRequest[] = EMPTY_QUOTES
-  try {
-    const raw = window.localStorage.getItem('tlh:quotes')
-    if (raw) all = JSON.parse(raw) as QuoteRequest[]
-  } catch {
-    all = EMPTY_QUOTES
-  }
   const next: QuoteRequest = { ...q, id: uid(), criadoEm: new Date().toISOString(), estado: 'nova' }
-  return writeStored('quotes', [next, ...all])
+  return updateStored<QuoteRequest[]>('quotes', EMPTY_QUOTES, (all) => [next, ...all])
 }
 
 /** Texto pré-preenchido para o formulário de contacto (vindo dos simuladores). */

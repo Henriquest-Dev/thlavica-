@@ -7,6 +7,7 @@ npm install
 npm run dev            # desenvolvimento
 npm run build          # dist/ para Netlify (index.html na raiz)
 npm run build:ghpages  # dist/ para GitHub Pages (subcaminho /thlavica-/)
+npm test               # testes dos módulos de src/lib (vitest)
 npm run images         # regenera public/img a partir de source-assets/ (Python + Pillow)
 ```
 
@@ -31,6 +32,18 @@ Sem autenticação real. Os dados ficam no `localStorage` do navegador (prefixo 
 | Vídeos e fotos | Carrossel da página inicial: imagens, YouTube e MP4 por endereço; ordem, pausa e remoção. |
 
 Para ligar ao Supabase: trocar `readRaw`/`writeStored` em `src/lib/store.ts` por chamadas à base de dados (os hooks `useStored`, `useCatalog`, `useMedia`, `usePromos` e `useQuoteList` mantêm-se) e passar os dados com "Exportar dados".
+
+## Estrutura (módulos em `src/lib`)
+
+Cada módulo tem uma interface pequena e esconde a lógica; os testes (`*.test.ts`) passam pela interface.
+
+| Módulo | Interface | Esconde |
+|---|---|---|
+| `store.ts` | `useStored`, `writeStored`, `updateStored`, `exportData`, `importData`, `clearData`, `usageKb` | O adaptador de armazenamento (localStorage; memória nos testes; Supabase depois), a cache e a lista de chaves do painel |
+| `sizing.ts` | `sizeSolar`, `sizePump`, `matchPumps`, `solarMessage`, `pumpMessage` | Pressupostos e fórmulas dos simuladores |
+| `proposal.ts` | `newProposal`, `proposalTotals`, `proposalMessage`, `nextNumber` | Numeração, IVA e texto da cotação |
+| `catalog.ts` / `catalogEdit.ts` | `useCatalog`, `useCatalogEditor` | Como se juntam produtos de origem, edições e produtos criados no painel |
+| `quotes.ts` | `useQuoteList`, `saveQuoteRequest` | Lista de cotação do visitante e caixa de entrada do painel |
 
 ## Identidade
 

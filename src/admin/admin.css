@@ -1005,3 +1005,16 @@
     display: none;
   }
 }
+.panel--lead {
+  border-color: #f1d9a8;
+  background: #fffaf0;
+}
+.panel--lead .panel__head h2 {
+  font-size: 20px;
+}
+.stats strong {
+  font-size: 26px;
+}
+.stats span {
+  font-size: 13px;
+}

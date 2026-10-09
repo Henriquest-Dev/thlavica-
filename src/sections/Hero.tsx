@@ -87,14 +87,14 @@ export function Hero() {
           <div className="hero__side">
             <p className="hero__lead">Painéis, inversores, baterias, bombas de água e termoacumuladores solares para casas, negócios e machambas.</p>
             <div className="hero__ctas">
-              <Link to="/produtos" className="pill pill--light">
-                Ver catálogo
+              <Link to="/contacto" className="pill pill--light">
+                Pedir cotação
                 <span className="pill__icon">
                   <Arrow size={14} />
                 </span>
               </Link>
-              <Link to="/contacto" className="pill pill--ghost">
-                Pedir cotação
+              <Link to="/produtos" className="pill pill--ghost">
+                Ver catálogo
               </Link>
             </div>
           </div>

@@ -1,4 +1,3 @@
-import type { CategoryId } from './site'
 import type { Product } from './products'
 
 export type QuoteStatus = 'nova' | 'em-preparacao' | 'enviada' | 'fechada'
@@ -34,6 +33,8 @@ export interface Proposal {
   criadaEm: string
   cliente: { nome: string; telefone: string; local: string }
   linhas: ProposalLine[]
+  /** IVA em percentagem (0 = sem IVA). */
+  iva: number
   validadeDias: number
   notas: string
   estado: 'rascunho' | 'enviada'
@@ -91,14 +92,3 @@ export const DEFAULT_MEDIA: MediaItem[] = [
   { id: 'm-foto-17', tipo: 'imagem', url: 'img/foto-17.webp', titulo: 'Tubos de vácuo e depósito', legenda: 'Termoacumulador solar', ativo: true },
   { id: 'm-foto-34', tipo: 'imagem', url: 'img/foto-34.webp', titulo: 'Depósitos elevados e painéis', legenda: 'Abastecimento de água com energia solar', ativo: true },
 ]
-
-export const CATEGORY_PICTO: Record<CategoryId, 'painel' | 'inversor' | 'bateria' | 'bomba' | 'submersivel' | 'bombasolar' | 'termo' | 'candeeiro'> = {
-  paineis: 'painel',
-  inversores: 'inversor',
-  baterias: 'bateria',
-  'bombas-superficie': 'bomba',
-  'bombas-submersiveis': 'submersivel',
-  'bombas-solares': 'bombasolar',
-  termoacumuladores: 'termo',
-  acessorios: 'candeeiro',
-}

@@ -12,7 +12,7 @@ export default function Services() {
   useReveal()
   return (
     <div className="page">
-      <PageHead kicker="Serviços" title="O que fornecemos e como ajudamos a escolher" lead="Três áreas de trabalho e duas ferramentas para estimar o que precisa antes de pedir cotação." />
+      <PageHead title="O que fornecemos e como ajudamos a escolher" lead="Três áreas de trabalho e duas ferramentas para estimar o que precisa antes de pedir cotação." />
 
       <section className="wrap svc" aria-label="Áreas de trabalho">
         {solutions.map((s) => (

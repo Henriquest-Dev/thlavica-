@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useCatalog, type CatalogProduct } from '../lib/catalog'
+import { useCatalog } from '../lib/catalog'
+import { ASSUMPTIONS, matchPumps, pumpMessage, sizePump, sizeSolar, solarMessage, type PumpInput } from '../lib/sizing'
 import { setPrefill } from '../lib/quotes'
 import { Ico } from './Ico'
 import { Arrow } from './Arrow'
@@ -31,11 +32,6 @@ const APPLIANCES: Appliance[] = [
   { id: 'ferro', nome: 'Ferro de engomar', w: 1000, h: 0.5 },
 ]
 
-const SUN_HOURS = 5
-const SYSTEM_EFF = 0.75
-const PANEL_W = 625
-const INVERTERS = [1, 1.5, 2, 3, 3.5, 5, 6, 8, 10, 12]
-
 function SolarSim() {
   const nav = useNavigate()
   const uid = useId()
@@ -44,35 +40,11 @@ function SolarSim() {
   const [battery, setBattery] = useState(true)
   const [night, setNight] = useState(50)
 
-  const r = useMemo(() => {
-    let wh = 0
-    let w = 0
-    const lines: string[] = []
-    for (const a of APPLIANCES) {
-      const q = qty[a.id] ?? 0
-      if (!q) continue
-      const h = hours[a.id] ?? a.h
-      wh += q * a.w * h
-      w += q * a.w
-      lines.push(`${q} × ${a.nome} (${a.w} W, ${fmt(h, h % 1 ? 1 : 0)} h/dia)`)
-    }
-    const peak = w * 0.7
-    const inverter = INVERTERS.find((k) => k * 1000 >= peak * 1.25) ?? INVERTERS[INVERTERS.length - 1]
-    const arrayW = wh / (SUN_HOURS * SYSTEM_EFF)
-    const panels = Math.max(wh ? 1 : 0, Math.ceil(arrayW / PANEL_W))
-    const batteryKwh = battery ? (wh * (night / 100)) / 0.8 / 1000 : 0
-    return { wh, w, peak, inverter, arrayW, panels, batteryKwh, lines }
-  }, [qty, hours, battery, night])
+  const lines = useMemo(() => APPLIANCES.map((a) => ({ nome: a.nome, w: a.w, h: hours[a.id] ?? a.h, qty: qty[a.id] ?? 0 })), [qty, hours])
+  const r = useMemo(() => sizeSolar(lines, { battery, nightPct: night }), [lines, battery, night])
 
   const send = () => {
-    setPrefill(
-      [
-        'Simulação (energia solar) feita no site:',
-        ...r.lines.map((l) => `• ${l}`),
-        `Consumo diário estimado: ${fmt(r.wh / 1000, 1)} kWh`,
-        `Sugestão orientativa: ${r.panels} painéis de ${PANEL_W} W, inversor de cerca de ${fmt(r.inverter, 1)} kW${r.batteryKwh ? `, bateria de cerca de ${fmt(r.batteryKwh, 1)} kWh` : ', sem baterias'}.`,
-      ].join('\n'),
-    )
+    setPrefill(solarMessage(lines, r))
     nav('/contacto')
   }
 
@@ -142,12 +114,12 @@ function SolarSim() {
               <div>
                 <dt>Painéis solares</dt>
                 <dd>
-                  {r.panels} × {PANEL_W} W <small>({fmt(r.arrayW / 1000, 1)} kW)</small>
+                  {r.panels} × {ASSUMPTIONS.panelW} W <small>({fmt(r.arrayW / 1000, 1)} kW)</small>
                 </dd>
               </div>
               <div>
                 <dt>Inversor</dt>
-                <dd>cerca de {fmt(r.inverter, 1)} kW</dd>
+                <dd>cerca de {fmt(r.inverterKw, 1)} kW</dd>
               </div>
               <div>
                 <dt>Bateria de lítio</dt>
@@ -155,7 +127,7 @@ function SolarSim() {
               </div>
             </dl>
             <p className="sim__note">
-              Estimativa orientativa: {SUN_HOURS} horas de sol por dia, {Math.round(SYSTEM_EFF * 100)}% de rendimento do sistema e aparelhos nem sempre ligados ao mesmo tempo. A proposta final depende do local e da ficha técnica dos equipamentos.
+              Estimativa orientativa: {ASSUMPTIONS.sunHours} horas de sol por dia, {Math.round(ASSUMPTIONS.systemEff * 100)}% de rendimento do sistema e aparelhos nem sempre ligados ao mesmo tempo. A proposta final depende do local e da ficha técnica dos equipamentos.
             </p>
             <button type="button" className="pill pill--dark" onClick={send}>
               Pedir cotação com esta estimativa
@@ -174,62 +146,21 @@ function SolarSim() {
 /* Bomba de água                                                       */
 /* ------------------------------------------------------------------ */
 
-const nums = (s: string) => (s.match(/\d+(?:[.,]\d+)?/g) ?? []).map((n) => Number(n.replace(',', '.')))
-
-/** Pares caudal (L/min) / altura (m) do anúncio, quando o produto os tem. */
-function curve(p: CatalogProduct): { q: number; h: number }[] | null {
-  const f = p.specs.find((s) => /^Caudal/.test(s.label))
-  const a = p.specs.find((s) => /^Altura/.test(s.label))
-  if (!f || !a) return null
-  const fq = nums(f.value)
-  const fh = nums(a.value)
-  if (!fq.length || !fh.length) return null
-  const toLmin = (n: number) => (/m³\/h/.test(f.value) ? (n * 1000) / 60 : /L\/h/.test(f.value) ? n / 60 : n)
-  if (fq.length === fh.length) return fq.map((q, i) => ({ q: toLmin(q), h: fh[i] }))
-  return [{ q: toLmin(Math.max(...fq)), h: Math.max(...fh) }]
-}
-
 function PumpSim() {
   const nav = useNavigate()
   const catalog = useCatalog()
-  const [depth, setDepth] = useState(30)
-  const [lift, setLift] = useState(8)
-  const [dist, setDist] = useState(20)
-  const [liters, setLiters] = useState(2000)
-  const [sun, setSun] = useState(6)
+  const [input, setInput] = useState<PumpInput>({ depth: 30, lift: 8, dist: 20, liters: 2000, sunHours: 6 })
+  const set = (k: keyof PumpInput) => (n: number) => setInput((v) => ({ ...v, [k]: n }))
 
-  const r = useMemo(() => {
-    const friction = (depth + lift) * 0.1 + dist / 100
-    const head = depth + lift + friction
-    const qm3h = liters / 1000 / sun
-    const lmin = (liters / sun) / 60
-    const hydW = 2.725 * qm3h * head
-    const elecW = hydW / 0.45
-    const arrayW = elecW * 1.3
-    const panels = Math.max(1, Math.ceil(arrayW / PANEL_W))
-    const matches = catalog
-      .filter((p) => ['bombas-solares', 'bombas-submersiveis'].includes(p.category) && /solar|DC|PV/i.test(`${p.name} ${p.category}`))
-      .filter((p) => {
-        const c = curve(p)
-        return c ? c.some((pt) => pt.q >= lmin && pt.h >= head) : false
-      })
-      .slice(0, 3)
-    return { head, qm3h, lmin, elecW, arrayW, panels, matches }
-  }, [depth, lift, dist, liters, sun, catalog])
+  const r = useMemo(() => sizePump(input), [input])
+  const matches = useMemo(() => matchPumps(catalog, { lmin: r.lmin, head: r.head }), [catalog, r])
 
-  const num = (v: number, set: (n: number) => void, min: number, max: number, step = 1) => (
-    <input type="number" inputMode="decimal" min={min} max={max} step={step} value={v} onChange={(e) => set(Math.max(min, Math.min(max, Number(e.target.value) || min)))} />
+  const num = (k: keyof PumpInput, min: number, max: number, step = 1) => (
+    <input type="number" inputMode="decimal" min={min} max={max} step={step} value={input[k]} onChange={(e) => set(k)(Math.max(min, Math.min(max, Number(e.target.value) || min)))} />
   )
 
   const send = () => {
-    setPrefill(
-      [
-        'Simulação (bomba de água) feita no site:',
-        `• Profundidade da água: ${depth} m · Altura até ao depósito: ${lift} m · Distância: ${dist} m`,
-        `• Água por dia: ${fmt(liters)} L em ${sun} h de sol`,
-        `Resultado orientativo: altura total de cerca de ${fmt(r.head)} m, caudal de ${fmt(r.lmin)} L/min, painéis de cerca de ${fmt(r.arrayW)} W.`,
-      ].join('\n'),
-    )
+    setPrefill(pumpMessage(input, r))
     nav('/contacto')
   }
 
@@ -240,23 +171,23 @@ function PumpSim() {
         <div className="sim__grid">
           <label>
             Profundidade da água <small>(metros, com o rebaixamento)</small>
-            {num(depth, setDepth, 1, 300)}
+            {num('depth', 1, 300)}
           </label>
           <label>
             Altura do depósito acima do solo <small>(metros)</small>
-            {num(lift, setLift, 0, 100)}
+            {num('lift', 0, 100)}
           </label>
           <label>
             Distância da tubagem até ao depósito <small>(metros)</small>
-            {num(dist, setDist, 0, 2000, 5)}
+            {num('dist', 0, 2000, 5)}
           </label>
           <label>
             Água necessária por dia <small>(litros)</small>
-            {num(liters, setLiters, 100, 200000, 100)}
+            {num('liters', 100, 200000, 100)}
           </label>
           <label>
             Horas de sol úteis para bombear
-            <select value={sun} onChange={(e) => setSun(Number(e.target.value))}>
+            <select value={input.sunHours} onChange={(e) => set('sunHours')(Number(e.target.value))}>
               {[4, 5, 6, 7, 8].map((h) => (
                 <option key={h} value={h}>
                   {h} horas
@@ -291,16 +222,16 @@ function PumpSim() {
           <div>
             <dt>Painéis solares</dt>
             <dd>
-              cerca de {fmt(r.arrayW)} W <small>({r.panels} × {PANEL_W} W)</small>
+              cerca de {fmt(r.arrayW)} W <small>({r.panels} × {ASSUMPTIONS.panelW} W)</small>
             </dd>
           </div>
         </dl>
-        {depth > 7 && <p className="sim__note">Com a água a mais de 7 m de profundidade, use uma bomba submersível: as de superfície não conseguem aspirar tanta altura.</p>}
-        {r.matches.length > 0 ? (
+        {r.needsSubmersible && <p className="sim__note">Com a água a mais de 7 m de profundidade, use uma bomba submersível: as de superfície não conseguem aspirar tanta altura.</p>}
+        {matches.length > 0 ? (
           <div className="sim__match">
             <p>Modelos do catálogo que cobrem este ponto (dados do anúncio, a confirmar):</p>
             <ul>
-              {r.matches.map((p) => (
+              {matches.map((p) => (
                 <li key={p.id}>
                   <Link to={`/produtos/${p.id}`}>{p.name}</Link>
                 </li>
@@ -311,7 +242,7 @@ function PumpSim() {
           <p className="sim__note">Nenhum modelo do catálogo cobre este ponto com os dados do anúncio. Peça-nos uma proposta: podemos propor outra solução.</p>
         )}
         <p className="sim__note">
-          Estimativa orientativa: perdas na tubagem de 10% da altura vertical mais 1 m por cada 100 m, rendimento da bomba de 45% e margem de 30% nos painéis. A escolha final depende da curva da bomba e da ficha técnica.
+          Estimativa orientativa: perdas na tubagem de {Math.round(ASSUMPTIONS.frictionRate * 100)}% da altura vertical mais 1 m por cada 100 m, rendimento da bomba de {Math.round(ASSUMPTIONS.pumpEff * 100)}% e margem de {Math.round((ASSUMPTIONS.panelMargin - 1) * 100)}% nos painéis. A escolha final depende da curva da bomba e da ficha técnica.
         </p>
         <button type="button" className="pill pill--dark" onClick={send}>
           Pedir cotação com esta estimativa

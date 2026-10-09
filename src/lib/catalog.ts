@@ -9,18 +9,21 @@ const NO_OVERRIDES: Record<string, CatalogOverride> = {}
 
 export type CatalogProduct = Product & { custom?: boolean; imgData?: string; hidden?: boolean; edited?: boolean }
 
-/** Catálogo = produtos de origem + produtos criados no painel, com as edições aplicadas. */
+/** União pura: produtos de origem com as edições aplicadas, mais os criados no painel. */
+export function mergeCatalog(baseList: Product[], custom: CustomProduct[], over: Record<string, CatalogOverride>, includeHidden = false): CatalogProduct[] {
+  const merged: CatalogProduct[] = baseList.map((p) => {
+    const o = over[p.id]
+    return o ? { ...p, ...o, id: p.id, edited: true } : p
+  })
+  const all = [...merged, ...custom]
+  return includeHidden ? all : all.filter((p) => !p.hidden)
+}
+
+/** Catálogo do site (sem ocultos) ou do painel (`includeHidden`). */
 export function useCatalog(includeHidden = false): CatalogProduct[] {
   const [custom] = useStored<CustomProduct[]>('catalog.custom', NO_CUSTOM)
   const [over] = useStored<Record<string, CatalogOverride>>('catalog.overrides', NO_OVERRIDES)
-  return useMemo(() => {
-    const merged: CatalogProduct[] = base.map((p) => {
-      const o = over[p.id]
-      return o ? { ...p, ...o, id: p.id, edited: true } : p
-    })
-    const all = [...merged, ...custom]
-    return includeHidden ? all : all.filter((p) => !p.hidden)
-  }, [custom, over, includeHidden])
+  return useMemo(() => mergeCatalog(base, custom, over, includeHidden), [custom, over, includeHidden])
 }
 
 export function useProduct(id: string) {

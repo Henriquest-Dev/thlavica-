@@ -92,7 +92,7 @@ export default function Contact() {
 
   return (
     <div className="page">
-      <PageHead kicker="Contacto" title={<>Pedir <em>cotação</em></>} lead="Diga-nos o local, o uso e o que precisa. Respondemos com uma proposta." />
+      <PageHead title="Pedir cotação" lead="Diga-nos o local, o uso e o que precisa. Respondemos com uma proposta." />
       <div className="wrap contact">
         <form className="form reveal" onSubmit={submit} noValidate>
           <div className="form__grid">

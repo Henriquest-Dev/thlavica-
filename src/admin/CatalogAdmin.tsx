@@ -1,74 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { categories, type CategoryId } from '../data/site'
-import type { CatalogOverride, CustomProduct } from '../data/admin'
-import { useCatalog, type CatalogProduct } from '../lib/catalog'
+import type { CatalogProduct } from '../lib/catalog'
+import { blankDraft, draftFromProduct, useCatalogEditor, type ProductDraft } from '../lib/catalogEdit'
 import { asset } from '../lib/asset'
-import { fileToDataUrl, uid, useStored } from '../lib/store'
+import { fileToDataUrl } from '../lib/store'
 import { Ico } from '../components/Ico'
 import { ProductThumb } from '../components/ProductThumb'
 import { Empty, Field, Modal, PageTitle, Panel } from './ui'
 
-const NO_CUSTOM: CustomProduct[] = []
-const NO_OVER: Record<string, CatalogOverride> = {}
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
-interface Draft {
-  id: string
-  isNew: boolean
-  custom: boolean
-  name: string
-  brand: string
-  model: string
-  category: CategoryId
-  summary: string
-  featured: boolean
-  hidden: boolean
-  specs: { label: string; value: string }[]
-  includes: string
-  imgData?: string
-  img: string
-}
-
-const blank = (): Draft => ({
-  id: 'c-' + uid(),
-  isNew: true,
-  custom: true,
-  name: '',
-  brand: '',
-  model: '',
-  category: 'paineis',
-  summary: '',
-  featured: false,
-  hidden: false,
-  specs: [{ label: 'Potência', value: '' }],
-  includes: '',
-  img: '',
-})
-
-const fromProduct = (p: CatalogProduct): Draft => ({
-  id: p.id,
-  isNew: false,
-  custom: Boolean(p.custom),
-  name: p.name,
-  brand: p.brand ?? '',
-  model: p.model ?? '',
-  category: p.category,
-  summary: p.summary,
-  featured: Boolean(p.featured),
-  hidden: Boolean(p.hidden),
-  specs: p.specs.length ? p.specs.map((s) => ({ ...s })) : [{ label: '', value: '' }],
-  includes: (p.includes ?? []).join('\n'),
-  imgData: p.imgData,
-  img: p.img,
-})
-
-function ProductForm({ draft, onSave, onClose }: { draft: Draft; onSave: (d: Draft) => void; onClose: () => void }) {
+function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: (d: ProductDraft) => void; onClose: () => void }) {
   const [d, setD] = useState(draft)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const file = useRef<HTMLInputElement>(null)
-  const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }))
+  const set = <K extends keyof ProductDraft>(k: K, v: ProductDraft[K]) => setD((x) => ({ ...x, [k]: v }))
   const preview = d.imgData ?? (d.img ? asset(`img/produtos/${d.img}.webp`) : undefined)
 
   return (
@@ -191,69 +139,65 @@ function ProductForm({ draft, onSave, onClose }: { draft: Draft; onSave: (d: Dra
 }
 
 export default function CatalogAdmin() {
-  const all = useCatalog(true)
-  const [, setCustom] = useStored<CustomProduct[]>('catalog.custom', NO_CUSTOM)
-  const [, setOver] = useStored<Record<string, CatalogOverride>>('catalog.overrides', NO_OVER)
+  const { all, save, toggleHidden, remove, reset, duplicate } = useCatalogEditor()
   const [params, setParams] = useSearchParams()
   const [q, setQ] = useState('')
   const [cat, setCat] = useState<'' | CategoryId>('')
-  const [draft, setDraft] = useState<Draft | null>(null)
+  const [show, setShow] = useState<'todos' | 'visiveis' | 'ocultos' | 'novos'>('todos')
+  const [draft, setDraft] = useState<ProductDraft | null>(null)
 
   useEffect(() => {
     if (params.get('novo') === '1') {
       setParams({}, { replace: true })
-      setDraft(blank())
+      setDraft(blankDraft())
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const rows = useMemo(
-    () => all.filter((p) => (!cat || p.category === cat) && (!q || norm(`${p.name} ${p.brand ?? ''} ${p.model ?? ''}`).includes(norm(q)))),
-    [all, q, cat],
+    () =>
+      all.filter(
+        (p) =>
+          (!cat || p.category === cat) &&
+          (show === 'todos' || (show === 'visiveis' && !p.hidden) || (show === 'ocultos' && p.hidden) || (show === 'novos' && p.custom)) &&
+          (!q || norm(`${p.name} ${p.brand ?? ''} ${p.model ?? ''}`).includes(norm(q))),
+      ),
+    [all, q, cat, show],
   )
 
-  const warn = (ok: boolean) => !ok && window.alert('A memória do navegador está cheia. Retire imagens grandes ou exporte os dados e apague alguns produtos.')
+  const counts = { todos: all.length, visiveis: all.filter((p) => !p.hidden).length, ocultos: all.filter((p) => p.hidden).length, novos: all.filter((p) => p.custom).length }
 
-  const save = (d: Draft) => {
-    const specs = d.specs.filter((s) => s.label.trim() && s.value.trim()).map((s) => ({ label: s.label.trim(), value: s.value.trim() }))
-    const includes = d.includes.split('\n').map((x) => x.trim()).filter(Boolean)
-    const common = {
-      name: d.name.trim(),
-      brand: d.brand.trim() || undefined,
-      model: d.model.trim() || undefined,
-      category: d.category,
-      summary: d.summary.trim(),
-      specs,
-      includes: includes.length ? includes : undefined,
-      featured: d.featured,
-      hidden: d.hidden,
-      imgData: d.imgData,
-    }
-    if (d.custom) {
-      const prod: CustomProduct = { ...common, id: d.id, img: '', source: 0, custom: true }
-      warn(setCustom((list) => (list.some((x) => x.id === d.id) ? list.map((x) => (x.id === d.id ? prod : x)) : [prod, ...list])))
-    } else {
-      warn(setOver((o) => ({ ...o, [d.id]: common })))
-    }
+  const onSave = (d: ProductDraft) => {
+    if (!save(d)) window.alert('A memória do navegador está cheia. Retire imagens grandes ou exporte os dados e apague alguns produtos.')
     setDraft(null)
-  }
-
-  const toggle = (p: CatalogProduct) => {
-    if (p.custom) setCustom((l) => l.map((x) => (x.id === p.id ? { ...x, hidden: !x.hidden } : x)))
-    else setOver((o) => ({ ...o, [p.id]: { ...o[p.id], hidden: !p.hidden } }))
   }
 
   return (
     <>
       <PageTitle
         title="Catálogo"
-        lead="Produtos que aparecem no site. Pode acrescentar produtos novos, trocar imagens e ocultar o que não está disponível."
+        lead="Produtos que aparecem no site. Acrescente produtos, troque imagens e oculte o que não está disponível."
         action={
-          <button type="button" className="btn" onClick={() => setDraft(blank())}>
+          <button type="button" className="btn" onClick={() => setDraft(blankDraft())}>
             + Novo produto
           </button>
         }
       />
+      <div className="atabs" role="tablist" aria-label="Estado dos produtos">
+        {(
+          [
+            ['todos', 'Todos'],
+            ['visiveis', 'Visíveis'],
+            ['ocultos', 'Ocultos'],
+            ['novos', 'Criados aqui'],
+          ] as const
+        ).map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={show === id} onClick={() => setShow(id)}>
+            {label}
+            <span>{counts[id]}</span>
+          </button>
+        ))}
+      </div>
       <div className="toolbar">
         <label className="asearch">
           <Ico name="pesquisa" size={16} />
@@ -271,7 +215,7 @@ export default function CatalogAdmin() {
       </div>
       <Panel>
         {rows.length === 0 ? (
-          <Empty title="Nenhum produto encontrado" text="Mude a pesquisa ou a categoria." />
+          <Empty title="Nenhum produto encontrado" text="Mude a pesquisa, a categoria ou o estado." />
         ) : (
           <table className="atable atable--prod">
             <thead>
@@ -304,35 +248,7 @@ export default function CatalogAdmin() {
                     </span>
                   </td>
                   <td className="atable__act">
-                    <button type="button" className="icon" onClick={() => setDraft(fromProduct(p))} aria-label={`Editar ${p.name}`}>
-                      <Ico name="editar" size={16} />
-                    </button>
-                    <button type="button" className="icon" onClick={() => toggle(p)} aria-label={p.hidden ? `Mostrar ${p.name}` : `Ocultar ${p.name}`} title={p.hidden ? 'Mostrar no site' : 'Ocultar do site'}>
-                      <Ico name="olho" size={16} />
-                    </button>
-                    {p.custom ? (
-                      <button type="button" className="icon" onClick={() => window.confirm(`Eliminar “${p.name}”?`) && setCustom((l) => l.filter((x) => x.id !== p.id))} aria-label={`Eliminar ${p.name}`}>
-                        <Ico name="lixo" size={16} />
-                      </button>
-                    ) : (
-                      p.edited && (
-                        <button
-                          type="button"
-                          className="icon"
-                          onClick={() =>
-                            setOver((o) => {
-                              const { [p.id]: _drop, ...rest } = o
-                              void _drop
-                              return rest
-                            })
-                          }
-                          aria-label={`Repor o original de ${p.name}`}
-                          title="Repor o original"
-                        >
-                          <Ico name="esquerda" size={16} />
-                        </button>
-                      )
-                    )}
+                    <RowActions p={p} onEdit={() => setDraft(draftFromProduct(p))} onToggle={() => toggleHidden(p)} onDuplicate={() => duplicate(p)} onRemove={() => window.confirm(`Eliminar “${p.name}”?`) && remove(p)} onReset={() => reset(p)} />
                   </td>
                 </tr>
               ))}
@@ -340,7 +256,34 @@ export default function CatalogAdmin() {
           </table>
         )}
       </Panel>
-      {draft && <ProductForm key={draft.id} draft={draft} onSave={save} onClose={() => setDraft(null)} />}
+      {draft && <ProductForm key={draft.id} draft={draft} onSave={onSave} onClose={() => setDraft(null)} />}
+    </>
+  )
+}
+
+function RowActions({ p, onEdit, onToggle, onDuplicate, onRemove, onReset }: { p: CatalogProduct; onEdit: () => void; onToggle: () => void; onDuplicate: () => void; onRemove: () => void; onReset: () => void }) {
+  return (
+    <>
+      <button type="button" className="icon" onClick={onEdit} aria-label={`Editar ${p.name}`} title="Editar">
+        <Ico name="editar" size={16} />
+      </button>
+      <button type="button" className="icon" onClick={onToggle} aria-label={p.hidden ? `Mostrar ${p.name}` : `Ocultar ${p.name}`} title={p.hidden ? 'Mostrar no site' : 'Ocultar do site'}>
+        <Ico name="olho" size={16} />
+      </button>
+      <button type="button" className="icon" onClick={onDuplicate} aria-label={`Duplicar ${p.name}`} title="Duplicar">
+        <Ico name="copiar" size={16} />
+      </button>
+      {p.custom ? (
+        <button type="button" className="icon" onClick={onRemove} aria-label={`Eliminar ${p.name}`} title="Eliminar">
+          <Ico name="lixo" size={16} />
+        </button>
+      ) : (
+        p.edited && (
+          <button type="button" className="icon" onClick={onReset} aria-label={`Repor o original de ${p.name}`} title="Repor o original">
+            <Ico name="esquerda" size={16} />
+          </button>
+        )
+      )}
     </>
   )
 }
