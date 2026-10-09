@@ -1,40 +1,35 @@
-import { useRef } from 'react'
-import { useProgress } from '../lib/useProgress'
-import { SolutionIcon } from '../components/Icon'
-import { solutions } from '../data/site'
+import { Link } from 'react-router-dom'
 
-const TEXT =
-  'Da energia para a casa à água para a machamba: a Tlhavika fornece equipamento solar e bombas de água, e ajuda a escolher o que serve o seu consumo.'
+const STEPS = [
+  { t: 'Diga-nos o que precisa', d: 'O local, o que quer alimentar ou bombear e o prazo.' },
+  { t: 'Recebe uma proposta', d: 'Com os equipamentos certos para o seu caso e o preço na cotação.' },
+  { t: 'Combinamos a entrega', d: 'Confirma a proposta e acertamos os próximos passos.' },
+]
 
-/** Declaração que acende palavra a palavra (referência Maya). */
+/** Apresentação e passos do pedido de cotação (aqui a numeração é uma sequência real). */
 export function Intro() {
-  const ref = useRef<HTMLElement>(null)
-  useProgress(ref)
-  const words = TEXT.split(' ')
   return (
-    <section ref={ref} className="intro" aria-label="Sobre a Tlhavika">
-      <div className="intro__sticky">
-        <p className="intro__text" style={{ '--n': words.length } as React.CSSProperties}>
-          {words.map((w, i) => (
-            <span key={i} style={{ '--i': i } as React.CSSProperties}>
-              {w}{' '}
-            </span>
-          ))}
-        </p>
-        <ul className="intro__pillars">
-          {solutions.map((s, i) => (
-            <li key={s.id} style={{ '--k': i } as React.CSSProperties}>
-              <span className="intro__icon">
-                <SolutionIcon name={s.icon} size={20} />
-              </span>
+    <section className="intro" aria-labelledby="intro-title">
+      <div className="wrap intro__grid">
+        <div className="reveal">
+          <h2 id="intro-title" className="intro__text">
+            Tudo em energia solar, num só lugar: do painel à bomba de água, e ajuda para escolher o que serve o seu consumo.
+          </h2>
+          <Link to="/servicos#simuladores" className="intro__link">
+            Estimar o que preciso
+          </Link>
+        </div>
+        <ol className="intro__steps reveal" style={{ '--d': '120ms' } as React.CSSProperties}>
+          {STEPS.map((s, i) => (
+            <li key={s.t}>
+              <span className="intro__n">{i + 1}</span>
               <span>
-                <strong>{s.name}</strong>
-                <br />
-                {s.short}
+                <strong>{s.t}</strong>
+                {s.d}
               </span>
             </li>
           ))}
-        </ul>
+        </ol>
       </div>
     </section>
   )

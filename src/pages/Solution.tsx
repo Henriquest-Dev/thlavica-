@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { categories, solutions, wa } from '../data/site'
-import { products as models } from '../data/products'
+import { useCatalog } from '../lib/catalog'
 import { img } from '../lib/asset'
 import { useReveal } from '../lib/useReveal'
 import { useMeta } from '../lib/useMeta'
@@ -10,20 +10,20 @@ import NotFound from './NotFound'
 
 export default function Solution() {
   const { id } = useParams()
+  const models = useCatalog()
   const s = solutions.find((x) => x.id === id)
   useMeta(s?.name ?? 'Página não encontrada', s?.lead)
   useReveal(id)
   if (!s) return <NotFound />
   const cats = categories.filter((c) => s.categories.includes(c.id))
-  const photo = s.image.startsWith('foto')
   const others = solutions.filter((x) => x.id !== s.id)
 
   return (
     <div className="page">
       <PageHead kicker={`${s.n} · Solução`} title={s.name} lead={s.lead} />
 
-      <figure className={`sol__figure wrap reveal${photo ? ' sol__figure--photo' : ''}`}>
-        <img src={img(s.image, photo ? undefined : 1672)} alt={s.imageAlt} />
+      <figure className="sol__figure wrap reveal">
+        <img src={img(s.image)} alt={s.imageAlt} />
       </figure>
 
       <section className="wrap sol__grid">

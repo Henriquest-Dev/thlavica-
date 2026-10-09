@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useProgress } from '../lib/useProgress'
-import { products } from '../data/products'
+import { useCatalog } from '../lib/catalog'
 import { ProductCard } from '../components/ProductCard'
 import { Arrow } from '../components/Arrow'
 
@@ -9,6 +9,7 @@ import { Arrow } from '../components/Arrow'
 export function Featured() {
   const ref = useRef<HTMLElement>(null)
   useProgress(ref)
+  const products = useCatalog()
   const list = products.filter((p) => p.featured)
   return (
     <section ref={ref} className="feat" aria-labelledby="feat-title" style={{ '--count': list.length } as React.CSSProperties}>

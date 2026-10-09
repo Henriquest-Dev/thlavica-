@@ -3,7 +3,7 @@ import { img } from '../lib/asset'
 import { useReveal } from '../lib/useReveal'
 import { useMeta } from '../lib/useMeta'
 import { PageHead } from '../components/PageHead'
-import { PHOTOS } from '../sections/Context'
+import { PHOTOS } from '../data/site'
 
 const USES = [
   { t: 'Casa', d: 'Energia para iluminação e eletrodomésticos, pressão nas torneiras e água quente para banhos.' },

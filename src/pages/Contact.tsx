@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { Ico } from '../components/Ico'
 import { useSearchParams } from 'react-router-dom'
 import { categories, contact, solutions, wa } from '../data/site'
-import { products } from '../data/products'
+import { useCatalog } from '../lib/catalog'
+import { saveQuoteRequest, takePrefill, useQuoteList } from '../lib/quotes'
 import { useReveal } from '../lib/useReveal'
 import { useMeta } from '../lib/useMeta'
 import { PageHead } from '../components/PageHead'
@@ -20,7 +22,13 @@ export default function Contact() {
   useMeta('Contacto', 'Peça uma cotação à Tlhavika: energia solar, bombas de água e aquecimento solar.')
   useReveal()
   const pre = params.get('solucao') ?? (params.get('produto') ? `produto:${params.get('produto')}` : params.get('categoria') ? `categoria:${params.get('categoria')}` : '')
-  const [v, setV] = useState({ nome: '', telefone: '', local: '', uso: '', interesse: pre, mensagem: '' })
+  const products = useCatalog()
+  const { items: listed } = useQuoteList()
+  const fromList = params.get('lista') === '1'
+  const listLines = listed
+    .map((i) => ({ ...i, p: products.find((p) => p.id === i.id) }))
+    .filter((r): r is typeof r & { p: NonNullable<typeof r.p> } => Boolean(r.p))
+  const [v, setV] = useState(() => ({ nome: '', telefone: '', local: '', uso: '', interesse: pre, mensagem: takePrefill() }))
   const [err, setErr] = useState<Record<string, string>>({})
   const [sent, setSent] = useState<null | { url: string; opened: boolean }>(null)
 
@@ -53,10 +61,21 @@ export default function Contact() {
       `Local: ${v.local}`,
       `Uso: ${v.uso}`,
       v.interesse && `Interesse: ${label(v.interesse)}`,
+      fromList && listLines.length > 0 && `Produtos da lista:\n${listLines.map((r) => `• ${r.qtd} × ${r.p.name}`).join('\n')}`,
       v.mensagem && `Detalhes: ${v.mensagem}`,
     ]
       .filter(Boolean)
       .join('\n')
+    saveQuoteRequest({
+      nome: v.nome.trim(),
+      telefone: v.telefone.trim(),
+      local: v.local.trim(),
+      uso: v.uso,
+      interesse: v.interesse ? label(v.interesse) : undefined,
+      mensagem: v.mensagem.trim() || undefined,
+      itens: fromList ? listLines.map((r) => ({ produtoId: r.id, nome: r.p.name, qtd: r.qtd })) : undefined,
+      origem: fromList ? 'lista' : v.mensagem.startsWith('Simulação') ? 'simulador' : 'formulario',
+    })
     const url = wa(text)
     const w = window.open(url, '_blank')
     if (w) w.opener = null
@@ -123,6 +142,19 @@ export default function Contact() {
             </div>
           </div>
 
+          {fromList && listLines.length > 0 && (
+            <div className="field field--wide listbox">
+              <p className="sol__h">Produtos da lista de cotação</p>
+              <ul>
+                {listLines.map((r) => (
+                  <li key={r.id}>
+                    <span>{r.qtd} ×</span> {r.p.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {sent && (
             <div className="notice" role="status">
               <p>
@@ -151,7 +183,15 @@ export default function Contact() {
           <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="contact__big">
             {contact.phone}
           </a>
-          <a href={`mailto:${contact.email}`}>{contact.email}</a>
+          <a href={wa('Olá Tlhavika, gostaria de mais informações.')} target="_blank" rel="noopener noreferrer">
+            <Ico name="whatsapp" size={18} /> WhatsApp
+          </a>
+          <a href={`mailto:${contact.email}`}>
+            <Ico name="correio" size={18} /> {contact.email}
+          </a>
+          <p className="contact__addr">
+            <Ico name="local" size={18} /> {contact.address}
+          </p>
           <a href={contact.facebook} target="_blank" rel="noopener noreferrer">
             Facebook
           </a>

@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageCircle } from 'lucide-react'
+import { Ico } from '../components/Ico'
 import { useProgress } from '../lib/useProgress'
 import { img } from '../lib/asset'
 import { Arrow } from '../components/Arrow'
@@ -14,7 +14,7 @@ export function Closing() {
     <section ref={ref} className="cls" aria-labelledby="cls-title">
       <div className="cls__sticky">
         <div className="cls__frame">
-          <img src={img('agua', 1672)} srcSet={`${img('agua', 960)} 960w, ${img('agua', 1672)} 1672w`} sizes="100vw" alt="" loading="lazy" />
+          <img src={img('foto-17')} alt="" loading="lazy" />
           <div className="cls__shade" />
           <div className="cls__content">
             <p className="hero__kicker">Pedido de cotação</p>
@@ -29,7 +29,7 @@ export function Closing() {
                 </span>
               </Link>
               <a className="pill pill--ghost" href={wa('Olá Tlhavika, gostaria de uma cotação.')} target="_blank" rel="noopener noreferrer">
-                <MessageCircle size={16} strokeWidth={1.8} aria-hidden="true" /> WhatsApp
+                <Ico name="whatsapp" size={18} /> WhatsApp
               </a>
             </div>
           </div>

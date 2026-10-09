@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Ico } from '../components/Ico'
 import { categories, type CategoryId } from '../data/site'
-import { products } from '../data/products'
+import { useCatalog } from '../lib/catalog'
 import { useReveal } from '../lib/useReveal'
 import { useMeta } from '../lib/useMeta'
 import { PageHead } from '../components/PageHead'
@@ -13,6 +13,7 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 export default function Products() {
   const [params, setParams] = useSearchParams()
   const cat = (params.get('categoria') ?? '') as CategoryId | ''
+  const products = useCatalog()
   const [q, setQ] = useState('')
   const current = categories.find((c) => c.id === cat)
   useMeta(current ? current.name : 'Produtos')
@@ -23,7 +24,7 @@ export default function Products() {
           (!cat || p.category === cat) &&
           (!q || norm(`${p.name} ${p.brand ?? ''} ${p.model ?? ''} ${p.specs.map((s) => s.value).join(' ')}`).includes(norm(q))),
       ),
-    [cat, q],
+    [cat, q, products],
   )
   useReveal(`${cat}-${q}`)
 
@@ -50,7 +51,7 @@ export default function Products() {
             })}
           </div>
           <label className="search">
-            <Search size={16} aria-hidden="true" />
+            <Ico name="pesquisa" size={16} />
             <span className="visually-hidden">Pesquisar</span>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Modelo, marca, potência…" />
           </label>

@@ -20,7 +20,8 @@ export function Footer() {
         </nav>
         <nav aria-label="Empresa">
           <p className="ft__h">Tlhavika</p>
-          <Link to="/produtos">Produtos</Link>
+          <Link to="/produtos">Catálogo</Link>
+          <Link to="/servicos">Serviços</Link>
           <Link to="/aplicacoes">Aplicações</Link>
           <Link to="/sobre">Sobre</Link>
           <Link to="/contacto">Contacto</Link>
@@ -38,7 +39,9 @@ export function Footer() {
         </div>
       </div>
       <div className="wrap ft__legal">
-        <p>© {new Date().getFullYear()} Tlhavika</p>
+        <p>
+          © {new Date().getFullYear()} Tlhavika · <Link to="/admin">Administração</Link>
+        </p>
         <p>As marcas de equipamentos pertencem aos respetivos fabricantes. Preços e disponibilidade na cotação.</p>
       </div>
     </footer>

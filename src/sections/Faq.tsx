@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Ico } from '../components/Ico'
 import { faqs } from '../data/site'
 
 export function Faq() {
@@ -16,7 +16,7 @@ export function Faq() {
             <details key={f.q} className="faq__item reveal">
               <summary>
                 {f.q}
-                <Plus size={20} strokeWidth={1.6} aria-hidden="true" />
+                <Ico name="mais" size={20} />
               </summary>
               <p>{f.a}</p>
             </details>

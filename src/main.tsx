@@ -10,10 +10,17 @@ import Home from './pages/Home'
 const Solution = lazy(() => import('./pages/Solution'))
 const Products = lazy(() => import('./pages/Products'))
 const ProductPage = lazy(() => import('./pages/ProductPage'))
+const Services = lazy(() => import('./pages/Services'))
 const Applications = lazy(() => import('./pages/Applications'))
 const About = lazy(() => import('./pages/About'))
 const Contact = lazy(() => import('./pages/Contact'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+const AdminLayout = lazy(() => import('./admin/AdminLayout'))
+const Overview = lazy(() => import('./admin/Overview'))
+const Quotes = lazy(() => import('./admin/Quotes'))
+const CatalogAdmin = lazy(() => import('./admin/CatalogAdmin'))
+const PromosAdmin = lazy(() => import('./admin/PromosAdmin'))
+const MediaAdmin = lazy(() => import('./admin/MediaAdmin'))
 
 initSmooth()
 
@@ -27,10 +34,18 @@ createRoot(document.getElementById('root')!).render(
             <Route path="solucoes/:id" element={<Solution />} />
             <Route path="produtos" element={<Products />} />
             <Route path="produtos/:id" element={<ProductPage />} />
+            <Route path="servicos" element={<Services />} />
             <Route path="aplicacoes" element={<Applications />} />
             <Route path="sobre" element={<About />} />
             <Route path="contacto" element={<Contact />} />
             <Route path="*" element={<NotFound />} />
+          </Route>
+          <Route path="admin" element={<AdminLayout />}>
+            <Route index element={<Overview />} />
+            <Route path="cotacoes" element={<Quotes />} />
+            <Route path="catalogo" element={<CatalogAdmin />} />
+            <Route path="promocoes" element={<PromosAdmin />} />
+            <Route path="midia" element={<MediaAdmin />} />
           </Route>
         </Routes>
       </Suspense>
