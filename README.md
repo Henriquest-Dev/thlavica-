@@ -29,7 +29,8 @@ Sem autenticação real. Os dados ficam no `localStorage` do navegador (prefixo 
 | Cotações | Pedidos recebidos (formulário, simulador, lista), estados, preparação de cotações com preços e IVA, copiar texto, WhatsApp, imprimir/PDF. |
 | Catálogo | Adicionar produtos, editar os existentes, enviar imagens (reduzidas a 900 px), ocultar, repor o original. |
 | Promoções | Faixa no topo, banner na página inicial e pop-up, com datas de início/fim e pré-visualização. |
-| Vídeos e fotos | Carrossel da página inicial: imagens, YouTube e MP4 por endereço; ordem, pausa e remoção. |
+| Vídeos e fotos | Carrossel automático do painel: imagens, YouTube e MP4 por endereço; ordem, pausa e remoção. |
+| Contactos | Telefone, WhatsApp, email, morada e Facebook que aparecem no site (rodapé, Contacto, Sobre e links do WhatsApp). |
 
 Para ligar ao Supabase: trocar `readRaw`/`writeStored` em `src/lib/store.ts` por chamadas à base de dados (os hooks `useStored`, `useCatalog`, `useMedia`, `usePromos` e `useQuoteList` mantêm-se) e passar os dados com "Exportar dados".
 

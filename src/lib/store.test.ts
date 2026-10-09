@@ -57,3 +57,12 @@ describe('saveQuoteRequest', () => {
     expect(quotes[0].estado).toBe('nova')
   })
 })
+
+describe('readStored', () => {
+  it('lê o valor gravado ou o valor por omissão', async () => {
+    const { readStored } = await import('./store')
+    expect(readStored('settings', { a: 1 })).toEqual({ a: 1 })
+    writeStored('settings', { a: 2 })
+    expect(readStored('settings', { a: 1 })).toEqual({ a: 2 })
+  })
+})

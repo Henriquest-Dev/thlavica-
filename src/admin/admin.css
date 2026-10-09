@@ -1018,3 +1018,13 @@
 .stats span {
   font-size: 13px;
 }
+.f .ferr {
+  margin: 4px 0 0;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.saved {
+  font-size: 14px;
+  font-weight: 600;
+  color: #12633a;
+}

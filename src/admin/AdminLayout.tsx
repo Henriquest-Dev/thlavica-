@@ -15,6 +15,7 @@ const NAV: { to: string; label: string; icon: IcoName; end?: boolean }[] = [
   { to: '/admin/catalogo', label: 'Catálogo', icon: 'caixa' },
   { to: '/admin/promocoes', label: 'Promoções', icon: 'etiqueta' },
   { to: '/admin/midia', label: 'Vídeos e fotos', icon: 'video' },
+  { to: '/admin/contactos', label: 'Contactos', icon: 'telefone' },
 ]
 
 function Gate({ onEnter }: { onEnter: () => void }) {

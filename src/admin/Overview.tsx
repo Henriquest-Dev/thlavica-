@@ -135,6 +135,11 @@ export default function Overview() {
                 <Ico name="video" size={20} /> Pôr um vídeo no carrossel
               </Link>
             </li>
+            <li>
+              <Link to="/admin/contactos">
+                <Ico name="telefone" size={20} /> Atualizar os contactos
+              </Link>
+            </li>
           </ul>
         </Panel>
       </div>

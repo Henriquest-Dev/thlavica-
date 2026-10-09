@@ -93,6 +93,11 @@ function read<T>(key: string, fallback: T): T {
   return value
 }
 
+/** Leitura pontual (fora de componentes). Dentro de componentes use `useStored`. */
+export function readStored<T>(key: string, fallback: T): T {
+  return read(key, fallback)
+}
+
 /** Devolve false se o navegador recusou gravar (por exemplo, memória cheia). */
 export function writeStored<T>(key: string, value: T): boolean {
   const ok = adapter.set(key, JSON.stringify(value))
@@ -136,7 +141,7 @@ export function useStored<T>(key: string, fallback: T) {
 /* ---- Gestão dos dados do painel (cópia, restauro e limpeza) ---- */
 
 /** Chaves que fazem parte dos dados do painel. A lista de cotação do visitante também. */
-export const DATA_KEYS = ['quotes', 'proposals', 'promos', 'media', 'catalog.custom', 'catalog.overrides', 'list'] as const
+export const DATA_KEYS = ['quotes', 'proposals', 'promos', 'media', 'catalog.custom', 'catalog.overrides', 'settings', 'list'] as const
 
 export function exportData(): string {
   const data: Record<string, unknown> = {}

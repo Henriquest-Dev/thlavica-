@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
 import { Logo } from './Logo'
-import { contact, solutions, wa } from '../data/site'
+import { solutions, useContact, wa } from '../data/site'
 import { useUi } from './Ui'
 
 export function Footer() {
   const { openLogin } = useUi()
+  const contact = useContact()
   return (
     <footer className="ft">
       <div className="wrap ft__grid">

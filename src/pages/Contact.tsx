@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Ico } from '../components/Ico'
 import { useSearchParams } from 'react-router-dom'
-import { categories, contact, solutions, wa } from '../data/site'
+import { categories, solutions, useContact, wa } from '../data/site'
 import { useCatalog } from '../lib/catalog'
 import { saveQuoteRequest, takePrefill, useQuoteList } from '../lib/quotes'
 import { useReveal } from '../lib/useReveal'
@@ -19,6 +19,7 @@ const PHONE_RE = /^(\+?258)?\s?8[2-7]\s?\d{3}\s?\d{4}$|^\+\d[\d\s]{7,16}$/
  */
 export default function Contact() {
   const [params] = useSearchParams()
+  const contact = useContact()
   useMeta('Contacto', 'Peça uma cotação à Tlhavika: energia solar, bombas de água e aquecimento solar.')
   useReveal()
   const pre = params.get('solucao') ?? (params.get('produto') ? `produto:${params.get('produto')}` : params.get('categoria') ? `categoria:${params.get('categoria')}` : '')

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { img } from '../lib/asset'
 import { useMatch } from '../lib/useMatch'
@@ -15,28 +15,19 @@ const WORD: Record<SolutionId, string> = {
 const ALT =
   'Tlhavika Dongyin: tudo em energia solar num só lugar. Painéis solares, termoacumuladores solares, inversores, baterias de lítio e equipamento para soluções completas de energia solar. Marcas: Growatt, LuxPower, Sungrow, Veichi, JA Solar, Deye, Dyness, Hanchu ESS e Canadian Solar.'
 
-/** Telemóvel: o cartaz é largo, por isso mostra-se em duas metades que se deslizam. */
+/** Telemóvel: o cartaz é largo, por isso mostra-se com a altura certa e desliza-se para o lado. */
 function MobileBanner() {
-  const ref = useRef<HTMLDivElement>(null)
-  const [i, setI] = useState(0)
+  const [moved, setMoved] = useState(false)
   return (
     <div className="hero__m">
-      <div
-        className="hero__mtrack"
-        ref={ref}
-        onScroll={(e) => {
-          const el = e.currentTarget
-          setI(Math.round(el.scrollLeft / el.clientWidth))
-        }}
-      >
-        <img src={img('banner-esq')} alt={ALT} width={1100} height={838} fetchPriority="high" />
-        <img src={img('banner-dir')} alt="" width={1097} height={838} loading="lazy" />
+      <div className="hero__mtrack" onScroll={() => setMoved(true)}>
+        <img src={img('banner-1877')} alt={ALT} width={1877} height={838} fetchPriority="high" />
       </div>
-      <div className="hero__mdots" aria-hidden="true">
-        <span className={i === 0 ? 'is-on' : ''} />
-        <span className={i === 1 ? 'is-on' : ''} />
-      </div>
-      <p className="hero__mhint">Deslize para ver o resto</p>
+      {!moved && (
+        <span className="hero__mhint" aria-hidden="true">
+          Deslize →
+        </span>
+      )}
     </div>
   )
 }

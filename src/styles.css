@@ -599,41 +599,35 @@ main:focus {
   position: relative;
 }
 .hero__mtrack {
-  display: flex;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
 .hero__mtrack::-webkit-scrollbar {
   display: none;
 }
 .hero__mtrack img {
-  flex: none;
-  width: 100%;
-  height: auto;
-  scroll-snap-align: start;
-}
-.hero__mdots {
-  position: absolute;
-  right: 14px;
-  bottom: 12px;
-  display: flex;
-  gap: 6px;
-}
-.hero__mdots span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 50%);
-  transition: background-color 0.3s;
-}
-.hero__mdots span.is-on {
-  background: var(--amber);
+  display: block;
+  max-width: none;
+  width: auto;
+  height: 470px;
 }
 .hero__mhint {
-  padding: 10px var(--gut) 0;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgb(8 28 54 / 78%);
+  color: var(--white);
   font-size: 12.5px;
-  color: rgb(255 255 255 / 56%);
+  font-weight: 600;
+  pointer-events: none;
+  animation: nudge 2.2s var(--ease) 1s infinite;
+}
+@keyframes nudge {
+  50% {
+    transform: translateX(6px);
+  }
 }
 
 /* ---------- Apresentação + pilares ---------- */
@@ -1886,34 +1880,31 @@ main:focus {
     margin-bottom: 20px;
   }
   .hero__band {
-    position: static;
-    width: auto;
-    grid-template-columns: 1fr;
-    padding: 6px var(--gut) 0;
+    width: 100%;
+    gap: 6px;
+    padding: 72px 14px 14px;
+    pointer-events: none;
   }
   .hero__band::before {
-    display: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+    background: linear-gradient(0deg, rgb(8 28 54 / 96%) 0%, rgb(8 28 54 / 84%) 50%, rgb(8 28 54 / 0%) 100%);
   }
-  .hero__stat,
-  .hero__stat + .hero__stat {
-    grid-template-columns: 138px 1fr;
-    align-items: baseline;
-    gap: 12px;
-    padding: 18px 0 14px;
-    border-top: 1px solid var(--line-light);
-  }
-  .hero__stat::before {
-    top: -1px;
+  .hero__stat {
+    gap: 6px;
+    padding: 14px 4px 0 0;
+    pointer-events: auto;
   }
   .hero__stat-big {
-    font-size: 24px;
+    font-size: clamp(18px, 5.3vw, 22px);
   }
   .hero__stat-arrow {
     display: none;
   }
   .hero__stat-text {
     max-width: none;
-    font-size: 12.5px;
+    font-size: 11.5px;
+    line-height: 1.35;
   }
   .intro__grid {
     grid-template-columns: 1fr;

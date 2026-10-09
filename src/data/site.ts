@@ -1,20 +1,37 @@
+import { useMemo } from 'react'
+import { readStored, useStored } from '../lib/store'
+
 /**
  * Conteúdo editável do site.
  * Regra: preços, stock, garantias, especificações, número de clientes/projetos
  * e contactos adicionais só entram depois de confirmados pela Tlhavika.
  */
 
-export const contact = {
+export const defaultContact = {
   /** Observado no perfil público; confirmar antes da publicação final. */
   phone: '+258 87 119 1481',
+  /** Só dígitos, com indicativo (usado nos links wa.me). */
   whatsapp: '258871191481',
   email: 'Tlhavika.solar@gmail.com',
   address: 'Av. de Moçambique, km 9,2 — Bairro do Zimpeto, Maputo',
   facebook: 'https://www.facebook.com/people/Tlhavika/61560557742444/',
-  confirmed: false,
 }
 
-export const wa = (text: string) => `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(text)}`
+export type Contact = typeof defaultContact
+
+const NO_SETTINGS: Partial<Contact> = {}
+
+/** Contactos do site: os de origem, com o que o painel (Contactos) tiver alterado. */
+export function getContact(): Contact {
+  return { ...defaultContact, ...readStored<Partial<Contact>>('settings', NO_SETTINGS) }
+}
+
+export function useContact(): Contact {
+  const [s] = useStored<Partial<Contact>>('settings', NO_SETTINGS)
+  return useMemo(() => ({ ...defaultContact, ...s }), [s])
+}
+
+export const wa = (text: string) => `https://wa.me/${getContact().whatsapp}?text=${encodeURIComponent(text)}`
 
 export type SolutionId = 'energia-solar' | 'bombagem' | 'aquecimento-solar'
 

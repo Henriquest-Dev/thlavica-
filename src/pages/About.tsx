@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { contact, solutions, wa } from '../data/site'
+import { solutions, useContact, wa } from '../data/site'
 import { img } from '../lib/asset'
 import { useReveal } from '../lib/useReveal'
 import { useMeta } from '../lib/useMeta'
@@ -9,6 +9,7 @@ import { Ico } from '../components/Ico'
 
 export default function About() {
   useMeta('Sobre')
+  const contact = useContact()
   useReveal()
   return (
     <div className="page">

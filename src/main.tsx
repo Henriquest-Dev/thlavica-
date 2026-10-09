@@ -21,6 +21,7 @@ const Quotes = lazy(() => import('./admin/Quotes'))
 const CatalogAdmin = lazy(() => import('./admin/CatalogAdmin'))
 const PromosAdmin = lazy(() => import('./admin/PromosAdmin'))
 const MediaAdmin = lazy(() => import('./admin/MediaAdmin'))
+const Settings = lazy(() => import('./admin/Settings'))
 
 initSmooth()
 
@@ -46,6 +47,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="catalogo" element={<CatalogAdmin />} />
             <Route path="promocoes" element={<PromosAdmin />} />
             <Route path="midia" element={<MediaAdmin />} />
+            <Route path="contactos" element={<Settings />} />
           </Route>
         </Routes>
       </Suspense>
