@@ -46,7 +46,9 @@ beforeAll(async () => {
     alter default privileges in schema public grant all on tables to anon, authenticated;
     alter default privileges in schema public grant all on functions to anon, authenticated;
   `)
-  await db.exec(readFileSync('supabase/migrations/20261009000000_inicio.sql', 'utf8'))
+  const sql = readFileSync('supabase/migrations/20261009000000_inicio.sql', 'utf8')
+  await db.exec(sql)
+  await db.exec(sql) // pode correr duas vezes sem erro
   await db.exec(`
     insert into auth.users values ('${ADMIN}', 'admin@x'), ('${VISITOR}', 'visitante@x');
     insert into public.admins values ('${ADMIN}');
