@@ -5,6 +5,8 @@ import { useCatalog } from '../lib/catalog'
 import { STATUS_LABEL, type Proposal, type ProposalLine, type QuoteRequest, type QuoteStatus } from '../data/admin'
 import { DEFAULT_IVA, lineFromProduct, newProposal, proposalMessage, proposalTotals } from '../lib/proposal'
 import { Ico } from '../components/Ico'
+import { useFeedback } from './feedback'
+import { useMatch } from '../lib/useMatch'
 import { Empty, Field, Modal, PageTitle, Panel, dateFmt, money } from './ui'
 
 const NO_Q: QuoteRequest[] = []
@@ -22,6 +24,7 @@ const digits = (s: string) => s.replace(/\D/g, '')
 /* ------------------------------------------------------------------ */
 
 function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onSave: (p: Proposal, send?: boolean) => void; onClose: () => void }) {
+  const { toast } = useFeedback()
   const catalog = useCatalog(true)
   const [p, setP] = useState(proposal)
   const set = <K extends keyof Proposal>(k: K, v: Proposal[K]) => setP((x) => ({ ...x, [k]: v }))
@@ -149,7 +152,7 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
             <p className="sheet__n">Validade: {p.validadeDias} dias. {p.notas}</p>
           </article>
           <div className="row row--end">
-            <button type="button" className="btn btn--line" onClick={() => navigator.clipboard?.writeText(text())}>
+            <button type="button" className="btn btn--line" onClick={() => navigator.clipboard?.writeText(text()).then(() => toast('Texto copiado'), () => toast('Não foi possível copiar', 'erro'))}>
               <Ico name="copiar" size={16} /> Copiar texto
             </button>
             <button type="button" className="btn btn--line" onClick={() => window.print()}>
@@ -161,15 +164,15 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
               </a>
             )}
           </div>
-          <div className="row row--end">
-            <button type="button" className="btn btn--line" onClick={() => onSave(p)}>
-              Guardar rascunho
-            </button>
-            <button type="button" className="btn" onClick={() => onSave({ ...p, estado: 'enviada' }, true)}>
-              Marcar como enviada
-            </button>
-          </div>
         </div>
+      </div>
+      <div className="prop__foot row row--end">
+        <button type="button" className="btn btn--line" onClick={() => onSave(p)}>
+          Guardar rascunho
+        </button>
+        <button type="button" className="btn" onClick={() => onSave({ ...p, estado: 'enviada' }, true)}>
+          Marcar como enviada
+        </button>
       </div>
     </Modal>
   )
@@ -185,6 +188,8 @@ export default function Quotes() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]['id']>('todas')
   const [editing, setEditing] = useState<Proposal | null>(null)
   const catalog = useCatalog(true)
+  const { toast, confirm } = useFeedback()
+  const mobile = useMatch('(max-width: 960px)')
 
   const list = useMemo(() => {
     const n = q.trim().toLowerCase()
@@ -192,7 +197,8 @@ export default function Quotes() {
       (r) => !r.arquivada && (filter === 'todas' || r.estado === filter) && (!n || `${r.nome} ${r.telefone} ${r.local} ${r.interesse ?? ''} ${(r.itens ?? []).map((i) => i.nome).join(' ')}`.toLowerCase().includes(n)),
     )
   }, [quotes, filter, q])
-  const selId = params.get('id') ?? list[0]?.id
+  // no telemóvel mostra-se a lista OU o pedido; no computador, os dois lado a lado
+  const selId = params.get('id') ?? (mobile ? undefined : list[0]?.id)
   const sel = quotes.find((q) => q.id === selId)
 
   const startProposal = (q?: QuoteRequest) => {
@@ -214,6 +220,7 @@ export default function Quotes() {
   const save = (p: Proposal, send?: boolean) => {
     setProposals((all) => (all.some((x) => x.id === p.id) ? all.map((x) => (x.id === p.id ? p : x)) : [p, ...all]))
     if (p.pedidoId) setStatus(p.pedidoId, send ? 'enviada' : 'em-preparacao')
+    toast(send ? 'Cotação marcada como enviada' : 'Rascunho guardado')
     setEditing(null)
   }
 
@@ -235,6 +242,13 @@ export default function Quotes() {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Pesquisar por nome, telefone, local ou produto" />
         </label>
       </div>
+      <select className="filtersel" value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)} aria-label="Estado dos pedidos">
+        {FILTERS.map((f) => (
+          <option key={f.id} value={f.id}>
+            {f.label} ({quotes.filter((r) => !r.arquivada && (f.id === 'todas' || r.estado === f.id)).length})
+          </option>
+        ))}
+      </select>
       <div className="atabs" role="tablist" aria-label="Estado dos pedidos">
         {FILTERS.map((f) => (
           <button key={f.id} type="button" role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)}>
@@ -258,6 +272,7 @@ export default function Quotes() {
         </Panel>
       ) : (
         <div className="split">
+          {(!mobile || !sel) && (
           <ul className="qlist" aria-label="Pedidos">
             {list.map((q) => (
               <li key={q.id}>
@@ -274,13 +289,14 @@ export default function Quotes() {
               </li>
             ))}
           </ul>
+          )}
 
           {sel && (
             <Panel
               className="qdetail"
               title={sel.nome || 'Sem nome'}
               action={
-                <select value={sel.estado} onChange={(e) => setStatus(sel.id, e.target.value as QuoteStatus)} aria-label="Estado do pedido">
+                <select className="qstatus" value={sel.estado} onChange={(e) => setStatus(sel.id, e.target.value as QuoteStatus)} aria-label="Estado do pedido">
                   {Object.entries(STATUS_LABEL).map(([k, v]) => (
                     <option key={k} value={k}>
                       {v}
@@ -289,6 +305,9 @@ export default function Quotes() {
                 </select>
               }
             >
+              <button type="button" className="btn btn--ghost qback" onClick={() => setParams({}, { replace: true })}>
+                <Ico name="esquerda" size={16} /> Todos os pedidos
+              </button>
               <dl className="kv">
                 <div>
                   <dt>Recebido</dt>
@@ -350,13 +369,23 @@ export default function Quotes() {
                 <button type="button" className="btn" onClick={() => startProposal(sel)}>
                   {proposals.some((p) => p.pedidoId === sel.id) ? 'Abrir a cotação' : 'Preparar a cotação'}
                 </button>
-                <button type="button" className="btn btn--line" onClick={() => setQuotes((all) => all.map((q) => (q.id === sel.id ? { ...q, arquivada: true } : q)))}>
+                <button type="button" className="btn btn--line" onClick={() => {
+                    setQuotes((all) => all.map((r) => (r.id === sel.id ? { ...r, arquivada: true } : r)))
+                    setParams({}, { replace: true })
+                    toast('Pedido arquivado')
+                  }}>
                   Arquivar
                 </button>
                 <button
                   type="button"
                   className="btn btn--danger"
-                  onClick={() => window.confirm('Eliminar este pedido?') && setQuotes((all) => all.filter((q) => q.id !== sel.id))}
+                  onClick={async () => {
+                    if (await confirm({ title: 'Eliminar este pedido?', text: 'Não é possível desfazer.', confirmLabel: 'Eliminar', danger: true })) {
+                      setQuotes((all) => all.filter((r) => r.id !== sel.id))
+                      setParams({}, { replace: true })
+                      toast('Pedido eliminado')
+                    }
+                  }}
                 >
                   <Ico name="lixo" size={16} /> Eliminar
                 </button>
@@ -368,37 +397,37 @@ export default function Quotes() {
 
       {proposals.length > 0 && (
         <Panel title="Cotações preparadas">
-          <table className="atable">
-            <thead>
-              <tr>
-                <th>Número</th>
-                <th>Cliente</th>
-                <th>Total</th>
-                <th>Estado</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {proposals.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.numero}</td>
-                  <td>{p.cliente.nome || '—'}</td>
-                  <td>{money(proposalTotals(p).total)}</td>
-                  <td>
-                    <em className={`chip chip--${p.estado === 'enviada' ? 'enviada' : 'em-preparacao'}`}>{p.estado === 'enviada' ? 'Enviada' : 'Rascunho'}</em>
-                  </td>
-                  <td className="atable__act">
-                    <button type="button" className="icon" onClick={() => setEditing(p)} aria-label={`Abrir ${p.numero}`}>
-                      <Ico name="editar" size={16} />
-                    </button>
-                    <button type="button" className="icon" onClick={() => window.confirm(`Eliminar ${p.numero}?`) && setProposals((all) => all.filter((x) => x.id !== p.id))} aria-label={`Eliminar ${p.numero}`}>
-                      <Ico name="lixo" size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ul className="alist">
+            {proposals.map((p) => (
+              <li key={p.id} className="arow arow--promo">
+                <span className={`chip chip--${p.estado === 'enviada' ? 'enviada' : 'em-preparacao'}`}>{p.estado === 'enviada' ? 'Enviada' : 'Rascunho'}</span>
+                <div className="arow__main">
+                  <strong>
+                    {p.numero} · {p.cliente.nome || 'Sem cliente'}
+                  </strong>
+                  <small>Total {money(proposalTotals(p).total)}</small>
+                </div>
+                <span />
+                <div className="arow__act">
+                  <button type="button" className="btn btn--line btn--sm" onClick={() => setEditing(p)}>
+                    <Ico name="editar" size={16} /> Abrir
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--danger btn--sm"
+                    onClick={async () => {
+                      if (await confirm({ title: `Eliminar ${p.numero}?`, text: 'A cotação preparada é apagada. O pedido do cliente mantém-se.', confirmLabel: 'Eliminar', danger: true })) {
+                        setProposals((all) => all.filter((x) => x.id !== p.id))
+                        toast('Cotação eliminada')
+                      }
+                    }}
+                  >
+                    <Ico name="lixo" size={16} /> Eliminar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
         </Panel>
       )}
 

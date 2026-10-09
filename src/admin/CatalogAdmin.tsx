@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { categories, type CategoryId } from '../data/site'
-import type { CatalogProduct } from '../lib/catalog'
 import { blankDraft, draftFromProduct, useCatalogEditor, type ProductDraft } from '../lib/catalogEdit'
 import { asset } from '../lib/asset'
 import { fileToDataUrl } from '../lib/store'
 import { Ico } from '../components/Ico'
 import { ProductThumb } from '../components/ProductThumb'
-import { Empty, Field, Modal, PageTitle, Panel } from './ui'
+import { useFeedback } from './feedback'
+import { Empty, Field, Modal, PageTitle, Panel, Switch } from './ui'
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
@@ -140,6 +140,7 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
 
 export default function CatalogAdmin() {
   const { all, save, toggleHidden, remove, reset, duplicate } = useCatalogEditor()
+  const { toast, confirm } = useFeedback()
   const [params, setParams] = useSearchParams()
   const [q, setQ] = useState('')
   const [cat, setCat] = useState<'' | CategoryId>('')
@@ -168,7 +169,8 @@ export default function CatalogAdmin() {
   const counts = { todos: all.length, visiveis: all.filter((p) => !p.hidden).length, ocultos: all.filter((p) => p.hidden).length, novos: all.filter((p) => p.custom).length }
 
   const onSave = (d: ProductDraft) => {
-    if (!save(d)) window.alert('A memória do navegador está cheia. Retire imagens grandes ou exporte os dados e apague alguns produtos.')
+    if (save(d)) toast(d.isNew ? 'Produto criado' : 'Alterações guardadas')
+    else toast('Memória cheia. Retire imagens grandes ou exporte os dados e apague produtos.', 'erro')
     setDraft(null)
   }
 
@@ -183,6 +185,12 @@ export default function CatalogAdmin() {
           </button>
         }
       />
+      <select className="filtersel" value={show} onChange={(e) => setShow(e.target.value as typeof show)} aria-label="Estado dos produtos">
+        <option value="todos">Todos ({counts.todos})</option>
+        <option value="visiveis">Visíveis ({counts.visiveis})</option>
+        <option value="ocultos">Ocultos ({counts.ocultos})</option>
+        <option value="novos">Criados aqui ({counts.novos})</option>
+      </select>
       <div className="atabs" role="tablist" aria-label="Estado dos produtos">
         {(
           [
@@ -217,73 +225,54 @@ export default function CatalogAdmin() {
         {rows.length === 0 ? (
           <Empty title="Nenhum produto encontrado" text="Mude a pesquisa, a categoria ou o estado." />
         ) : (
-          <table className="atable atable--prod">
-            <thead>
-              <tr>
-                <th>Produto</th>
-                <th>Categoria</th>
-                <th>Estado</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((p) => (
-                <tr key={p.id} className={p.hidden ? 'is-off' : ''}>
-                  <td>
-                    <span className="pcell">
-                      <ProductThumb p={p} size={44} />
-                      <span>
-                        <strong>{p.name}</strong>
-                        <small>{[p.brand, p.model].filter(Boolean).join(' · ')}</small>
-                      </span>
-                    </span>
-                  </td>
-                  <td>{categories.find((c) => c.id === p.category)?.name}</td>
-                  <td>
-                    <span className="chips">
-                      <em className={`chip ${p.hidden ? 'chip--off' : 'chip--on'}`}>{p.hidden ? 'Oculto' : 'Visível'}</em>
-                      {p.custom && <em className="chip chip--new">Novo</em>}
-                      {p.edited && <em className="chip chip--ed">Editado</em>}
-                      {p.featured && <em className="chip chip--star">Destaque</em>}
-                    </span>
-                  </td>
-                  <td className="atable__act">
-                    <RowActions p={p} onEdit={() => setDraft(draftFromProduct(p))} onToggle={() => toggleHidden(p)} onDuplicate={() => duplicate(p)} onRemove={() => window.confirm(`Eliminar “${p.name}”?`) && remove(p)} onReset={() => reset(p)} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ul className="alist">
+            {rows.map((p) => (
+              <li key={p.id} className={`arow${p.hidden ? ' is-off' : ''}`}>
+                <ProductThumb p={p} size={56} />
+                <div className="arow__main">
+                  <strong>{p.name}</strong>
+                  <small>{[categories.find((c) => c.id === p.category)?.name, p.brand].filter(Boolean).join(' · ')}</small>
+                  <span className="chips">
+                    {p.custom && <em className="chip chip--new">Novo</em>}
+                    {p.edited && <em className="chip chip--ed">Editado</em>}
+                    {p.featured && <em className="chip chip--star">Destaque</em>}
+                  </span>
+                </div>
+                <Switch on={!p.hidden} onChange={() => { toggleHidden(p); toast(p.hidden ? 'Produto visível no site' : 'Produto ocultado do site') }} label={p.hidden ? 'Oculto' : 'No site'} />
+                <div className="arow__act">
+                  <button type="button" className="btn btn--line btn--sm" onClick={() => setDraft(draftFromProduct(p))}>
+                    <Ico name="editar" size={16} /> Editar
+                  </button>
+                  <button type="button" className="btn btn--line btn--sm" onClick={() => { duplicate(p); toast('Cópia criada (oculta)') }}>
+                    <Ico name="copiar" size={16} /> Duplicar
+                  </button>
+                  {p.custom ? (
+                    <button
+                      type="button"
+                      className="btn btn--danger btn--sm"
+                      onClick={async () => {
+                        if (await confirm({ title: `Eliminar “${p.name}”?`, text: 'O produto deixa de existir no site e no painel.', confirmLabel: 'Eliminar', danger: true })) {
+                          remove(p)
+                          toast('Produto eliminado')
+                        }
+                      }}
+                    >
+                      <Ico name="lixo" size={16} /> Eliminar
+                    </button>
+                  ) : (
+                    p.edited && (
+                      <button type="button" className="btn btn--ghost btn--sm" onClick={() => { reset(p); toast('Original reposto') }}>
+                        Repor o original
+                      </button>
+                    )
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </Panel>
       {draft && <ProductForm key={draft.id} draft={draft} onSave={onSave} onClose={() => setDraft(null)} />}
-    </>
-  )
-}
-
-function RowActions({ p, onEdit, onToggle, onDuplicate, onRemove, onReset }: { p: CatalogProduct; onEdit: () => void; onToggle: () => void; onDuplicate: () => void; onRemove: () => void; onReset: () => void }) {
-  return (
-    <>
-      <button type="button" className="icon" onClick={onEdit} aria-label={`Editar ${p.name}`} title="Editar">
-        <Ico name="editar" size={16} />
-      </button>
-      <button type="button" className="icon" onClick={onToggle} aria-label={p.hidden ? `Mostrar ${p.name}` : `Ocultar ${p.name}`} title={p.hidden ? 'Mostrar no site' : 'Ocultar do site'}>
-        <Ico name="olho" size={16} />
-      </button>
-      <button type="button" className="icon" onClick={onDuplicate} aria-label={`Duplicar ${p.name}`} title="Duplicar">
-        <Ico name="copiar" size={16} />
-      </button>
-      {p.custom ? (
-        <button type="button" className="icon" onClick={onRemove} aria-label={`Eliminar ${p.name}`} title="Eliminar">
-          <Ico name="lixo" size={16} />
-        </button>
-      ) : (
-        p.edited && (
-          <button type="button" className="icon" onClick={onReset} aria-label={`Repor o original de ${p.name}`} title="Repor o original">
-            <Ico name="esquerda" size={16} />
-          </button>
-        )
-      )}
     </>
   )
 }

@@ -5,13 +5,15 @@ import { DEFAULT_MEDIA, type MediaItem, type MediaKind } from '../data/admin'
 import { MediaCarousel } from '../components/MediaCarousel'
 import { asset } from '../lib/asset'
 import { Ico } from '../components/Ico'
-import { Empty, Field, PageTitle, Panel } from './ui'
+import { useFeedback } from './feedback'
+import { Empty, Field, PageTitle, Panel, Switch } from './ui'
 
 const KIND_LABEL: Record<MediaKind, string> = { imagem: 'Imagem', youtube: 'Vídeo do YouTube', video: 'Vídeo (ficheiro MP4)' }
 const src = (u: string) => (/^(https?:|data:|blob:)/.test(u) ? u : asset(u))
 
 export default function MediaAdmin() {
   const [items, setItems] = useMedia()
+  const { toast, confirm } = useFeedback()
   const [tipo, setTipo] = useState<MediaKind>('imagem')
   const [url, setUrl] = useState('')
   const [titulo, setTitulo] = useState('')
@@ -38,6 +40,7 @@ export default function MediaAdmin() {
     setUrl('')
     setTitulo('')
     setLegenda('')
+    toast('Acrescentado ao carrossel')
   }
 
   return (
@@ -53,30 +56,35 @@ export default function MediaAdmin() {
           {items.length === 0 ? (
             <Empty title="O carrossel está vazio" text="Acrescente fotografias ou vídeos ao lado." action={<button type="button" className="btn btn--line" onClick={() => setItems(DEFAULT_MEDIA)}>Repor as fotografias de origem</button>} />
           ) : (
-            <ul className="mlist">
+            <ul className="alist">
               {items.map((m, i) => (
-                <li key={m.id} className={m.ativo ? '' : 'is-off'}>
-                  <span className="mlist__thumb">
-                    {m.tipo === 'imagem' ? <img src={src(m.url)} alt="" /> : <Ico name="video" size={22} />}
-                  </span>
-                  <span className="mlist__t">
+                <li key={m.id} className={`arow${m.ativo ? '' : ' is-off'}`}>
+                  <span className="arow__thumb">{m.tipo === 'imagem' ? <img src={src(m.url)} alt="" /> : <Ico name="video" size={24} />}</span>
+                  <div className="arow__main">
                     <strong>{m.titulo}</strong>
                     <small>{KIND_LABEL[m.tipo]}</small>
-                  </span>
-                  <span className="atable__act">
-                    <button type="button" className="icon" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Subir ${m.titulo}`}>
-                      <Ico name="cima" size={16} />
+                  </div>
+                  <Switch on={m.ativo} label={m.ativo ? 'Visível' : 'Pausado'} onChange={(v) => setItems((l) => l.map((x) => (x.id === m.id ? { ...x, ativo: v } : x)))} />
+                  <div className="arow__act">
+                    <button type="button" className="icon" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Subir ${m.titulo}`} title="Subir">
+                      <Ico name="cima" size={18} />
                     </button>
-                    <button type="button" className="icon" onClick={() => move(i, 1)} disabled={i === items.length - 1} aria-label={`Descer ${m.titulo}`}>
-                      <Ico name="baixo" size={16} />
+                    <button type="button" className="icon" onClick={() => move(i, 1)} disabled={i === items.length - 1} aria-label={`Descer ${m.titulo}`} title="Descer">
+                      <Ico name="baixo" size={18} />
                     </button>
-                    <button type="button" className="icon" onClick={() => setItems((l) => l.map((x) => (x.id === m.id ? { ...x, ativo: !x.ativo } : x)))} aria-pressed={m.ativo} aria-label={m.ativo ? `Pausar ${m.titulo}` : `Mostrar ${m.titulo}`} title={m.ativo ? 'Visível — clique para pausar' : 'Pausado — clique para mostrar'}>
-                      <Ico name="olho" size={16} />
+                    <button
+                      type="button"
+                      className="btn btn--danger btn--sm"
+                      onClick={async () => {
+                        if (await confirm({ title: `Retirar “${m.titulo}”?`, text: 'Deixa de passar no carrossel.', confirmLabel: 'Retirar', danger: true })) {
+                          setItems((l) => l.filter((x) => x.id !== m.id))
+                          toast('Item retirado')
+                        }
+                      }}
+                    >
+                      <Ico name="lixo" size={16} /> Retirar
                     </button>
-                    <button type="button" className="icon" onClick={() => window.confirm(`Retirar “${m.titulo}”?`) && setItems((l) => l.filter((x) => x.id !== m.id))} aria-label={`Retirar ${m.titulo}`}>
-                      <Ico name="lixo" size={16} />
-                    </button>
-                  </span>
+                  </div>
                 </li>
               ))}
             </ul>

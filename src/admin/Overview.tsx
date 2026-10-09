@@ -7,6 +7,7 @@ import { DEFAULT_MEDIA, FORMAT_LABEL, STATUS_LABEL, type MediaItem, type Promo, 
 import { Ico } from '../components/Ico'
 import { MediaCarousel } from '../components/MediaCarousel'
 import { money, proposalTotals } from '../lib/proposal'
+import { useFeedback } from './feedback'
 import { PageTitle, Panel, dateFmt, Empty } from './ui'
 
 const NO_Q: QuoteRequest[] = []
@@ -15,6 +16,7 @@ const NO_PR: Proposal[] = []
 const MEDIA0: MediaItem[] = DEFAULT_MEDIA
 
 export default function Overview() {
+  const { toast, confirm } = useFeedback()
   const [quotes] = useStored<QuoteRequest[]>('quotes', NO_Q)
   const [proposals] = useStored<Proposal[]>('proposals', NO_PR)
   const [promos] = useStored<Promo[]>('promos', NO_P)
@@ -30,13 +32,15 @@ export default function Overview() {
     a.download = `tlhavika-dados-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(a.href)
+    toast('Cópia descarregada')
   }
 
   const importAll = async (f: File) => {
     try {
-      importData(await f.text())
+      const n = importData(await f.text())
+      toast(`Dados restaurados (${n} secções)`)
     } catch {
-      window.alert('Ficheiro inválido. Use um ficheiro exportado por este painel.')
+      toast('Ficheiro inválido. Use um ficheiro exportado por este painel.', 'erro')
     }
   }
 
@@ -55,7 +59,7 @@ export default function Overview() {
 
   return (
     <>
-      <PageTitle title="Resumo" lead={toAnswer.length ? `${toAnswer.length} ${toAnswer.length === 1 ? 'pedido espera' : 'pedidos esperam'} resposta.` : 'Nada à espera de resposta.'} />
+      <PageTitle keepLead title="Resumo" lead={toAnswer.length ? `${toAnswer.length} ${toAnswer.length === 1 ? 'pedido espera' : 'pedidos esperam'} resposta.` : 'Nada à espera de resposta.'} />
 
       <Panel title="Para responder" action={<Link to="/admin/cotacoes">Ver todos os pedidos</Link>} className="panel--lead">
         {toAnswer.length === 0 ? (
@@ -163,9 +167,10 @@ export default function Overview() {
           <button
             type="button"
             className="btn btn--danger"
-            onClick={() => {
-              if (window.confirm('Apagar todos os dados guardados neste dispositivo (pedidos, propostas, promoções, vídeos e alterações ao catálogo)?')) {
+            onClick={async () => {
+              if (await confirm({ title: 'Apagar todos os dados?', text: 'Pedidos, propostas, promoções, vídeos, contactos e alterações ao catálogo deste aparelho. Exporte uma cópia antes, se precisar.', confirmLabel: 'Apagar tudo', danger: true })) {
                 clearData()
+                toast('Dados apagados')
               }
             }}
           >

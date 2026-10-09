@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { defaultContact, useContact, type Contact } from '../data/site'
 import { removeStored, writeStored } from '../lib/store'
+import { useFeedback } from './feedback'
 import { Field, PageTitle, Panel } from './ui'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -8,12 +9,11 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 /** Contactos que aparecem no site (rodapé, Contacto, Sobre e links do WhatsApp). */
 export default function Settings() {
   const current = useContact()
+  const { toast } = useFeedback()
   const [v, setV] = useState<Contact>(current)
   const [err, setErr] = useState<Partial<Record<keyof Contact, string>>>({})
-  const [saved, setSaved] = useState(false)
   const set = (k: keyof Contact) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setV({ ...v, [k]: e.target.value })
-    setSaved(false)
     setErr({ ...err, [k]: undefined })
   }
 
@@ -30,7 +30,8 @@ export default function Settings() {
     if (Object.keys(n).length) return
     const next: Contact = { phone: v.phone.trim(), whatsapp: wa, email: v.email.trim(), address: v.address.trim(), facebook: v.facebook.trim() }
     setV(next)
-    setSaved(writeStored('settings', next))
+    const ok = writeStored('settings', next)
+    toast(ok ? 'Contactos guardados. Já aparecem no site.' : 'Não foi possível guardar.', ok ? 'ok' : 'erro')
   }
 
   return (
@@ -70,16 +71,11 @@ export default function Settings() {
               onClick={() => {
                 removeStored('settings')
                 setV(defaultContact)
-                setSaved(false)
+                toast('Contactos de origem repostos')
               }}
             >
               Repor os de origem
             </button>
-            {saved && (
-              <span className="saved" role="status">
-                Guardado. Já aparece no site.
-              </span>
-            )}
           </div>
         </form>
       </Panel>

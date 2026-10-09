@@ -5,7 +5,8 @@ import { useCatalog } from '../lib/catalog'
 import { promoLive, usePromos } from '../lib/promos'
 import { fileToDataUrl, uid } from '../lib/store'
 import { Ico } from '../components/Ico'
-import { Empty, Field, Modal, PageTitle, Panel } from './ui'
+import { useFeedback } from './feedback'
+import { Empty, Field, Modal, PageTitle, Panel, Switch } from './ui'
 
 const blank = (formato: PromoFormat = 'faixa'): Promo => ({
   id: uid(),
@@ -146,10 +147,7 @@ function PromoForm({ promo, onSave, onClose }: { promo: Promo; onSave: (p: Promo
                 </div>
               </div>
             )}
-            <label className="check">
-              <input type="checkbox" checked={p.ativo} onChange={(e) => set('ativo', e.target.checked)} />
-              <span>Ativa (aparece no site dentro das datas)</span>
-            </label>
+            <Switch on={p.ativo} onChange={(v) => set('ativo', v)} label="Ativa: aparece no site dentro das datas" />
           </div>
           <div>
             <p className="sub">Pré-visualização</p>
@@ -183,6 +181,7 @@ export default function PromosAdmin() {
   const [promos, setPromos] = usePromos()
   const [params, setParams] = useSearchParams()
   const [edit, setEdit] = useState<Promo | null>(null)
+  const { toast, confirm } = useFeedback()
 
   useEffect(() => {
     if (params.get('novo') === '1') {
@@ -193,9 +192,13 @@ export default function PromosAdmin() {
   }, [])
 
   const save = (p: Promo) => {
-    if (!setPromos((l) => (l.some((x) => x.id === p.id) ? l.map((x) => (x.id === p.id ? p : x)) : [p, ...l]))) window.alert('A memória do navegador está cheia. Use uma imagem mais pequena.')
+    const isNew = !promos.some((x) => x.id === p.id)
+    if (setPromos((l) => (l.some((x) => x.id === p.id) ? l.map((x) => (x.id === p.id ? p : x)) : [p, ...l]))) toast(isNew ? 'Promoção criada' : 'Alterações guardadas')
+    else toast('Memória cheia. Use uma imagem mais pequena.', 'erro')
     setEdit(null)
   }
+
+  const fmt = (d: string) => new Date(d + 'T12:00').toLocaleDateString('pt-PT')
 
   return (
     <>
@@ -220,28 +223,42 @@ export default function PromosAdmin() {
             }
           />
         ) : (
-          <ul className="plist">
+          <ul className="alist">
             {promos.map((p) => {
               const st = state(p)
               return (
-                <li key={p.id}>
-                  <div className="plist__main">
+                <li key={p.id} className={`arow arow--promo${p.ativo ? '' : ' is-off'}`}>
+                  <span className={`chip chip--${st.cls}`}>{st.label}</span>
+                  <div className="arow__main">
                     <strong>{p.titulo}</strong>
                     <small>
                       {FORMAT_LABEL[p.formato]}
-                      {p.inicio || p.fim ? ` · ${p.inicio ? new Date(p.inicio + 'T12:00').toLocaleDateString('pt-PT') : 'já'} → ${p.fim ? new Date(p.fim + 'T12:00').toLocaleDateString('pt-PT') : 'sem fim'}` : ''}
+                      {p.inicio || p.fim ? ` · ${p.inicio ? fmt(p.inicio) : 'já'} → ${p.fim ? fmt(p.fim) : 'sem fim'}` : ''}
                     </small>
                   </div>
-                  <em className={`chip chip--${st.cls}`}>{st.label}</em>
-                  <div className="atable__act">
-                    <button type="button" className="icon" onClick={() => setPromos((l) => l.map((x) => (x.id === p.id ? { ...x, ativo: !x.ativo } : x)))} aria-label={p.ativo ? `Pausar ${p.titulo}` : `Ativar ${p.titulo}`} title={p.ativo ? 'Pausar' : 'Ativar'}>
-                      <Ico name={p.ativo ? 'olho' : 'reproduzir'} size={16} />
+                  <Switch
+                    on={p.ativo}
+                    label={p.ativo ? 'Ativa' : 'Pausada'}
+                    onChange={(v) => {
+                      setPromos((l) => l.map((x) => (x.id === p.id ? { ...x, ativo: v } : x)))
+                      toast(v ? 'Promoção ativada' : 'Promoção pausada')
+                    }}
+                  />
+                  <div className="arow__act">
+                    <button type="button" className="btn btn--line btn--sm" onClick={() => setEdit(p)}>
+                      <Ico name="editar" size={16} /> Editar
                     </button>
-                    <button type="button" className="icon" onClick={() => setEdit(p)} aria-label={`Editar ${p.titulo}`}>
-                      <Ico name="editar" size={16} />
-                    </button>
-                    <button type="button" className="icon" onClick={() => window.confirm(`Eliminar “${p.titulo}”?`) && setPromos((l) => l.filter((x) => x.id !== p.id))} aria-label={`Eliminar ${p.titulo}`}>
-                      <Ico name="lixo" size={16} />
+                    <button
+                      type="button"
+                      className="btn btn--danger btn--sm"
+                      onClick={async () => {
+                        if (await confirm({ title: `Eliminar “${p.titulo}”?`, text: 'Deixa de aparecer no site.', confirmLabel: 'Eliminar', danger: true })) {
+                          setPromos((l) => l.filter((x) => x.id !== p.id))
+                          toast('Promoção eliminada')
+                        }
+                      }}
+                    >
+                      <Ico name="lixo" size={16} /> Eliminar
                     </button>
                   </div>
                 </li>

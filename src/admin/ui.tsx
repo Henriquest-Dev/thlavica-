@@ -15,9 +15,9 @@ export function Panel({ title, action, children, className = '' }: { title?: Rea
   )
 }
 
-export function PageTitle({ title, lead, action }: { title: string; lead?: string; action?: ReactNode }) {
+export function PageTitle({ title, lead, action, keepLead }: { title: string; lead?: string; action?: ReactNode; keepLead?: boolean }) {
   return (
-    <header className="ptitle">
+    <header className={`ptitle${keepLead ? ' ptitle--lead' : ''}`}>
       <div>
         <h1>{title}</h1>
         {lead && <p className="muted">{lead}</p>}
@@ -64,6 +64,18 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
         <div className="amodal__body">{children}</div>
       </div>
     </div>
+  )
+}
+
+/** Interruptor com texto: mostra claramente se está ligado. */
+export function Switch({ on, onChange, label, hideLabel }: { on: boolean; onChange: (v: boolean) => void; label: string; hideLabel?: boolean }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} className={`switch${on ? ' is-on' : ''}`} onClick={() => onChange(!on)}>
+      <span className="switch__track" aria-hidden="true">
+        <span className="switch__thumb" />
+      </span>
+      <span className={hideLabel ? 'visually-hidden' : 'switch__label'}>{label}</span>
+    </button>
   )
 }
 
