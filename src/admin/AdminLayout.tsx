@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
+import { AdminLoginForm } from '../components/AdminLoginForm'
 import { Logo } from '../components/Logo'
 import { Ico, type IcoName } from '../components/Ico'
 import { useStored } from '../lib/store'
@@ -21,34 +22,16 @@ const NAV: { to: string; label: string; icon: IcoName; end?: boolean }[] = [
 function Gate({ onEnter }: { onEnter: () => void }) {
   return (
     <div className="adm adm--gate">
-      <form
-        className="gate"
-        onSubmit={(e) => {
-          e.preventDefault()
-          onEnter()
-        }}
-      >
+      <div className="gate">
         <Logo className="logo--dark" />
         <h1>Administração</h1>
         <p className="muted">Gerir catálogo, cotações, promoções e vídeos do site.</p>
-        <label>
-          Email
-          <input type="email" autoComplete="username" placeholder="nome@empresa.co.mz" />
-        </label>
-        <label>
-          Palavra-passe
-          <input type="password" autoComplete="current-password" />
-        </label>
-        <button type="submit" className="btn">
-          Entrar
-        </button>
-        <p className="gate__note">
-          Protótipo: ainda não há contas nem proteção real. Os dados ficam só neste dispositivo e passam para a base de dados (Supabase) numa fase seguinte.
-        </p>
+        <AdminLoginForm onSuccess={onEnter} />
+        <p className="gate__note">Protótipo: a verificação é feita neste navegador. A proteção real chega com a base de dados (Supabase).</p>
         <Link to="/" className="gate__back">
           Voltar ao site
         </Link>
-      </form>
+      </div>
     </div>
   )
 }

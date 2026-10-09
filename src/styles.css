@@ -3308,3 +3308,41 @@ main:focus {
 .ph__back:hover {
   text-decoration: underline;
 }
+.lform {
+  display: grid;
+  gap: 14px;
+}
+.lform label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.lform input {
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  font: inherit;
+  font-weight: 400;
+  color: var(--text);
+}
+.lform__err {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fdecea;
+  color: #8a1c14;
+  font-size: 14px;
+}
+.lform .pill {
+  justify-content: center;
+  padding: 6px 22px;
+}
+.lform .pill:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

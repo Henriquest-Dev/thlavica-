@@ -21,7 +21,7 @@ npm run images         # regenera public/img a partir de source-assets/ (Python 
 
 ## Administração (protótipo) — `/admin`
 
-Sem autenticação real. Os dados ficam no `localStorage` do navegador (prefixo `tlh:`), em `src/lib/store.ts`.
+Entrada com utilizador e palavra-passe verificados no navegador (só o hash está no código; para mudar: `node scripts/admin-hash.mjs <utilizador> <palavra-passe>` e colar o resultado em `CREDENTIAL_HASH`, `src/lib/adminSession.ts`). Não é segurança a sério: quem tiver o código pode tentar adivinhar offline; a proteção real vem com contas no Supabase. Os dados ficam no `localStorage` do navegador (prefixo `tlh:`), em `src/lib/store.ts`.
 
 | Secção | O que faz |
 |---|---|
