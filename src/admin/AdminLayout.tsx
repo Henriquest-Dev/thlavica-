@@ -3,11 +3,11 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 import { Logo } from '../components/Logo'
 import { Ico, type IcoName } from '../components/Ico'
 import { useStored } from '../lib/store'
+import { isAdmin, signIn, signOut } from '../lib/adminSession'
 import type { QuoteRequest } from '../data/admin'
 import './admin.css'
 
 const NO_QUOTES: QuoteRequest[] = []
-const KEY = 'tlh:admin'
 
 const NAV: { to: string; label: string; icon: IcoName; end?: boolean }[] = [
   { to: '/admin', label: 'Resumo', icon: 'painel', end: true },
@@ -53,13 +53,7 @@ function Gate({ onEnter }: { onEnter: () => void }) {
 }
 
 export default function AdminLayout() {
-  const [ok, setOk] = useState(() => {
-    try {
-      return window.sessionStorage.getItem(KEY) === '1'
-    } catch {
-      return false
-    }
-  })
+  const [ok, setOk] = useState(isAdmin)
   const [quotes] = useStored<QuoteRequest[]>('quotes', NO_QUOTES)
   const fresh = quotes.filter((q) => q.estado === 'nova' && !q.arquivada).length
 
@@ -80,11 +74,7 @@ export default function AdminLayout() {
     return (
       <Gate
         onEnter={() => {
-          try {
-            window.sessionStorage.setItem(KEY, '1')
-          } catch {
-            /* ignorar */
-          }
+          signIn()
           setOk(true)
         }}
       />
@@ -112,11 +102,7 @@ export default function AdminLayout() {
           <button
             type="button"
             onClick={() => {
-              try {
-                window.sessionStorage.removeItem(KEY)
-              } catch {
-                /* ignorar */
-              }
+              signOut()
               setOk(false)
             }}
           >

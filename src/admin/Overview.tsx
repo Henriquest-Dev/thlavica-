@@ -5,6 +5,7 @@ import { useCatalog } from '../lib/catalog'
 import { promoLive } from '../lib/promos'
 import { DEFAULT_MEDIA, STATUS_LABEL, type MediaItem, type Promo, type QuoteRequest, type Proposal } from '../data/admin'
 import { Ico } from '../components/Ico'
+import { MediaCarousel } from '../components/MediaCarousel'
 import { PageTitle, Panel, dateFmt, Empty } from './ui'
 
 const NO_Q: QuoteRequest[] = []
@@ -82,6 +83,10 @@ export default function Overview() {
           </li>
         ))}
       </ul>
+
+      <Panel title="Vídeos e fotos em rotação" action={<Link to="/admin/midia">Gerir</Link>}>
+        <MediaCarousel />
+      </Panel>
 
       <div className="two">
         <Panel title="Pedidos recentes" action={<Link to="/admin/cotacoes">Ver todos</Link>}>

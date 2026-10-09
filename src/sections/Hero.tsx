@@ -64,6 +64,19 @@ export function Hero() {
             fetchPriority="high"
           />
         )}
+        <nav className="hero__band" aria-label="Áreas de trabalho">
+          {solutions.map((s, i) => (
+            <Link key={s.id} to={`/solucoes/${s.id}`} className="hero__stat" style={{ '--i': i } as React.CSSProperties}>
+              <span className="hero__stat-big">
+                {WORD[s.id]}
+                <span className="hero__stat-arrow" aria-hidden="true">
+                  <Arrow size={14} />
+                </span>
+              </span>
+              <span className="hero__stat-text">{s.short}</span>
+            </Link>
+          ))}
+        </nav>
       </div>
 
       <div className="hero__body wrap">
@@ -87,19 +100,6 @@ export function Hero() {
           </div>
         </div>
 
-        <nav className="hero__band" aria-label="Áreas de trabalho">
-          {solutions.map((s, i) => (
-            <Link key={s.id} to={`/solucoes/${s.id}`} className="hero__stat" style={{ '--i': i } as React.CSSProperties}>
-              <span className="hero__stat-big">
-                {WORD[s.id]}
-                <span className="hero__stat-arrow" aria-hidden="true">
-                  <Arrow size={14} />
-                </span>
-              </span>
-              <span className="hero__stat-text">{s.short}</span>
-            </Link>
-          ))}
-        </nav>
       </div>
     </section>
   )

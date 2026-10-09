@@ -6,6 +6,7 @@ import { UiProvider } from './Ui'
 import { SearchOverlay } from './SearchOverlay'
 import { QuoteDrawer } from './QuoteDrawer'
 import { PromoPopup } from './Promos'
+import { AdminLogin } from './AdminLogin'
 import { scrollTop } from '../lib/smooth'
 
 export function Layout() {
@@ -35,6 +36,7 @@ export function Layout() {
       <SearchOverlay />
       <QuoteDrawer />
       <PromoPopup />
+      <AdminLogin />
     </UiProvider>
   )
 }

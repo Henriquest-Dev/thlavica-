@@ -6,17 +6,22 @@ import { Ico } from './Ico'
 
 const src = (u: string) => (/^(https?:|data:|blob:)/.test(u) ? u : asset(u))
 
-function Slide({ m, active }: { m: MediaItem; active: boolean }) {
-  const [playing, setPlaying] = useState(false)
+function Slide({ m, active, onPlaying, onEnded }: { m: MediaItem; active: boolean; onPlaying: (on: boolean) => void; onEnded: () => void }) {
+  const [playing, setPlayingState] = useState(false)
+  const setPlaying = (on: boolean) => {
+    setPlayingState(on)
+    onPlaying(on)
+  }
   const [thumbFail, setThumbFail] = useState(false)
   useEffect(() => {
-    if (!active) setPlaying(false)
+    if (!active && playing) setPlaying(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active])
 
   if (m.tipo === 'imagem') return <img src={src(m.url)} alt={m.titulo} loading="lazy" draggable={false} />
 
   if (m.tipo === 'video')
-    return <video src={src(m.url)} controls playsInline preload="metadata" aria-label={m.titulo} />
+    return <video src={src(m.url)} controls muted playsInline preload="metadata" aria-label={m.titulo} onPlay={() => onPlaying(true)} onPause={() => onPlaying(false)} onEnded={() => { onPlaying(false); onEnded() }} />
 
   const id = youtubeId(m.url)
   if (!id) return <div className="mc__bad">Endereço de vídeo inválido</div>
@@ -46,6 +51,7 @@ export function MediaCarousel({ autoplay = true }: { autoplay?: boolean }) {
   const track = useRef<HTMLUListElement>(null)
   const [idx, setIdx] = useState(0)
   const [hold, setHold] = useState(false)
+  const [playing, setPlaying] = useState(false)
 
   const go = useCallback(
     (i: number) => {
@@ -82,10 +88,10 @@ export function MediaCarousel({ autoplay = true }: { autoplay?: boolean }) {
   const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const current = items[idx]
   useEffect(() => {
-    if (!autoplay || reduce || hold || items.length < 2 || current?.tipo !== 'imagem') return
-    const t = window.setTimeout(() => go(idx + 1), 5500)
+    if (!autoplay || reduce || hold || playing || items.length < 2) return
+    const t = window.setTimeout(() => go(idx + 1), current?.tipo === 'imagem' ? 5000 : 7000)
     return () => window.clearTimeout(t)
-  }, [autoplay, reduce, hold, idx, items.length, current?.tipo, go])
+  }, [autoplay, reduce, hold, playing, idx, items.length, current?.tipo, go])
 
   if (!items.length) return <p className="muted">Sem itens ativos no carrossel.</p>
 
@@ -104,7 +110,7 @@ export function MediaCarousel({ autoplay = true }: { autoplay?: boolean }) {
         {items.map((m, i) => (
           <li key={m.id} className={`mc__slide${i === idx ? ' is-active' : ''}`} aria-roledescription="slide" aria-label={`${i + 1} de ${items.length}`}>
             <div className="mc__media">
-              <Slide m={m} active={i === idx} />
+              <Slide m={m} active={i === idx} onPlaying={setPlaying} onEnded={() => go(idx + 1)} />
             </div>
             <div className="mc__cap">
               <strong>{m.titulo}</strong>

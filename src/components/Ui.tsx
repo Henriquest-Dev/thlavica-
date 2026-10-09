@@ -4,10 +4,13 @@ import { Link } from 'react-router-dom'
 interface UiState {
   searchOpen: boolean
   listOpen: boolean
+  loginOpen: boolean
   openSearch: () => void
   closeSearch: () => void
   openList: () => void
   closeList: () => void
+  openLogin: () => void
+  closeLogin: () => void
   toast: (text: string, action?: { label: string; run: () => void }) => void
 }
 
@@ -28,6 +31,7 @@ interface ToastData {
 export function UiProvider({ children }: { children: ReactNode }) {
   const [searchOpen, setSearch] = useState(false)
   const [listOpen, setList] = useState(false)
+  const [loginOpen, setLogin] = useState(false)
   const [toastData, setToast] = useState<ToastData | null>(null)
   const timer = useRef<number>(0)
 
@@ -54,13 +58,16 @@ export function UiProvider({ children }: { children: ReactNode }) {
     () => ({
       searchOpen,
       listOpen,
+      loginOpen,
       openSearch: () => setSearch(true),
       closeSearch: () => setSearch(false),
       openList: () => setList(true),
       closeList: () => setList(false),
+      openLogin: () => setLogin(true),
+      closeLogin: () => setLogin(false),
       toast,
     }),
-    [searchOpen, listOpen, toast],
+    [searchOpen, listOpen, loginOpen, toast],
   )
 
   return (

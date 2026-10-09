@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Logo } from './Logo'
 import { contact, solutions, wa } from '../data/site'
+import { useUi } from './Ui'
 
 export function Footer() {
+  const { openLogin } = useUi()
   return (
     <footer className="ft">
       <div className="wrap ft__grid">
@@ -40,7 +42,10 @@ export function Footer() {
       </div>
       <div className="wrap ft__legal">
         <p>
-          © {new Date().getFullYear()} Tlhavika · <Link to="/admin">Administração</Link>
+          <button type="button" className="ft__year" onClick={openLogin} aria-label="Entrar na administração">
+            © {new Date().getFullYear()}
+          </button>{' '}
+          Tlhavika
         </p>
         <p>As marcas de equipamentos pertencem aos respetivos fabricantes. Preços e disponibilidade na cotação.</p>
       </div>

@@ -42,10 +42,10 @@ export default function MediaAdmin() {
 
   return (
     <>
-      <PageTitle title="Vídeos e fotos" lead="O carrossel “No terreno” da página inicial. Arraste a ordem com as setas e pause o que não quer mostrar." />
+      <PageTitle title="Vídeos e fotos" lead="Fotografias e vídeos que passam sozinhos neste painel. Mude a ordem com as setas e pause o que não quer mostrar." />
 
-      <Panel title="Como aparece no site">
-        <MediaCarousel autoplay={false} />
+      <Panel title="Em rotação automática">
+        <MediaCarousel />
       </Panel>
 
       <div className="two two--wide">
