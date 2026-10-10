@@ -37,7 +37,6 @@ export function AdminLogin() {
             nav('/admin')
           }}
         />
-        <p className="alogin__note">Protótipo: a verificação é feita neste navegador. A proteção real chega com a base de dados (Supabase).</p>
       </div>
     </div>
   )

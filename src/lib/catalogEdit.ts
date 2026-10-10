@@ -21,6 +21,11 @@ export interface ProductDraft {
   summary: string
   featured: boolean
   hidden: boolean
+  /** Preço em MZN, como o utilizador o escreve (vazio = sem preço). */
+  price: string
+  /** Desconto em % (0 = sem desconto) e último dia dele. */
+  discount: number
+  discountUntil: string
   specs: { label: string; value: string }[]
   /** Um item por linha. */
   includes: string
@@ -43,6 +48,9 @@ export const blankDraft = (): ProductDraft => ({
   summary: '',
   featured: false,
   hidden: false,
+  price: '',
+  discount: 0,
+  discountUntil: '',
   specs: [{ label: 'Potência', value: '' }],
   includes: '',
   img: '',
@@ -59,6 +67,9 @@ export const draftFromProduct = (p: CatalogProduct): ProductDraft => ({
   summary: p.summary,
   featured: Boolean(p.featured),
   hidden: Boolean(p.hidden),
+  price: p.price ? String(p.price) : '',
+  discount: p.discount ?? 0,
+  discountUntil: p.discountUntil ?? '',
   specs: p.specs.length ? p.specs.map((s) => ({ ...s })) : [{ label: '', value: '' }],
   includes: (p.includes ?? []).join('\n'),
   imgData: p.imgData,
@@ -79,6 +90,23 @@ export function draftFields(d: ProductDraft) {
     featured: d.featured,
     hidden: d.hidden,
     imgData: d.imgData,
+    ...priceFields(d),
+  }
+}
+
+/** Preço e desconto limpos: aceita "15 500,50" ou "15500.5"; sem preço válido não grava nada. */
+export function parsePrice(text: string): number | undefined {
+  const t = text.replace(/\s/g, '').replace(/MZN|MT/gi, '')
+  const n = Number(t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t)
+  return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : undefined
+}
+
+function priceFields(d: Pick<ProductDraft, 'price' | 'discount' | 'discountUntil'>) {
+  const discount = Math.round(d.discount) >= 1 ? Math.min(90, Math.round(d.discount)) : undefined
+  return {
+    price: parsePrice(d.price),
+    discount,
+    discountUntil: discount && d.discountUntil ? d.discountUntil : undefined,
   }
 }
 

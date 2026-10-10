@@ -13,6 +13,7 @@ import {
   type NotifyConfig,
 } from '../lib/notify'
 import { useFeedback } from './feedback'
+import { useTech } from './tech'
 import { Field, Panel, Switch } from './ui'
 
 const msg = (e: unknown) => (e instanceof Error ? e.message : 'Erro desconhecido.')
@@ -21,6 +22,7 @@ const msg = (e: unknown) => (e instanceof Error ? e.message : 'Erro desconhecido
 export function NotifyPanel() {
   const { toast, confirm } = useFeedback()
   const contact = useContact()
+  const tech = useTech()
   const [cfg, setCfg] = useState<NotifyConfig | null>(null)
   const [state, setState] = useState<'loading' | 'ok' | 'missing' | 'error'>(notifyAvailable ? 'loading' : 'missing')
   const [error, setError] = useState('')
@@ -55,6 +57,16 @@ export function NotifyPanel() {
     if (window.location.hash === '#avisos') document.getElementById('avisos')?.scrollIntoView({ block: 'start' })
   }, [state])
 
+  /** O que falta para ligar os avisos. Só quem instalou o site vê os pormenores da ligação ao Google. */
+  const emailProblem = (): string => {
+    const { ok, bad } = parseEmails(para)
+    if (!ok.length) return 'Indique pelo menos um email que vai receber os avisos.'
+    if (bad.length) return `Email inválido: ${bad[0]}`
+    const technical = validateEmail(para, url, chave)
+    if (!technical) return ''
+    return tech ? technical : 'A ligação ao email ainda não foi configurada. Fale com quem instalou o site.'
+  }
+
   const patch = async (p: Partial<NotifyConfig>, done?: string) => {
     if (!cfg) return false
     setBusy(true)
@@ -72,7 +84,7 @@ export function NotifyPanel() {
   }
 
   const saveEmail = async () => {
-    const problem = validateEmail(para, url, chave)
+    const problem = emailProblem()
     setFormErr(problem)
     if (problem) return false
     return patch({ email_para: parseEmails(para).ok.join(', '), email_url: url.trim(), email_chave: chave.trim() }, 'Definições do email guardadas.')
@@ -86,13 +98,15 @@ export function NotifyPanel() {
 
           {state === 'missing' && (
             <p className="muted">
-              {notifyAvailable
-                ? 'Os avisos ainda não estão ativados na base de dados. Execute no Supabase o ficheiro supabase/migrations/20261012000000_avisos_email.sql e volte a abrir esta página.'
-                : 'Os avisos precisam da ligação ao Supabase.'}
+              {tech
+                ? notifyAvailable
+                  ? 'Os avisos ainda não estão ativados na base de dados. Execute o ficheiro supabase/migrations/20261012000000_avisos_email.sql e volte a abrir esta página.'
+                  : 'Os avisos precisam da ligação à base de dados.'
+                : 'Os avisos por email ainda não estão ativos. Fale com quem instalou o site.'}
             </p>
           )}
 
-          {state === 'error' && <p className="ferr">Não foi possível ler as definições: {error}</p>}
+          {state === 'error' && <p className="ferr">{tech ? `Não foi possível ler as definições: ${error}` : 'Não foi possível abrir esta secção. Tente outra vez daqui a pouco.'}</p>}
 
           {state === 'ok' && cfg && (
             <>
@@ -105,9 +119,9 @@ export function NotifyPanel() {
                 on={cfg.email_ativo}
                 onChange={async (v) => {
                   if (v) {
-                    const problem = validateEmail(para, url, chave)
+                    const problem = emailProblem()
                     setFormErr(problem)
-                    if (problem) return toast('Preencha primeiro os dados abaixo.', 'erro')
+                    if (problem) return toast('Reveja os dados abaixo.', 'erro')
                     if (await saveEmail()) await patch({ email_ativo: true }, 'Avisos por email ligados')
                   } else {
                     await patch({ email_ativo: false }, 'Avisos por email desligados')
@@ -123,6 +137,7 @@ export function NotifyPanel() {
               </div>
               {formErr && <p className="ferr">{formErr}</p>}
 
+              {tech && (
               <details className="notify__adv" open={!cfg.email_url}>
                 <summary>Ligação ao Google (configuração técnica, feita uma só vez por quem instalou o site)</summary>
                 <div className="grid2">
@@ -134,6 +149,7 @@ export function NotifyPanel() {
                   </Field>
                 </div>
               </details>
+              )}
 
               <div className="row">
                 <button type="button" className="btn" disabled={busy} onClick={() => void saveEmail()}>
@@ -144,7 +160,7 @@ export function NotifyPanel() {
                   className="btn btn--line"
                   disabled={busy}
                   onClick={async () => {
-                    const problem = validateEmail(para, url, chave)
+                    const problem = emailProblem()
                     setFormErr(problem)
                     if (problem) return
                     setBusy(true)
@@ -162,6 +178,7 @@ export function NotifyPanel() {
                 </button>
               </div>
 
+              {tech && (
               <details className="notify__adv">
                 <summary>Como ligar (feito uma só vez por quem instala o site)</summary>
                 <ol className="notify__steps">
@@ -173,12 +190,13 @@ export function NotifyPanel() {
                   <li>Carregue em <b>Enviar email de teste</b> e depois ligue o interruptor.</li>
                 </ol>
               </details>
+              )}
             </>
           )}
         </div>
       </Panel>
 
-      {state === 'ok' && cfg && (
+      {tech && state === 'ok' && cfg && (
         <Panel title="Opções técnicas">
           <details className="notify__adv">
             <summary>Avisos por app no telemóvel (ntfy)</summary>

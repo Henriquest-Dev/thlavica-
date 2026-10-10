@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { activeDiscount, finalPrice, priceLabel } from '../lib/pricing'
 import { categories, categoryPic } from '../data/site'
 import { productImage, type CatalogProduct } from '../lib/catalog'
 import { useQuoteList } from '../lib/quotes'
@@ -40,17 +41,25 @@ export function ProductCard({ p, size = 'md' }: { p: CatalogProduct; size?: 'md'
   const cat = categories.find((c) => c.id === p.category)
   const chip = p.specs.find((s) => /Potência|Capacidade|Versões/.test(s.label) && s.value.length < 22)?.value
   const src = productImage(p)
+  const off = activeDiscount(p)
+  const price = finalPrice(p)
   return (
     <div className="pcw">
       <Link to={`/produtos/${p.id}`} className={`pc pc--${size}`}>
         <span className="pc__media">{src ? <img src={src} alt={p.name} loading="lazy" /> : <Ico name={categoryPic(p.category)} size={96} className="pc__picto" />}</span>
         {chip && <span className="pc__chip">{chip}</span>}
+        {off > 0 && <span className="pc__sale">-{off}%</span>}
         <span className="pc__body">
           <span className="pc__cat">
             {cat?.name}
             {p.brand ? ` · ${p.brand}` : ''}
           </span>
           <span className="pc__name">{p.name}</span>
+          {price !== undefined && (
+            <span className="pc__price">
+              {off > 0 && <s>{priceLabel(p.price!)}</s>} {priceLabel(price)}
+            </span>
+          )}
         </span>
         <span className="pc__go" aria-hidden="true">
           <Arrow size={14} />

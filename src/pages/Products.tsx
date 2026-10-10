@@ -52,7 +52,7 @@ export default function Products() {
       <PageHead
         back={current ? { to: '/produtos', label: 'Todo o catálogo' } : undefined}
         title={current ? current.name : 'Catálogo'}
-        lead="Equipamento apresentado pela Tlhavika. As especificações são as dos anúncios; preço, disponibilidade e ficha técnica são confirmados na cotação."
+        lead="Painéis, inversores, baterias, bombas e termoacumuladores. Escolha o que precisa e peça a sua cotação."
       />
       <div className="wrap">
         <div className="cat-bar">
@@ -92,7 +92,6 @@ export default function Products() {
             </p>
           </div>
         )}
-        <p className="fine">As marcas pertencem aos respetivos fabricantes. Preços antigos dos anúncios não são publicados.</p>
       </div>
     </div>
   )

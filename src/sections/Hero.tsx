@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { img } from '../lib/asset'
 import { useMatch } from '../lib/useMatch'
@@ -15,19 +14,11 @@ const WORD: Record<SolutionId, string> = {
 const ALT =
   'Tlhavika Dongyin: tudo em energia solar num só lugar. Painéis solares, termoacumuladores solares, inversores, baterias de lítio e equipamento para soluções completas de energia solar. Marcas: Growatt, LuxPower, Sungrow, Veichi, JA Solar, Deye, Dyness, Hanchu ESS e Canadian Solar.'
 
-/** Telemóvel: o cartaz é largo, por isso mostra-se com a altura certa e desliza-se para o lado. */
+/** Telemóvel: o cartaz mostra-se inteiro, à largura do ecrã (sem deslizar). */
 function MobileBanner() {
-  const [moved, setMoved] = useState(false)
   return (
     <div className="hero__m">
-      <div className="hero__mtrack" onScroll={() => setMoved(true)}>
-        <img src={img('banner-1200')} alt={ALT} width={1200} height={535} fetchPriority="high" decoding="async" />
-      </div>
-      {!moved && (
-        <span className="hero__mhint" aria-hidden="true">
-          Deslize →
-        </span>
-      )}
+      <img src={img('banner-1200')} alt={ALT} width={1200} height={535} fetchPriority="high" decoding="async" />
     </div>
   )
 }

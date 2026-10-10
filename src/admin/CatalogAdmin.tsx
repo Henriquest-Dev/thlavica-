@@ -7,7 +7,10 @@ import { saveImage } from '../lib/images'
 import { Ico } from '../components/Ico'
 import { ProductThumb } from '../components/ProductThumb'
 import { useFeedback } from './feedback'
-import { Empty, Field, Modal, PageTitle, Panel, Switch } from './ui'
+import { endInDays } from '../lib/promos'
+import { Choice, Empty, Field, Modal, PageTitle, Panel, Switch } from './ui'
+
+const DESCONTOS = [5, 10, 15, 20, 25, 30]
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
@@ -18,6 +21,8 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
   const file = useRef<HTMLInputElement>(null)
   const set = <K extends keyof ProductDraft>(k: K, v: ProductDraft[K]) => setD((x) => ({ ...x, [k]: v }))
   const preview = d.imgData ?? (d.img ? asset(`img/produtos/${d.img}.webp`) : undefined)
+  const [descOutro, setDescOutro] = useState(d.discount > 0 && !DESCONTOS.includes(d.discount))
+  const [dur, setDur] = useState<'sem' | '7' | '15' | '30' | 'data'>(d.discountUntil ? 'data' : 'sem')
 
   return (
     <Modal title={d.isNew ? 'Novo produto' : 'Editar produto'} onClose={onClose} wide>
@@ -58,6 +63,50 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
             <textarea rows={2} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="Uma frase sobre o produto." />
           </Field>
         </div>
+
+        <h3 className="sub">Preço e desconto (opcional)</h3>
+        <div className="grid2">
+          <Field label="Preço (MZN)" hint="Deixe vazio se o preço só se dá na cotação.">
+            <input value={d.price} onChange={(e) => set('price', e.target.value)} inputMode="decimal" placeholder="Ex.: 15 500" />
+          </Field>
+        </div>
+        <div className="f">
+          <span className="f__l">Desconto neste produto</span>
+          <div className="choices" role="radiogroup" aria-label="Desconto">
+            <Choice on={d.discount === 0} onClick={() => { set('discount', 0); setDescOutro(false) }}>Sem desconto</Choice>
+            {DESCONTOS.map((x) => (
+              <Choice key={x} on={d.discount === x && !descOutro} onClick={() => { set('discount', x); setDescOutro(false) }}>
+                -{x}%
+              </Choice>
+            ))}
+            <Choice on={descOutro} onClick={() => { setDescOutro(true); if (DESCONTOS.includes(d.discount)) set('discount', 0) }}>Outro</Choice>
+          </div>
+          {descOutro && (
+            <input type="number" min={1} max={90} value={d.discount || ''} onChange={(e) => set('discount', Math.max(0, Math.min(90, Number(e.target.value) || 0)))} placeholder="Percentagem, ex.: 12" aria-label="Percentagem de desconto" />
+          )}
+        </div>
+        {d.discount > 0 && (
+          <div className="f">
+            <span className="f__l">Quanto tempo dura o desconto?</span>
+            <div className="choices" role="radiogroup" aria-label="Duração do desconto">
+              {([['sem', 'Sem data de fim'], ['7', '7 dias'], ['15', '15 dias'], ['30', '30 dias'], ['data', 'Escolher data']] as const).map(([id, label]) => (
+                <Choice
+                  key={id}
+                  on={dur === id}
+                  onClick={() => {
+                    setDur(id)
+                    if (id === 'sem') set('discountUntil', '')
+                    else if (id !== 'data') set('discountUntil', endInDays(Number(id)))
+                  }}
+                >
+                  {label}
+                </Choice>
+              ))}
+            </div>
+            {dur === 'data' && <input type="date" value={d.discountUntil} onChange={(e) => set('discountUntil', e.target.value)} aria-label="Último dia do desconto" />}
+            {dur !== 'sem' && dur !== 'data' && d.discountUntil && <small className="muted">Termina no dia {new Date(d.discountUntil + 'T12:00').toLocaleDateString('pt-PT')}.</small>}
+          </div>
+        )}
 
         <h3 className="sub">Imagem</h3>
         <div className="imgup">

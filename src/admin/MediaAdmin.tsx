@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useMedia, youtubeId } from '../lib/promos'
 import { saveImage } from '../lib/images'
 import { uid } from '../lib/store'
-import { DEFAULT_MEDIA, type MediaItem, type MediaKind } from '../data/admin'
+import { type MediaItem, type MediaKind } from '../data/admin'
 import { MediaCarousel } from '../components/MediaCarousel'
 import { asset } from '../lib/asset'
 import { Ico } from '../components/Ico'
@@ -48,14 +48,16 @@ export default function MediaAdmin() {
     <>
       <PageTitle title="Vídeos e fotos" lead="Fotografias e vídeos que passam sozinhos neste painel. Mude a ordem com as setas e pause o que não quer mostrar." />
 
-      <Panel title="Em rotação automática">
-        <MediaCarousel />
-      </Panel>
+      {items.some((m) => m.ativo) && (
+        <Panel title="Em rotação automática">
+          <MediaCarousel />
+        </Panel>
+      )}
 
       <div className="two two--wide">
         <Panel title="Itens do carrossel">
           {items.length === 0 ? (
-            <Empty title="O carrossel está vazio" text="Acrescente fotografias ou vídeos ao lado." action={<button type="button" className="btn btn--line" onClick={() => setItems(DEFAULT_MEDIA)}>Repor as fotografias de origem</button>} />
+            <Empty title="Ainda não há fotografias nem vídeos" text="Acrescente a primeira fotografia ou vídeo ao lado." />
           ) : (
             <ul className="alist">
               {items.map((m, i) => (
@@ -143,7 +145,7 @@ export default function MediaAdmin() {
             ) : (
               <Field
                 label={tipo === 'youtube' ? 'Link do vídeo no YouTube *' : 'Endereço do ficheiro MP4 *'}
-                hint={tipo === 'youtube' ? 'No YouTube, abra o vídeo, toque em Partilhar, Copiar link e cole aqui.' : 'O vídeo tem de estar alojado online (por exemplo, no Supabase Storage). Os vídeos não cabem na memória do navegador.'}
+                hint={tipo === 'youtube' ? 'No YouTube, abra o vídeo, toque em Partilhar, Copiar link e cole aqui.' : 'O vídeo tem de estar alojado online. Prefira um vídeo do YouTube.'}
               >
                 <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" inputMode="url" />
               </Field>

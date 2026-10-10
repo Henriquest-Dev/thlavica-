@@ -2,12 +2,11 @@ import { Link, useParams } from 'react-router-dom'
 import { categories, categoryPic, wa } from '../data/site'
 import { productImage, useCatalog } from '../lib/catalog'
 import { breadcrumbSchema, fileUrl, productSchema, useSeo } from '../lib/seo'
+import { activeDiscount, finalPrice, priceLabel, untilLabel } from '../lib/pricing'
 import { useReveal } from '../lib/useReveal'
 import { AddToList, ProductCard } from '../components/ProductCard'
 import { Ico } from '../components/Ico'
 import NotFound from './NotFound'
-
-const FB = 'https://www.facebook.com/people/Tlhavika/61560557742444/'
 
 export default function ProductPage() {
   const { id = '' } = useParams()
@@ -36,6 +35,8 @@ export default function ProductPage() {
   useReveal(id)
   if (!p) return <NotFound />
   const related = catalog.filter((x) => x.id !== p.id && x.category === p.category).slice(0, 4)
+  const off = activeDiscount(p)
+  const price = finalPrice(p)
   const text = `Olá Tlhavika, gostaria de uma cotação para: ${p.name}${p.brand ? ` (${p.brand})` : ''}.`
   const src = productImage(p)
 
@@ -48,7 +49,6 @@ export default function ProductPage() {
         <div className="pdp__grid">
           <div className="pdp__media reveal">
             {src ? <img src={src} alt={p.name} /> : <Ico name={categoryPic(p.category)} size={160} className="pdp__picto" />}
-            {p.illustrative && <span className="pdp__imgnote">Imagem ilustrativa</span>}
           </div>
           <div className="pdp__info reveal">
             <p className="pdp__cat">
@@ -58,16 +58,32 @@ export default function ProductPage() {
             <h1 className="pdp__title">{p.name}</h1>
             {p.model && <p className="muted">Modelo {p.model}</p>}
             <p className="pdp__summary">{p.summary}</p>
+            {(price !== undefined || off > 0) && (
+              <div className="pdp__price">
+                {price !== undefined && (
+                  <p className="pdp__now">
+                    {off > 0 && <s>{priceLabel(p.price!)}</s>} <strong>{priceLabel(price)}</strong>
+                  </p>
+                )}
+                {off > 0 && (
+                  <p className="pdp__off">
+                    <span className="selo">-{off}%</span> {untilLabel(p) ? `Desconto ${untilLabel(p)}` : 'Desconto em vigor'}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="pdp__ctas">
-              <a className="pill pill--dark" href={wa(text)} target="_blank" rel="noopener noreferrer">
-                <Ico name="whatsapp" size={18} /> Pedir cotação pelo WhatsApp
-              </a>
+              <Link className="pill pill--dark" to={`/contacto?produto=${p.id}`}>
+                Pedir cotação
+              </Link>
               <AddToList p={p} className="addlist--lg" label />
             </div>
             <p className="pdp__note">
-              Preço e disponibilidade na cotação. Prefere escrever?{' '}
-              <Link to={`/contacto?produto=${p.id}`}>Use o formulário</Link>.
+              {p.price ? 'Preço de referência. ' : ''}Os valores finais e a disponibilidade são confirmados na cotação.{' '}
+              <a className="optional" href={wa(text)} target="_blank" rel="noopener noreferrer">
+                Prefere falar no WhatsApp?
+              </a>
             </p>
 
             {p.specs.length > 0 && (
@@ -98,11 +114,6 @@ export default function ProductPage() {
                   ))}
                 </ul>
               </section>
-            )}
-            {!p.custom && (
-              <a className="pdp__src" href={FB} target="_blank" rel="noopener noreferrer">
-                Ver publicações na página da Tlhavika
-              </a>
             )}
           </div>
         </div>

@@ -7,7 +7,7 @@ import { saveImage } from '../lib/images'
 import { uid } from '../lib/store'
 import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
-import { Empty, Field, Modal, PageTitle, Panel, Switch } from './ui'
+import { Choice, Empty, Field, Modal, PageTitle, Panel, Switch } from './ui'
 
 const blank = (formato: PromoFormat = 'faixa'): Promo => ({
   id: uid(),
@@ -163,15 +163,6 @@ function ProductPicker({ chosen, onChange }: { chosen: string[]; onChange: (ids:
         {list.length === 0 && <li className="picker__none">Nenhum produto com esse nome.</li>}
       </ul>
     </div>
-  )
-}
-
-/** Botão de escolha (substitui os campos de texto): um toque seleciona. */
-function Choice({ on, onClick, children, disabled }: { on: boolean; onClick: () => void; children: React.ReactNode; disabled?: boolean }) {
-  return (
-    <button type="button" role="radio" aria-checked={on} className="choice" disabled={disabled} onClick={onClick}>
-      {children}
-    </button>
   )
 }
 

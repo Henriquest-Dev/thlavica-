@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCatalog } from '../lib/catalog'
-import { saveQuoteRequest, useQuoteList } from '../lib/quotes'
+import { useQuoteList } from '../lib/quotes'
 import { wa } from '../data/site'
 import { useUi } from './Ui'
 import { Ico } from './Ico'
@@ -9,7 +9,7 @@ import { ProductThumb } from './ProductThumb'
 
 /** Painel lateral com a lista de cotação do visitante. */
 export function QuoteDrawer() {
-  const { listOpen, closeList, toast } = useUi()
+  const { listOpen, closeList } = useUi()
   const { items, remove, setQty, clear } = useQuoteList()
   const catalog = useCatalog(true)
   const nav = useNavigate()
@@ -33,20 +33,6 @@ export function QuoteDrawer() {
 
   const message = () =>
     ['Olá Tlhavika, gostaria de uma cotação para:', '', ...rows.map((r) => `• ${r.qtd} × ${r.p.name}${r.p.brand ? ` (${r.p.brand})` : ''}`)].join('\n')
-
-  const sendWhatsApp = () => {
-    saveQuoteRequest({
-      nome: 'Pedido pelo WhatsApp',
-      telefone: '',
-      local: '',
-      uso: '',
-      itens: rows.map((r) => ({ produtoId: r.id, nome: r.p.name, qtd: r.qtd })),
-      origem: 'lista',
-    })
-    const w = window.open(wa(message()), '_blank')
-    if (w) w.opener = null
-    toast('Mensagem preparada no WhatsApp. O pedido só chega depois de o enviar.')
-  }
 
   return (
     <div className="ov ov--drawer" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && closeList()}>
@@ -98,19 +84,19 @@ export function QuoteDrawer() {
               ))}
             </ul>
             <footer className="drawer__foot">
-              <button type="button" className="pill pill--dark" onClick={sendWhatsApp}>
-                <Ico name="whatsapp" size={18} /> Enviar pelo WhatsApp
-              </button>
               <button
                 type="button"
-                className="pill pill--line-dark"
+                className="pill pill--dark"
                 onClick={() => {
                   closeList()
                   nav('/contacto?lista=1')
                 }}
               >
-                Preencher o formulário
+                Pedir cotação
               </button>
+              <a className="drawer__alt optional" href={wa(message())} target="_blank" rel="noopener noreferrer">
+                Prefere falar no WhatsApp?
+              </a>
               <button type="button" className="drawer__clear" onClick={clear}>
                 Limpar a lista
               </button>

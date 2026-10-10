@@ -1,4 +1,5 @@
 import type { Proposal, ProposalLine, QuoteRequest } from '../data/admin'
+import { activeDiscount } from './pricing'
 import { uid } from './store'
 
 /** Cotações preparadas no painel: numeração, totais e texto para enviar ao cliente. */
@@ -36,6 +37,9 @@ interface CatalogRef {
   id: string
   name: string
   brand?: string
+  price?: number
+  discount?: number
+  discountUntil?: string
 }
 
 const label = (p: CatalogRef) => p.name + (p.brand ? ` (${p.brand})` : '')
@@ -43,7 +47,10 @@ const label = (p: CatalogRef) => p.name + (p.brand ? ` (${p.brand})` : '')
 export function newProposal(existing: Pick<Proposal, 'numero'>[], catalog: CatalogRef[], request?: QuoteRequest): Proposal {
   const linhas: ProposalLine[] = (request?.itens ?? []).map((i) => {
     const prod = catalog.find((c) => c.id === i.produtoId)
-    return { id: uid(), produtoId: i.produtoId, descricao: prod ? label(prod) : i.nome, qtd: i.qtd, preco: 0 }
+    // o preço e o desconto que o cliente viu no site passam para a cotação (a empresa ajusta, se precisar)
+    const preco = i.preco ?? prod?.price ?? 0
+    const desconto = i.desconto ?? (prod ? activeDiscount(prod) : 0)
+    return { id: uid(), produtoId: i.produtoId, descricao: prod ? label(prod) : i.nome, qtd: i.qtd, preco, ...(desconto ? { desconto } : {}) }
   })
   return {
     id: uid(),
@@ -60,7 +67,8 @@ export function newProposal(existing: Pick<Proposal, 'numero'>[], catalog: Catal
 }
 
 export function lineFromProduct(p: CatalogRef): ProposalLine {
-  return { id: uid(), produtoId: p.id, descricao: label(p), qtd: 1, preco: 0 }
+  const desconto = activeDiscount(p)
+  return { id: uid(), produtoId: p.id, descricao: label(p), qtd: 1, preco: p.price ?? 0, ...(desconto ? { desconto } : {}) }
 }
 
 export function proposalMessage(p: Proposal): string {

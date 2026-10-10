@@ -95,3 +95,13 @@ export const dateFmt = (iso: string) =>
   new Date(iso).toLocaleString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
 export { money } from '../lib/proposal'
+
+/** Botão de escolha (substitui os campos de texto): um toque seleciona. */
+export function Choice({ on, onClick, children, disabled }: { on: boolean; onClick: () => void; children: React.ReactNode; disabled?: boolean }) {
+  return (
+    <button type="button" role="radio" aria-checked={on} className="choice" disabled={disabled} onClick={onClick}>
+      {children}
+    </button>
+  )
+}
+

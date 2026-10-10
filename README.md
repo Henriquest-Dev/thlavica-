@@ -53,6 +53,12 @@ Nunca pôr no código nem no repositório a palavra-passe da base de dados nem a
 
 Os visitantes não carregam a biblioteca do Supabase: leem o catálogo e enviam pedidos com `fetch` direto à API REST (`publicSelect`/`publicInsert` em `supabase.ts`). A biblioteca só carrega no painel.
 
+## Pedido de cotação, preços e modo técnico
+
+- **Pedido de cotação:** o formulário grava o pedido (aparece no painel e gera o aviso por email) e mostra um agradecimento ao cliente (`ThankYou`). O WhatsApp é só uma ligação opcional ("Prefere falar no WhatsApp?"); todos os "Pedir cotação" levam ao formulário.
+- **Preço e desconto por produto (opcionais):** no editor de produtos. Sem preço, o site diz que é confirmado na cotação. O desconto pode ter data de fim e deixa de contar sozinho (`src/lib/pricing.ts`). O desconto em vigor fica registado no pedido do cliente e passa para as linhas da cotação.
+- **Modo técnico:** a empresa não vê as definições técnicas (ligação ao Google, ntfy, cópias de dados). Quem instalou o site abre-as uma vez com `?tecnico=1` no endereço do painel, por exemplo `…/admin/contactos/?tecnico=1`; fica ligado até fechar o separador.
+
 ## Cotação em PDF
 
 Em **Cotações**, ao preparar uma cotação, o botão **Descarregar PDF** gera o PDF no desenho do modelo da empresa (A4: logótipo e título no topo, dados da cotação à direita, blocos DE / PARA, tabela de linhas com desconto e IVA, notas em baixo à esquerda, totais à direita e valor a pagar em destaque). O nome do cliente, as linhas, o IVA, a validade e o número (`COT-AAAA-NNN`) preenchem-se sozinhos; o ficheiro chama-se `Cotacao-COT-2026-001-Nome-do-Cliente.pdf`.

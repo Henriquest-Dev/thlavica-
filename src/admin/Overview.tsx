@@ -8,6 +8,7 @@ import { Ico } from '../components/Ico'
 import { MediaCarousel } from '../components/MediaCarousel'
 import { money, proposalTotals } from '../lib/proposal'
 import { remoteEnabled } from '../lib/supabase'
+import { useTech } from './tech'
 import { getSyncStatus, pullNow } from '../lib/sync'
 import { useFeedback } from './feedback'
 import { PageTitle, Panel, dateFmt, Empty } from './ui'
@@ -18,6 +19,7 @@ const NO_PR: Proposal[] = []
 const MEDIA0: MediaItem[] = DEFAULT_MEDIA
 
 export default function Overview() {
+  const tech = useTech()
   const { toast, confirm } = useFeedback()
   const [quotes] = useStored<QuoteRequest[]>('quotes', NO_Q)
   const [proposals] = useStored<Proposal[]>('proposals', NO_PR)
@@ -155,14 +157,17 @@ export default function Overview() {
         </Panel>
       </div>
 
-      <Panel title="Vídeos e fotos em rotação" action={<Link to="/admin/midia">Gerir</Link>}>
-        <MediaCarousel />
-      </Panel>
+      {media.some((m) => m.ativo) && (
+        <Panel title="Vídeos e fotos em rotação" action={<Link to="/admin/midia">Gerir</Link>}>
+          <MediaCarousel />
+        </Panel>
+      )}
 
+      {tech && (
       <Panel title={remoteEnabled ? 'Dados e sincronização' : 'Dados deste dispositivo'}>
         <p className="muted">
           {remoteEnabled
-            ? `Tudo o que cria aqui fica guardado no Supabase e aparece em todos os aparelhos. Neste aparelho há uma cópia de ${usageKb()} KB que acelera o carregamento.`
+            ? `Tudo o que cria aqui fica guardado no a base de dados e aparece em todos os aparelhos. Neste aparelho há uma cópia de ${usageKb()} KB que acelera o carregamento.`
             : `Tudo o que cria aqui fica guardado neste navegador (${usageKb()} KB de cerca de 5 000 KB). Exporte uma cópia antes de limpar o navegador.`}
         </p>
         <div className="row">
@@ -193,7 +198,7 @@ export default function Overview() {
                 await confirm({
                   title: remoteEnabled ? 'Limpar a cópia deste aparelho?' : 'Apagar todos os dados?',
                   text: remoteEnabled
-                    ? 'Só apaga a cópia neste aparelho. Os dados no Supabase mantêm-se e voltam a carregar.'
+                    ? 'Só apaga a cópia neste aparelho. Os dados no a base de dados mantêm-se e voltam a carregar.'
                     : 'Pedidos, propostas, promoções, vídeos, contactos e alterações ao catálogo deste aparelho. Exporte uma cópia antes, se precisar.',
                   confirmLabel: remoteEnabled ? 'Limpar a cópia' : 'Apagar tudo',
                   danger: true,
@@ -208,6 +213,7 @@ export default function Overview() {
           </button>
         </div>
       </Panel>
+      )}
     </>
   )
 }

@@ -36,7 +36,6 @@ export function Featured() {
             ))}
           </ul>
         </div>
-        <p className="feat__note wrap">Imagens dos produtos a partir das publicações da Tlhavika. Preço e disponibilidade na cotação.</p>
       </div>
     </section>
   )

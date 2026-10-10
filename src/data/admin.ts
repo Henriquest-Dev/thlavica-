@@ -12,7 +12,8 @@ export interface QuoteRequest {
   interesse?: string
   mensagem?: string
   /** Produtos da lista de cotação, com quantidade. */
-  itens?: { produtoId: string; nome: string; qtd: number }[]
+  /** Preço (sem desconto) e desconto em vigor no site quando o cliente fez o pedido. */
+  itens?: { produtoId: string; nome: string; qtd: number; preco?: number; desconto?: number }[]
   origem: 'formulario' | 'simulador' | 'lista'
   estado: QuoteStatus
   arquivada?: boolean
@@ -102,9 +103,5 @@ export const FORMAT_LABEL: Record<PromoFormat, string> = {
   popup: 'Pop-up',
 }
 
-export const DEFAULT_MEDIA: MediaItem[] = [
-  { id: 'm-foto-16', tipo: 'imagem', url: 'img/foto-16.webp', titulo: 'Termoacumulador em telhado de telha', legenda: 'Instalação fotografada pela Tlhavika', ativo: true },
-  { id: 'm-foto-15', tipo: 'imagem', url: 'img/foto-15.webp', titulo: 'Termoacumulador em laje', legenda: 'Cobertura plana', ativo: true },
-  { id: 'm-foto-17', tipo: 'imagem', url: 'img/foto-17.webp', titulo: 'Tubos de vácuo e depósito', legenda: 'Termoacumulador solar', ativo: true },
-  { id: 'm-foto-34', tipo: 'imagem', url: 'img/foto-34.webp', titulo: 'Depósitos elevados e painéis', legenda: 'Abastecimento de água com energia solar', ativo: true },
-]
+/** Sem exemplos: o carrossel do painel começa vazio e a empresa acrescenta as suas fotografias e vídeos. */
+export const DEFAULT_MEDIA: MediaItem[] = []

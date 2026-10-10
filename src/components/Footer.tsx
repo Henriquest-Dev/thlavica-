@@ -48,7 +48,6 @@ export function Footer() {
           </button>{' '}
           Tlhavika
         </p>
-        <p>As marcas de equipamentos pertencem aos respetivos fabricantes. Preços e disponibilidade na cotação.</p>
       </div>
     </footer>
   )

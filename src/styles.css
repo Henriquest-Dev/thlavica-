@@ -604,34 +604,10 @@ main:focus {
   outline: 2px solid var(--amber);
   outline-offset: 2px;
 }
-.hero__m {
-  position: relative;
-}
-.hero__mtrack {
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.hero__mtrack::-webkit-scrollbar {
-  display: none;
-}
-.hero__mtrack img {
+.hero__m img {
   display: block;
-  max-width: none;
-  width: auto;
-  height: 470px;
-}
-.hero__mhint {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: rgb(8 28 54 / 78%);
-  color: var(--white);
-  font-size: 12.5px;
-  font-weight: 600;
-  pointer-events: none;
-  animation: nudge 2.2s var(--ease) 1s infinite;
+  width: 100%;
+  height: auto;
 }
 @keyframes nudge {
   50% {
@@ -1910,21 +1886,19 @@ main:focus {
     font-size: 15.5px;
     margin-bottom: 20px;
   }
+  /* o cartaz aparece inteiro; as três áreas ficam numa fila por baixo, sobre o fundo azul */
   .hero__band {
+    position: static;
     width: 100%;
-    gap: 6px;
-    padding: 72px 14px 14px;
-    pointer-events: none;
+    gap: 10px;
+    padding: 18px var(--gut) 4px;
   }
   .hero__band::before {
-    -webkit-mask-image: none;
-    mask-image: none;
-    background: linear-gradient(0deg, rgb(8 28 54 / 96%) 0%, rgb(8 28 54 / 84%) 50%, rgb(8 28 54 / 0%) 100%);
+    display: none;
   }
   .hero__stat {
     gap: 6px;
     padding: 14px 4px 0 0;
-    pointer-events: auto;
   }
   .hero__stat-big {
     font-size: clamp(18px, 5.3vw, 22px);
@@ -3534,4 +3508,162 @@ main:focus {
 }
 .popup[data-estilo='claro'] .pprods__item:hover {
   background: rgb(14 47 87 / 13%);
+}
+
+/* ---------- Agradecimento depois do pedido de cotação ---------- */
+.thanks {
+  width: min(540px, 100%);
+}
+.thanks__photo {
+  position: relative;
+  height: 190px;
+  background: var(--navy-900);
+}
+.thanks__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 40%;
+  opacity: 0.78;
+}
+.thanks__photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgb(8 28 54 / 70%), rgb(8 28 54 / 0%) 70%);
+}
+.thanks__tick {
+  position: absolute;
+  z-index: 1;
+  left: 28px;
+  bottom: -26px;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 4px solid var(--white);
+  border-radius: 50%;
+  background: var(--amber);
+  color: var(--navy-900);
+}
+.thanks__body {
+  display: grid;
+  gap: 12px;
+  padding: 40px 28px 28px;
+  overflow-y: auto;
+}
+.thanks__body h2 {
+  font-size: clamp(28px, 4vw, 36px);
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  color: var(--navy);
+}
+.thanks__lead {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.thanks__body p {
+  margin: 0;
+  color: var(--muted);
+}
+.thanks__body strong {
+  color: var(--navy);
+}
+.thanks__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* ligação discreta para quem prefere o WhatsApp (opcional, nunca o caminho principal) */
+a.optional {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.drawer__alt {
+  display: block;
+  padding: 6px 0;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* preço e desconto de produto */
+.pc__sale {
+  position: absolute;
+  z-index: 2;
+  top: 44px;
+  left: 12px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  background: var(--orange);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 800;
+}
+.pc__price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+}
+.pc__price s,
+.pdp__now s {
+  margin-right: 4px;
+  font-weight: 500;
+  opacity: 0.65;
+}
+.pdp__price {
+  display: grid;
+  gap: 6px;
+  margin: 18px 0 4px;
+}
+.pdp__now {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 34px);
+  letter-spacing: -0.03em;
+  color: var(--navy);
+}
+.pdp__now strong {
+  font-weight: 800;
+}
+.pdp__now s {
+  font-size: 0.6em;
+  color: var(--muted);
+}
+.pdp__off {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+.pdp__off .selo {
+  background: var(--orange);
+  color: var(--white);
+}
+
+.promo-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff7e8;
+  color: var(--navy);
+  font-size: 15px;
+}
+.promo-note .selo,
+.selo--sm {
+  background: var(--orange);
+  color: var(--white);
+}
+.selo--sm {
+  margin-left: 6px;
+  padding: 1px 7px;
+  font-size: 12px;
 }

@@ -3,19 +3,20 @@ import { Ico } from '../components/Ico'
 import { useSearchParams } from 'react-router-dom'
 import { categories, solutions, useContact, wa } from '../data/site'
 import { useCatalog } from '../lib/catalog'
+import { activeDiscount } from '../lib/pricing'
 import { saveQuoteRequest, takePrefill, useQuoteList } from '../lib/quotes'
 import { useReveal } from '../lib/useReveal'
 import { useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
 import { Arrow } from '../components/Arrow'
+import { ThankYou } from '../components/ThankYou'
 
 const USES = ['Casa', 'Comércio', 'Agricultura', 'Instalação profissional']
 const PHONE_RE = /^(\+?258)?\s?8[2-7]\s?\d{3}\s?\d{4}$|^\+\d[\d\s]{7,16}$/
 
 /**
- * Pedido de cotação. Não há servidor: o formulário abre o WhatsApp com a
- * mensagem preenchida para o utilizador rever e enviar. Nunca se mostra
- * "enviado" — o pedido só chega quando o utilizador o envia no WhatsApp.
+ * Pedido de cotação. Ao enviar, o pedido fica guardado (aparece no painel da empresa e gera um aviso) e o cliente
+ * vê um agradecimento. O WhatsApp é só uma opção à parte, para quem preferir falar já.
  */
 export default function Contact() {
   const [params] = useSearchParams()
@@ -28,18 +29,25 @@ export default function Contact() {
   useReveal()
   const pre = params.get('solucao') ?? (params.get('produto') ? `produto:${params.get('produto')}` : params.get('categoria') ? `categoria:${params.get('categoria')}` : '')
   const products = useCatalog()
-  const { items: listed } = useQuoteList()
+  const { items: listed, clear: clearList } = useQuoteList()
   const fromList = params.get('lista') === '1'
   const listLines = listed
     .map((i) => ({ ...i, p: products.find((p) => p.id === i.id) }))
     .filter((r): r is typeof r & { p: NonNullable<typeof r.p> } => Boolean(r.p))
   const [v, setV] = useState(() => ({ nome: '', telefone: '', local: '', uso: '', interesse: pre, mensagem: takePrefill() }))
   const [err, setErr] = useState<Record<string, string>>({})
-  const [sent, setSent] = useState<null | { url: string; opened: boolean }>(null)
+  const [thanks, setThanks] = useState<null | { nome: string; telefone: string }>(null)
 
   const set = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setV({ ...v, [k]: e.target.value })
     setErr({ ...err, [k]: '' })
+  }
+
+  // produto escolhido no formulário (vindo da página do produto ou do campo Interesse)
+  const picked = v.interesse.startsWith('produto:') ? products.find((p) => `produto:${p.id}` === v.interesse) : undefined
+  const itemOf = (p: (typeof products)[number], qtd: number) => {
+    const desconto = activeDiscount(p)
+    return { produtoId: p.id, nome: p.name, qtd, ...(p.price ? { preco: p.price } : {}), ...(desconto ? { desconto } : {}) }
   }
 
   const label = (val: string) =>
@@ -60,34 +68,42 @@ export default function Contact() {
       document.getElementById(`f-${first}`)?.focus()
       return
     }
-    const text = [
+    const items = fromList
+      ? listLines.map((r) => itemOf(r.p, r.qtd))
+      : picked
+        ? [itemOf(picked, 1)]
+        : undefined
+    if (!trap)
+      saveQuoteRequest({
+        nome: v.nome.trim(),
+        telefone: v.telefone.trim(),
+        local: v.local.trim(),
+        uso: v.uso,
+        interesse: v.interesse ? label(v.interesse) : undefined,
+        mensagem: v.mensagem.trim() || undefined,
+        itens: items,
+        origem: fromList ? 'lista' : v.mensagem.startsWith('Simulação') ? 'simulador' : 'formulario',
+      })
+    setThanks({ nome: v.nome.trim(), telefone: v.telefone.trim() })
+  }
+
+  const closeThanks = () => {
+    setThanks(null)
+    if (fromList) clearList()
+    setV({ nome: '', telefone: '', local: '', uso: '', interesse: '', mensagem: '' })
+  }
+
+  /** Para quem prefere falar já no WhatsApp (opcional): mensagem preparada com o que já escreveu. */
+  const whatsappText = () =>
+    [
       'Olá Tlhavika, gostaria de uma cotação.',
-      '',
-      `Nome: ${v.nome}`,
-      `Telefone: ${v.telefone}`,
-      `Local: ${v.local}`,
-      `Uso: ${v.uso}`,
+      v.nome.trim() && `Nome: ${v.nome.trim()}`,
       v.interesse && `Interesse: ${label(v.interesse)}`,
-      fromList && listLines.length > 0 && `Produtos da lista:\n${listLines.map((r) => `• ${r.qtd} × ${r.p.name}`).join('\n')}`,
-      v.mensagem && `Detalhes: ${v.mensagem}`,
+      fromList && listLines.length > 0 && `Produtos:\n${listLines.map((r) => `• ${r.qtd} × ${r.p.name}`).join('\n')}`,
+      v.mensagem.trim() && `Detalhes: ${v.mensagem.trim()}`,
     ]
       .filter(Boolean)
       .join('\n')
-    if (!trap) saveQuoteRequest({
-      nome: v.nome.trim(),
-      telefone: v.telefone.trim(),
-      local: v.local.trim(),
-      uso: v.uso,
-      interesse: v.interesse ? label(v.interesse) : undefined,
-      mensagem: v.mensagem.trim() || undefined,
-      itens: fromList ? listLines.map((r) => ({ produtoId: r.id, nome: r.p.name, qtd: r.qtd })) : undefined,
-      origem: fromList ? 'lista' : v.mensagem.startsWith('Simulação') ? 'simulador' : 'formulario',
-    })
-    const url = wa(text)
-    const w = window.open(url, '_blank')
-    if (w) w.opener = null
-    setSent({ url, opened: Boolean(w) })
-  }
 
   const field = (k: keyof typeof v, lab: string, input: React.ReactNode) => (
     <div className={`field${err[k] ? ' has-err' : ''}`}>
@@ -105,7 +121,7 @@ export default function Contact() {
           <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hp" />
           <div className="form__grid">
             {field('nome', 'Nome *', <input id="f-nome" value={v.nome} onChange={set('nome')} autoComplete="name" maxLength={120} />)}
-            {field('telefone', 'Telefone / WhatsApp *', <input id="f-telefone" value={v.telefone} onChange={set('telefone')} inputMode="tel" autoComplete="tel" maxLength={40} placeholder="+258 8X XXX XXXX" />)}
+            {field('telefone', 'WhatsApp / telefone *', <input id="f-telefone" value={v.telefone} onChange={set('telefone')} inputMode="tel" autoComplete="tel" maxLength={40} placeholder="+258 8X XXX XXXX" />)}
             {field('local', 'Local *', <input id="f-local" value={v.local} onChange={set('local')} maxLength={160} placeholder="Cidade ou província" />)}
             {field(
               'uso',
@@ -150,6 +166,12 @@ export default function Contact() {
             </div>
           </div>
 
+          {picked && activeDiscount(picked) > 0 && (
+            <p className="promo-note" role="status">
+              <span className="selo">-{activeDiscount(picked)}%</span> O produto escolhido tem desconto. Fica registado no seu pedido.
+            </p>
+          )}
+
           {fromList && listLines.length > 0 && (
             <div className="field field--wide listbox">
               <p className="sol__h">Produtos da lista de cotação</p>
@@ -157,32 +179,26 @@ export default function Contact() {
                 {listLines.map((r) => (
                   <li key={r.id}>
                     <span>{r.qtd} ×</span> {r.p.name}
+                    {activeDiscount(r.p) > 0 && <span className="selo selo--sm"> -{activeDiscount(r.p)}%</span>}
                   </li>
                 ))}
               </ul>
             </div>
           )}
 
-          {sent && (
-            <div className="notice" role="status">
-              <p>
-                <strong>{sent.opened ? 'Mensagem preparada no WhatsApp.' : 'Abra o WhatsApp para enviar.'}</strong> O pedido só chega à
-                Tlhavika depois de carregar em Enviar no WhatsApp.
-              </p>
-              <a href={sent.url} target="_blank" rel="noopener noreferrer">
-                Abrir WhatsApp
-              </a>
-            </div>
-          )}
-
           <div className="form__foot">
             <button type="submit" className="pill pill--dark">
-              Continuar no WhatsApp
+              Enviar pedido de cotação
               <span className="pill__icon">
                 <Arrow size={12} />
               </span>
             </button>
-            <p className="muted">Abre o WhatsApp com o pedido escrito, para rever e enviar.</p>
+            <p className="muted">
+              Respondemos com uma proposta, pelo WhatsApp.{' '}
+              <a className="optional" href={wa(whatsappText())} target="_blank" rel="noopener noreferrer">
+                Prefere falar já no WhatsApp?
+              </a>
+            </p>
           </div>
         </form>
 
@@ -205,6 +221,7 @@ export default function Contact() {
           </a>
         </aside>
       </div>
+      {thanks && <ThankYou nome={thanks.nome} telefone={thanks.telefone} onClose={closeThanks} />}
     </div>
   )
 }

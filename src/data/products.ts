@@ -19,6 +19,11 @@ export interface Product {
   /** Número da publicação de origem (source-assets/fontes.csv). */
   source: number
   featured?: boolean
+  /** Preço em MZN (opcional). Sem preço, o site diz que é confirmado na cotação. */
+  price?: number
+  /** Desconto em percentagem (opcional) e último dia dele. */
+  discount?: number
+  discountUntil?: string
   /** Imagem ilustrativa (interpretação do anúncio), não fotografia do modelo. */
   illustrative?: boolean
 }

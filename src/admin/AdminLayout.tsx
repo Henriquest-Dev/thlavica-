@@ -44,7 +44,6 @@ function Gate({ onEnter }: { onEnter: () => void }) {
         <h1>Administração</h1>
         <p className="muted">Gerir catálogo, cotações, promoções e vídeos do site.</p>
         <AdminLoginForm onSuccess={onEnter} />
-        <p className="gate__note">Protótipo: a verificação é feita neste navegador. A proteção real chega com a base de dados (Supabase).</p>
         <Link to="/" className="gate__back">
           Voltar ao site
         </Link>
@@ -86,12 +85,12 @@ export default function AdminLayout() {
   }
 
   const badge = !remoteEnabled
-    ? { cls: 'local', text: 'Protótipo · dados neste aparelho' }
+    ? { cls: 'local', text: 'Dados guardados neste aparelho' }
     : sync.state === 'saving'
       ? { cls: 'saving', text: 'A guardar…' }
       : sync.state === 'error' || sync.state === 'offline'
         ? { cls: 'error', text: sync.state === 'offline' ? 'Sem ligação · por guardar' : 'Erro ao guardar' }
-        : { cls: 'ok', text: 'Guardado no Supabase' }
+        : { cls: 'ok', text: 'Tudo guardado' }
 
   const link = (n: Item) => (
     <NavLink key={n.to} to={n.to} end={n.end}>
