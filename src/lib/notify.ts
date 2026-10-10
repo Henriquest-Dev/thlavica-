@@ -14,11 +14,15 @@ export interface NotifyConfig {
   ntfy_token: string | null
   admin_url: string
   icon_url: string
+  email_ativo: boolean
+  email_url: string | null
+  email_chave: string | null
+  email_para: string | null
 }
 
 export const notifyAvailable = remoteEnabled
 
-const COLUMNS = 'ativo,ntfy_server,ntfy_topic,ntfy_token,admin_url,icon_url'
+const COLUMNS = 'ativo,ntfy_server,ntfy_topic,ntfy_token,admin_url,icon_url,email_ativo,email_url,email_chave,email_para'
 
 export async function loadNotify(): Promise<NotifyConfig | null> {
   const c = await getClient()
@@ -60,4 +64,38 @@ export async function sendTest(c: NotifyConfig): Promise<void> {
   })
   if (r.status === 429) throw new Error('O ntfy atingiu o limite diário deste endereço. Crie uma conta gratuita em ntfy.sh e cole o token em "Avançado".')
   if (!r.ok) throw new Error(`O ntfy recusou o aviso (${r.status}).`)
+}
+
+/* ---------------------------------------------------------------- email (Google Apps Script) */
+
+const MAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const SCRIPT_URL = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/
+
+/** Lista de emails separados por vírgula ou espaço; devolve só os válidos (máximo 5) e os que falharam. */
+export function parseEmails(text: string): { ok: string[]; bad: string[] } {
+  const all = text.split(/[\s,;]+/).filter(Boolean)
+  return { ok: all.filter((e) => MAIL.test(e)).slice(0, 5), bad: all.filter((e) => !MAIL.test(e)) }
+}
+
+/** Mensagem de erro para os campos do email, ou '' se estiver tudo certo para ligar. */
+export function validateEmail(para: string, url: string, chave: string): string {
+  const { ok, bad } = parseEmails(para)
+  if (!ok.length) return 'Indique pelo menos um email que vai receber os avisos.'
+  if (bad.length) return `Email inválido: ${bad[0]}`
+  if (!SCRIPT_URL.test(url.trim())) return 'O endereço do script tem de ser o que o Google dá no fim: https://script.google.com/macros/s/…/exec'
+  if (chave.trim().length < 12) return 'A chave deve ter pelo menos 12 caracteres (a mesma que pôs no script).'
+  return ''
+}
+
+/**
+ * Pede ao script do Google que envie um email de teste. O navegador não consegue ler a resposta do Google
+ * (é de outro site), por isso só se sabe que o pedido saiu: o resultado vê-se na caixa de entrada.
+ */
+export async function sendEmailTest(url: string, chave: string, para: string): Promise<void> {
+  await fetch(url.trim(), {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ chave: chave.trim(), para, assunto: 'Tlhavika: email de teste', texto: 'Se recebeu este email, os avisos de novos pedidos de cotação estão a funcionar.' }),
+  })
 }

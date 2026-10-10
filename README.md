@@ -53,14 +53,20 @@ Nunca pôr no código nem no repositório a palavra-passe da base de dados nem a
 
 Os visitantes não carregam a biblioteca do Supabase: leem o catálogo e enviam pedidos com `fetch` direto à API REST (`publicSelect`/`publicInsert` em `supabase.ts`). A biblioteca só carrega no painel.
 
-## Avisos de novos pedidos (ntfy)
+## Avisos de novos pedidos por email
 
-Quando um visitante envia um pedido de cotação, um trigger da base de dados (`supabase/migrations/20261011000000_notificacoes.sql`, usa `pg_net`) faz um POST ao [ntfy](https://ntfy.sh), gratuito, e o aviso chega ao Android, ao iOS e ao computador, mesmo com o painel fechado. A mensagem leva só o nome e o local (nunca o telefone). Se o aviso falhar, o pedido guarda-se na mesma.
+A empresa não quer instalar apps: quando um visitante envia um pedido de cotação, a base de dados avisa por **email** (para o Gmail da empresa) e a empresa abre o painel e responde ao cliente. Nada para instalar. É gratuito: o email sai de um pequeno script do Google (Apps Script) chamado pela base de dados (`pg_net`).
 
-- O **tópico** (128 bits aleatórios) é criado pela migração e fica na tabela `notify_config`, que só administradores leem. Funciona como palavra-passe: não está no código nem no Git.
-- Em **Contactos → Avisos de novos pedidos** o administrador vê o tópico, liga/desliga, envia um aviso de teste, cria um tópico novo e, se o ntfy.sh chegar ao limite diário (partilhado por IP), cola o token de uma conta gratuita.
-- Telemóvel: app **ntfy** (Google Play / App Store) → `+` → nome do tópico. Computador: abrir `https://ntfy.sh/<tópico>` no Chrome ou Edge → Subscribe.
-- Com o painel aberto, `QuoteWatcher` também mostra um aviso e o número de pedidos novos no título do separador.
+Instalação (uma vez por site, ~5 minutos):
+
+1. No SQL Editor do Supabase, executar `supabase/migrations/20261012000000_avisos_email.sql` (completo; não precisa do 20261011).
+2. Em [script.google.com](https://script.google.com) → **Novo projeto**, colar `supabase/apps-script/avisos.gs` e trocar `COLOQUE_AQUI_UMA_CHAVE_COMPRIDA` por uma chave comprida (anotá-la).
+3. **Implementar → Nova implementação → Aplicação Web**, "Quem tem acesso": **Qualquer pessoa**. Autorizar (o Google avisa que a app não está verificada: Avançadas → Ir para o projeto). Copiar o endereço que termina em `/exec`.
+4. No painel: **Contactos → Avisos de novos pedidos por email** → colar o endereço e a chave, confirmar o email da empresa, **Guardar**, **Enviar email de teste**, e ligar o interruptor.
+
+O script usa a conta Google de quem o criou para enviar: criá-lo com a conta Gmail da empresa evita depender de uma conta pessoal. O email leva nome, telefone, local, uso e mensagem do pedido e a ligação ao painel. Se o aviso falhar, o pedido guarda-se na mesma. O script só envia se a chave estiver certa (e para no máximo 5 emails válidos).
+
+Opcional, para técnicos: o mesmo trigger também pode avisar pelo ntfy (app no telemóvel), desligado por omissão (secção no fim de Contactos). Com o painel aberto, `QuoteWatcher` mostra um aviso e o número de pedidos novos no título do separador.
 
 ## SEO e publicação
 

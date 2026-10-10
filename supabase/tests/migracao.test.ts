@@ -190,13 +190,13 @@ describe('avisos de novos pedidos (ntfy)', () => {
   const calls = async () => (await db.query('select url, body, headers from net.calls order by id')).rows as { url: string; body: Record<string, unknown>; headers: Record<string, string> }[]
   const novo = (id: string) => as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('${id}', '{"nome":"Maria","local":"Matola","telefone":"+258 84 000 0000","estado":"nova"}')`))
   beforeEach(async () => {
-    await db.exec(`delete from net.calls; delete from public.quote_requests where id like 'n-%'; set test.net_falha = '0'; update public.notify_config set ativo = true, ntfy_token = null`)
+    await db.exec(`delete from net.calls; delete from public.quote_requests where id like 'n-%'; set test.net_falha = '0'; update public.notify_config set ativo = true, ntfy_token = null, email_ativo = false`)
   })
 
   it('cria o tópico aleatório uma vez e não o troca ao repetir a migração', async () => {
     const t = ((await db.query('select ntfy_topic from public.notify_config')).rows[0] as { ntfy_topic: string }).ntfy_topic
     expect(t).toMatch(/^tlhavika-[0-9a-f]{32}$/)
-    await db.exec(readFileSync('supabase/migrations/20261011000000_notificacoes.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261012000000_avisos_email.sql', 'utf8'))
     expect(((await db.query('select ntfy_topic from public.notify_config')).rows[0] as { ntfy_topic: string }).ntfy_topic).toBe(t)
   })
 
@@ -233,5 +233,49 @@ describe('avisos de novos pedidos (ntfy)', () => {
     expect((await as('authenticated', ADMIN, () => db.query('select * from public.notify_config'))).rows).toHaveLength(1)
     await as('anon', null, () => ok(`update public.notify_config set ntfy_topic = 'hackeado'`)) // sem política: afeta 0 linhas
     expect(((await db.query('select ntfy_topic from public.notify_config')).rows[0] as { ntfy_topic: string }).ntfy_topic).not.toBe('hackeado')
+  })
+
+  describe('por email (Apps Script)', () => {
+    const URL_ = 'https://script.google.com/macros/s/ABC/exec'
+    const configurar = (extra = '') => db.exec(`update public.notify_config set ativo = false, email_ativo = true, email_url = '${URL_}', email_chave = 'segredo', email_para = 'empresa@exemplo.pt'; ${extra}`)
+
+    it('envia o email com os dados do pedido e a ligação ao painel', async () => {
+      await configurar()
+      await novo('n-6')
+      const c = await calls()
+      expect(c).toHaveLength(1)
+      expect(c[0].url).toBe(URL_)
+      expect(c[0].body).toMatchObject({ chave: 'segredo', para: 'empresa@exemplo.pt', assunto: 'Tlhavika: novo pedido de cotação — Maria · Matola' })
+      const texto = (c[0].body as { texto: string }).texto
+      expect(texto).toContain('Nome: Maria')
+      expect(texto).toContain('Telefone: +258 84 000 0000')
+      expect(texto).toContain('/admin/cotacoes/')
+    })
+
+    it('desligado, sem endereço ou sem destinatários, não envia', async () => {
+      await configurar(`update public.notify_config set email_ativo = false`)
+      await novo('n-7')
+      await configurar(`update public.notify_config set email_url = null`)
+      await novo('n-8')
+      await configurar(`update public.notify_config set email_para = ''`)
+      await novo('n-9')
+      expect(await calls()).toHaveLength(0)
+    })
+
+    it('email e ntfy podem estar ligados ao mesmo tempo, e um erro não bloqueia o pedido', async () => {
+      await configurar(`update public.notify_config set ativo = true`)
+      await novo('n-10')
+      expect((await calls()).map((x) => x.url)).toEqual([URL_, 'https://ntfy.sh'])
+      await db.exec(`set test.net_falha = '1'`)
+      await novo('n-11')
+      expect(((await db.query(`select count(*)::int as n from public.quote_requests where id = 'n-11'`)).rows[0] as { n: number }).n).toBe(1)
+    })
+
+    it('o ntfy fica desligado por omissão e as chaves do email só se veem como administrador', async () => {
+      expect(((await db.query(`select column_default from information_schema.columns where table_name = 'notify_config' and column_name = 'ativo'`)).rows[0] as { column_default: string }).column_default).toBe('false')
+      await configurar()
+      expect((await as('anon', null, () => db.query('select email_chave from public.notify_config'))).rows).toHaveLength(0)
+      expect((await as('authenticated', ADMIN, () => db.query('select email_chave from public.notify_config'))).rows).toEqual([{ email_chave: 'segredo' }])
+    })
   })
 })
