@@ -109,9 +109,13 @@ export interface ProductLike {
   model?: string
   imageUrl?: string
   categoryName?: string
+  /** Preço a pagar em MZN (já com desconto). Só se a Tlhavika o publicou no painel. */
+  price?: number
+  /** Último dia em que esse preço vale (AAAA-MM-DD). */
+  priceUntil?: string
 }
 
-/** Produto sem preço nem stock: a Tlhavika confirma ambos na cotação, por isso não se publicam. */
+/** Preço só se existir no painel; a disponibilidade nunca se publica (a Tlhavika confirma-a na cotação). */
 export function productSchema(p: ProductLike): Json {
   return {
     '@type': 'Product',
@@ -122,6 +126,17 @@ export function productSchema(p: ProductLike): Json {
     ...(p.brand ? { brand: { '@type': 'Brand', name: p.brand } } : {}),
     ...(p.model ? { model: p.model } : {}),
     ...(p.categoryName ? { category: p.categoryName } : {}),
+    ...(p.price && p.price > 0
+      ? {
+          offers: {
+            '@type': 'Offer',
+            price: p.price.toFixed(2),
+            priceCurrency: 'MZN',
+            url: pageUrl(`/produtos/${p.id}`),
+            ...(p.priceUntil ? { priceValidUntil: p.priceUntil } : {}),
+          },
+        }
+      : {}),
   }
 }
 

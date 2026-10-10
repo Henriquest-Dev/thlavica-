@@ -56,11 +56,15 @@ describe('seo', () => {
     expect(pageTitle('Sobre a Tlhavika')).toBe('Sobre a Tlhavika')
   })
 
-  it('o produto não inventa preço nem stock', async () => {
+  it('o produto só leva preço se existir, e nunca stock', async () => {
     const { productSchema } = await load()
     const p = productSchema({ id: 'p1', name: 'Bomba X', summary: 'Resumo', brand: 'Marca', model: 'M1' })
     expect(p['@type']).toBe('Product')
     expect(p).not.toHaveProperty('offers')
+    const comPreco = productSchema({ id: 'p1', name: 'Bomba X', summary: 'Resumo', price: 13175, priceUntil: '2026-12-31' }) as Record<string, any>
+    expect(comPreco.offers).toEqual({ '@type': 'Offer', price: '13175.00', priceCurrency: 'MZN', url: 'https://exemplo.test/thlavica-/produtos/p1/', priceValidUntil: '2026-12-31' })
+    expect(comPreco.offers).not.toHaveProperty('availability')
+    expect(productSchema({ id: 'p1', name: 'x', summary: 'y', price: 0 })).not.toHaveProperty('offers')
     expect(p.url).toBe('https://exemplo.test/thlavica-/produtos/p1/')
     expect(p.brand).toEqual({ '@type': 'Brand', name: 'Marca' })
   })

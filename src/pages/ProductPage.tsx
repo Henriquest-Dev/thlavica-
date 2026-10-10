@@ -22,7 +22,7 @@ export default function ProductPage() {
     noindex: !p,
     jsonLd: p
       ? [
-          productSchema({ id: p.id, name: p.name, summary: p.summary, brand: p.brand, model: p.model, categoryName: cat?.name, imageUrl: fileUrl(pic) }),
+          productSchema({ id: p.id, name: p.name, summary: p.summary, brand: p.brand, model: p.model, categoryName: cat?.name, imageUrl: fileUrl(pic), price: finalPrice(p), priceUntil: activeDiscount(p) ? p.discountUntil : undefined }),
           breadcrumbSchema([
             { name: 'Início', path: '/' },
             { name: 'Catálogo', path: '/produtos' },
