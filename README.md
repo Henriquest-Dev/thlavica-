@@ -53,6 +53,15 @@ Nunca pôr no código nem no repositório a palavra-passe da base de dados nem a
 
 Os visitantes não carregam a biblioteca do Supabase: leem o catálogo e enviam pedidos com `fetch` direto à API REST (`publicSelect`/`publicInsert` em `supabase.ts`). A biblioteca só carrega no painel.
 
+## Avisos de novos pedidos (ntfy)
+
+Quando um visitante envia um pedido de cotação, um trigger da base de dados (`supabase/migrations/20261011000000_notificacoes.sql`, usa `pg_net`) faz um POST ao [ntfy](https://ntfy.sh), gratuito, e o aviso chega ao Android, ao iOS e ao computador, mesmo com o painel fechado. A mensagem leva só o nome e o local (nunca o telefone). Se o aviso falhar, o pedido guarda-se na mesma.
+
+- O **tópico** (128 bits aleatórios) é criado pela migração e fica na tabela `notify_config`, que só administradores leem. Funciona como palavra-passe: não está no código nem no Git.
+- Em **Contactos → Avisos de novos pedidos** o administrador vê o tópico, liga/desliga, envia um aviso de teste, cria um tópico novo e, se o ntfy.sh chegar ao limite diário (partilhado por IP), cola o token de uma conta gratuita.
+- Telemóvel: app **ntfy** (Google Play / App Store) → `+` → nome do tópico. Computador: abrir `https://ntfy.sh/<tópico>` no Chrome ou Edge → Subscribe.
+- Com o painel aberto, `QuoteWatcher` também mostra um aviso e o número de pedidos novos no título do separador.
+
 ## SEO e publicação
 
 `npm run build:ghpages` compila, **pré-renderiza** cada página (`scripts/prerender.mjs`) e gera `sitemap.xml` e `robots.txt`. Cada rota passa a ter o seu `index.html` com título, descrição, endereço canónico, Open Graph/Twitter, dados estruturados (LocalBusiness, WebSite, FAQPage, Product, BreadcrumbList) e o conteúdo, e responde com 200 (o GitHub Pages devolveria 404 às rotas só de JavaScript). O `<head>` de cada página vem de `useSeo` em `src/lib/seo.ts`.

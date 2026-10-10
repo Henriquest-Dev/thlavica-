@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { defaultContact, useContact, type Contact } from '../data/site'
 import { removeStored, writeStored } from '../lib/store'
 import { useFeedback } from './feedback'
+import { NotifyPanel } from './NotifyPanel'
 import { Field, PageTitle, Panel } from './ui'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -79,6 +80,7 @@ export default function Settings() {
           </div>
         </form>
       </Panel>
+      <NotifyPanel />
     </>
   )
 }

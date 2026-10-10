@@ -132,6 +132,11 @@ export default function Overview() {
               </Link>
             </li>
             <li>
+              <Link to="/admin/contactos#avisos">
+                <Ico name="telefone" size={20} /> Receber avisos de novos pedidos
+              </Link>
+            </li>
+            <li>
               <Link to="/admin/promocoes?novo=1">
                 <Ico name="etiqueta" size={20} /> Criar uma promoção
               </Link>

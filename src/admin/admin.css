@@ -1578,3 +1578,37 @@
 .asheet .adm__sync--error {
   color: #b3261e !important;
 }
+
+/* ---------- Avisos de novos pedidos ---------- */
+.notify {
+  display: grid;
+  gap: 16px;
+}
+.notify__lead {
+  max-width: 62ch;
+  color: var(--a-muted);
+}
+.notify__steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 22px;
+  max-width: 70ch;
+  color: var(--a-text);
+}
+.notify__adv {
+  padding: 12px 14px;
+  border: 1px solid var(--a-line);
+  border-radius: 12px;
+}
+.notify__adv summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.notify__adv .row {
+  margin-top: 10px;
+}
+.notify__adv input {
+  flex: 1;
+  min-width: 0;
+}

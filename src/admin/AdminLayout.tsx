@@ -12,6 +12,7 @@ import { useSyncStatus } from '../lib/useSyncStatus'
 import { retryNow } from '../lib/sync'
 import type { QuoteRequest } from '../data/admin'
 import { FeedbackProvider } from './feedback'
+import { QuoteWatcher } from './QuoteWatcher'
 import './admin.css'
 
 const NO_QUOTES: QuoteRequest[] = []
@@ -102,6 +103,7 @@ export default function AdminLayout() {
 
   return (
     <FeedbackProvider>
+      <QuoteWatcher />
       <div className="adm">
         {/* Computador: barra lateral fixa */}
         <aside className="adm__side">

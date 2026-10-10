@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 
 /**
@@ -34,6 +34,13 @@ beforeAll(async () => {
     create schema auth;
     create table auth.users (id uuid primary key, email text);
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+    -- pg_net falso: regista as chamadas (o real faz o POST em segundo plano)
+    create schema net;
+    create table net.calls (id serial primary key, url text, body jsonb, headers jsonb);
+    create function net.http_post(url text, body jsonb default '{}', params jsonb default '{}', headers jsonb default '{}', timeout_milliseconds integer default 5000)
+      returns bigint language plpgsql as $$ begin
+        if current_setting('test.net_falha', true) = '1' then raise exception 'sem rede'; end if;
+        insert into net.calls (url, body, headers) values (url, body, headers); return 1; end $$;
     create schema storage;
     create table storage.buckets (id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
     create table storage.objects (id serial primary key, bucket_id text, name text);
@@ -176,5 +183,55 @@ describe('esquema', () => {
     await db.query(`update public.promos set data = '{"titulo":"Promo 2"}' where id = 'p1'`)
     const after = (await db.query(`select updated_at from public.promos where id = 'p1'`)).rows[0] as { updated_at: Date }
     expect(+after.updated_at).toBeGreaterThan(+before.updated_at)
+  })
+})
+
+describe('avisos de novos pedidos (ntfy)', () => {
+  const calls = async () => (await db.query('select url, body, headers from net.calls order by id')).rows as { url: string; body: Record<string, unknown>; headers: Record<string, string> }[]
+  const novo = (id: string) => as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('${id}', '{"nome":"Maria","local":"Matola","telefone":"+258 84 000 0000","estado":"nova"}')`))
+  beforeEach(async () => {
+    await db.exec(`delete from net.calls; delete from public.quote_requests where id like 'n-%'; set test.net_falha = '0'; update public.notify_config set ativo = true, ntfy_token = null`)
+  })
+
+  it('cria o tópico aleatório uma vez e não o troca ao repetir a migração', async () => {
+    const t = ((await db.query('select ntfy_topic from public.notify_config')).rows[0] as { ntfy_topic: string }).ntfy_topic
+    expect(t).toMatch(/^tlhavika-[0-9a-f]{32}$/)
+    await db.exec(readFileSync('supabase/migrations/20261011000000_notificacoes.sql', 'utf8'))
+    expect(((await db.query('select ntfy_topic from public.notify_config')).rows[0] as { ntfy_topic: string }).ntfy_topic).toBe(t)
+  })
+
+  it('um pedido novo envia o aviso com nome e local (sem telefone)', async () => {
+    await novo('n-1')
+    const c = await calls()
+    expect(c).toHaveLength(1)
+    expect(c[0].url).toBe('https://ntfy.sh')
+    expect(c[0].body).toMatchObject({ title: 'Novo pedido de cotação', message: 'Maria · Matola', priority: 4 })
+    expect(JSON.stringify(c[0].body)).not.toContain('258')
+    expect(c[0].headers).toEqual({ 'Content-Type': 'application/json' })
+  })
+
+  it('com token, envia-o; desligado, não envia nada', async () => {
+    await db.exec(`update public.notify_config set ntfy_token = 'tk_abc'`)
+    await novo('n-2')
+    expect((await calls())[0].headers.Authorization).toBe('Bearer tk_abc')
+    await db.exec(`delete from net.calls; update public.notify_config set ativo = false`)
+    await novo('n-3')
+    expect(await calls()).toHaveLength(0)
+  })
+
+  it('se o aviso falhar, o pedido guarda-se na mesma', async () => {
+    await db.exec(`set test.net_falha = '1'`)
+    await novo('n-4')
+    expect(((await db.query(`select count(*)::int as n from public.quote_requests where id = 'n-4'`)).rows[0] as { n: number }).n).toBe(1)
+  })
+
+  it('pedidos recusados não avisam, e só administradores veem o tópico', async () => {
+    await fails(as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('n-5', '{"nome":"A","estado":"nova"}')`)))
+    expect(await calls()).toHaveLength(0)
+    expect((await as('anon', null, () => db.query('select * from public.notify_config'))).rows).toHaveLength(0)
+    expect((await as('authenticated', VISITOR, () => db.query('select * from public.notify_config'))).rows).toHaveLength(0)
+    expect((await as('authenticated', ADMIN, () => db.query('select * from public.notify_config'))).rows).toHaveLength(1)
+    await as('anon', null, () => ok(`update public.notify_config set ntfy_topic = 'hackeado'`)) // sem política: afeta 0 linhas
+    expect(((await db.query('select ntfy_topic from public.notify_config')).rows[0] as { ntfy_topic: string }).ntfy_topic).not.toBe('hackeado')
   })
 })
