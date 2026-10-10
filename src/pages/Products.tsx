@@ -63,7 +63,7 @@ export default function Products() {
             {categories.map((c) => {
               const n = products.filter((p) => p.category === c.id).length
               return (
-                <button key={c.id} role="tab" aria-selected={cat === c.id} onClick={() => navigate(`/categoria/${c.id}`, { replace: true })}>
+                <button key={c.id} role="tab" data-empty={n === 0 || undefined} aria-selected={cat === c.id} onClick={() => navigate(`/categoria/${c.id}`, { replace: true })}>
                   {c.name} <span>{n}</span>
                 </button>
               )
