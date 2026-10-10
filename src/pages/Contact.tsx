@@ -5,7 +5,7 @@ import { categories, solutions, useContact, wa } from '../data/site'
 import { useCatalog } from '../lib/catalog'
 import { saveQuoteRequest, takePrefill, useQuoteList } from '../lib/quotes'
 import { useReveal } from '../lib/useReveal'
-import { useMeta } from '../lib/useMeta'
+import { useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
 import { Arrow } from '../components/Arrow'
 
@@ -20,7 +20,11 @@ const PHONE_RE = /^(\+?258)?\s?8[2-7]\s?\d{3}\s?\d{4}$|^\+\d[\d\s]{7,16}$/
 export default function Contact() {
   const [params] = useSearchParams()
   const contact = useContact()
-  useMeta('Contacto', 'Peça uma cotação à Tlhavika: energia solar, bombas de água e aquecimento solar.')
+  useSeo({
+    title: 'Pedir cotação e contactos',
+    description: 'Peça uma cotação à Tlhavika: energia solar, bombas de água e aquecimento solar. Fale connosco por telefone, WhatsApp ou email, em Maputo.',
+    path: '/contacto',
+  })
   useReveal()
   const pre = params.get('solucao') ?? (params.get('produto') ? `produto:${params.get('produto')}` : params.get('categoria') ? `categoria:${params.get('categoria')}` : '')
   const products = useCatalog()
@@ -41,8 +45,10 @@ export default function Contact() {
   const label = (val: string) =>
     solutions.find((s) => s.id === val)?.name ?? products.find((p) => `produto:${p.id}` === val)?.name ?? categories.find((c) => `categoria:${c.id}` === val)?.name ?? val
 
-  const submit = (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    // campo-isco: as pessoas não o veem nem o preenchem; os robôs preenchem tudo
+    const trap = (e.currentTarget.elements.namedItem('website') as HTMLInputElement | null)?.value
     const n: Record<string, string> = {}
     if (!v.nome.trim()) n.nome = 'Indique o seu nome.'
     if (!PHONE_RE.test(v.telefone.trim())) n.telefone = 'Indique um número válido, ex.: 84 123 4567.'
@@ -67,7 +73,7 @@ export default function Contact() {
     ]
       .filter(Boolean)
       .join('\n')
-    saveQuoteRequest({
+    if (!trap) saveQuoteRequest({
       nome: v.nome.trim(),
       telefone: v.telefone.trim(),
       local: v.local.trim(),
@@ -96,10 +102,11 @@ export default function Contact() {
       <PageHead title="Pedir cotação" lead="Diga-nos o local, o uso e o que precisa. Respondemos com uma proposta." />
       <div className="wrap contact">
         <form className="form reveal" onSubmit={submit} noValidate>
+          <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hp" />
           <div className="form__grid">
-            {field('nome', 'Nome *', <input id="f-nome" value={v.nome} onChange={set('nome')} autoComplete="name" />)}
-            {field('telefone', 'Telefone / WhatsApp *', <input id="f-telefone" value={v.telefone} onChange={set('telefone')} inputMode="tel" autoComplete="tel" placeholder="+258 8X XXX XXXX" />)}
-            {field('local', 'Local *', <input id="f-local" value={v.local} onChange={set('local')} placeholder="Cidade ou província" />)}
+            {field('nome', 'Nome *', <input id="f-nome" value={v.nome} onChange={set('nome')} autoComplete="name" maxLength={120} />)}
+            {field('telefone', 'Telefone / WhatsApp *', <input id="f-telefone" value={v.telefone} onChange={set('telefone')} inputMode="tel" autoComplete="tel" maxLength={40} placeholder="+258 8X XXX XXXX" />)}
+            {field('local', 'Local *', <input id="f-local" value={v.local} onChange={set('local')} maxLength={160} placeholder="Cidade ou província" />)}
             {field(
               'uso',
               'Uso *',
@@ -139,7 +146,7 @@ export default function Contact() {
             </div>
             <div className="field field--wide">
               <label htmlFor="f-mensagem">Detalhes</label>
-              <textarea id="f-mensagem" rows={4} value={v.mensagem} onChange={set('mensagem')} placeholder="Ex.: aparelhos e horas de uso, profundidade do furo, pessoas em casa…" />
+              <textarea id="f-mensagem" rows={4} maxLength={3000} value={v.mensagem} onChange={set('mensagem')} placeholder="Ex.: aparelhos e horas de uso, profundidade do furo, pessoas em casa…" />
             </div>
           </div>
 

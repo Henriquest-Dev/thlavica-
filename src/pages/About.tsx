@@ -2,13 +2,17 @@ import { Link } from 'react-router-dom'
 import { solutions, useContact, wa } from '../data/site'
 import { img } from '../lib/asset'
 import { useReveal } from '../lib/useReveal'
-import { useMeta } from '../lib/useMeta'
+import { useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
 import { Arrow } from '../components/Arrow'
 import { Ico } from '../components/Ico'
 
 export default function About() {
-  useMeta('Sobre')
+  useSeo({
+    title: 'Sobre a Tlhavika, energia solar em Maputo',
+    description: 'Empresa moçambicana de energia solar e soluções de água, em Maputo. Painéis, inversores, baterias, bombas de água e termoacumuladores solares.',
+    path: '/sobre',
+  })
   const contact = useContact()
   useReveal()
   return (

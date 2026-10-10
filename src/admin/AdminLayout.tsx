@@ -7,6 +7,7 @@ import { useStored } from '../lib/store'
 import { remoteEnabled } from '../lib/supabase'
 import { isAdmin } from '../lib/adminSession'
 import { restoreAdmin, signOutAdmin } from '../lib/adminAuth'
+import { useSeo } from '../lib/seo'
 import { useSyncStatus } from '../lib/useSyncStatus'
 import { retryNow } from '../lib/sync'
 import type { QuoteRequest } from '../data/admin'
@@ -61,18 +62,7 @@ export default function AdminLayout() {
   const fresh = quotes.filter((q) => q.estado === 'nova' && !q.arquivada).length
   const current = [...MAIN, ...MORE].find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)))
 
-  useEffect(() => {
-    const m = document.createElement('meta')
-    m.name = 'robots'
-    m.content = 'noindex'
-    document.head.appendChild(m)
-    const t = document.title
-    document.title = 'Administração — Tlhavika'
-    return () => {
-      m.remove()
-      document.title = t
-    }
-  }, [])
+  useSeo({ title: 'Administração', path: '/admin', noindex: true })
 
   useEffect(() => setMore(false), [pathname])
 

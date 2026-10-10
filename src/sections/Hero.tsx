@@ -21,7 +21,7 @@ function MobileBanner() {
   return (
     <div className="hero__m">
       <div className="hero__mtrack" onScroll={() => setMoved(true)}>
-        <img src={img('banner-1877')} alt={ALT} width={1877} height={838} fetchPriority="high" />
+        <img src={img('banner-1200')} alt={ALT} width={1200} height={535} fetchPriority="high" decoding="async" />
       </div>
       {!moved && (
         <span className="hero__mhint" aria-hidden="true">
@@ -47,7 +47,7 @@ export function Hero() {
           <img
             className="hero__img"
             src={img('banner-1877')}
-            srcSet={`${img('banner-800')} 800w, ${img('banner-1200')} 1200w, ${img('banner-1877')} 1877w`}
+            srcSet={`${img('banner-800')} 800w, ${img('banner-1200')} 1200w, ${img('banner-1600')} 1600w, ${img('banner-1877')} 1877w`}
             sizes="100vw"
             alt={ALT}
             width={1877}

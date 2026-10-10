@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { img } from '../lib/asset'
 import { useReveal } from '../lib/useReveal'
-import { useMeta } from '../lib/useMeta'
+import { useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
 import { PHOTOS } from '../data/site'
 
@@ -13,7 +13,11 @@ const USES = [
 ]
 
 export default function Applications() {
-  useMeta('Aplicações')
+  useSeo({
+    title: 'Aplicações: casa, comércio e agricultura',
+    description: 'Onde o equipamento solar e de água da Tlhavika é usado: energia para casas e negócios, bombagem solar para rega e abeberamento, água quente solar.',
+    path: '/aplicacoes',
+  })
   useReveal()
   return (
     <div className="page">

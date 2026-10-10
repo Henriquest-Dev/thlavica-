@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 
@@ -46,9 +46,12 @@ beforeAll(async () => {
     alter default privileges in schema public grant all on tables to anon, authenticated;
     alter default privileges in schema public grant all on functions to anon, authenticated;
   `)
-  const sql = readFileSync('supabase/migrations/20261009000000_inicio.sql', 'utf8')
-  await db.exec(sql)
-  await db.exec(sql) // pode correr duas vezes sem erro
+  // todas as migrações, por ordem, e cada uma duas vezes (têm de poder repetir-se sem erro)
+  for (const f of readdirSync('supabase/migrations').sort()) {
+    const sql = readFileSync(`supabase/migrations/${f}`, 'utf8')
+    await db.exec(sql)
+    await db.exec(sql)
+  } // pode correr duas vezes sem erro
   await db.exec(`
     insert into auth.users values ('${ADMIN}', 'admin@x'), ('${VISITOR}', 'visitante@x');
     insert into public.admins values ('${ADMIN}');
@@ -74,12 +77,40 @@ describe('visitante sem conta (anon)', () => {
   })
 
   it('envia pedidos de cotação, só como "nova", e não os lê', async () => {
-    await as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('q1', '{"nome":"A","estado":"nova"}')`))
-    await fails(as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('q2', '{"nome":"A","estado":"enviada"}')`)))
+    await as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('q1', '{"nome":"A","telefone":"+258 84 000 0000","estado":"nova"}')`))
+    await fails(as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('q2', '{"nome":"A","telefone":"+258 84 000 0000","estado":"enviada"}')`)))
     await fails(as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('q3', '[1]')`)))
     await fails(as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('q4', '{"estado":"nova","x":"${'a'.repeat(21000)}"}')`)))
     expect((await as('anon', null, () => db.query('select * from public.quote_requests'))).rows).toHaveLength(0)
     expect(await count('quote_requests')).toBe(1)
+  })
+
+  it('recusa pedidos sem nome ou telefone e com campos gigantes', async () => {
+    const ins = (id: string, d: object) => as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('${id}', '${JSON.stringify({ estado: 'nova', ...d })}')`))
+    await fails(ins('v1', { telefone: '+258 84 000 0000' })) // sem nome
+    await fails(ins('v2', { nome: 'A' })) // sem telefone
+    await fails(ins('v3', { nome: 'x'.repeat(121), telefone: '+258 84 000 0000' }))
+    await fails(ins('v4', { nome: 'A', telefone: '1' }))
+    await fails(ins('v5', { nome: 'A', telefone: '+258 84 000 0000', mensagem: 'm'.repeat(3001) }))
+    await fails(ins('i'.repeat(65), { nome: 'A', telefone: '+258 84 000 0000' }))
+    await ins('v6', { nome: 'A', telefone: '+258 84 000 0000', local: 'Maputo', mensagem: 'Olá' })
+    await db.exec(`delete from public.quote_requests where id = 'v6'`)
+  })
+
+  it('limita o número de pedidos por minuto, mesmo sem poder ler a tabela', async () => {
+    const before = await count('quote_requests')
+    let accepted = 0
+    for (let i = 0; i < 70; i++) {
+      try {
+        await as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('flood${i}', '{"nome":"A","telefone":"+258 84 000 0000","estado":"nova"}')`))
+        accepted++
+      } catch {
+        break
+      }
+    }
+    expect(accepted).toBe(60 - before)
+    await db.exec(`delete from public.quote_requests where id like 'flood%'`)
+    expect(await count('quote_requests')).toBe(before)
   })
 
   it('não vê propostas nem administradores, nem envia imagens', async () => {

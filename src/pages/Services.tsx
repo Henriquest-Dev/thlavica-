@@ -1,14 +1,18 @@
 import { Link } from 'react-router-dom'
 import { solutions } from '../data/site'
 import { useReveal } from '../lib/useReveal'
-import { useMeta } from '../lib/useMeta'
+import { useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
 import { Simulators } from '../components/Simulators'
 import { Ico } from '../components/Ico'
 import { Arrow } from '../components/Arrow'
 
 export default function Services() {
-  useMeta('Serviços', 'Energia solar, bombas de água e aquecimento solar: o que a Tlhavika fornece e simuladores para estimar o que precisa.')
+  useSeo({
+    title: 'Energia solar, bombas de água e aquecimento solar',
+    description: 'O que a Tlhavika fornece em Moçambique e dois simuladores para estimar a energia solar e a bomba de água de que precisa antes de pedir cotação.',
+    path: '/servicos',
+  })
   useReveal()
   return (
     <div className="page">

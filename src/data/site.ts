@@ -21,14 +21,24 @@ export type Contact = typeof defaultContact
 
 const NO_SETTINGS: Partial<Contact> = {}
 
+/**
+ * Junta os contactos de origem com o que o painel alterou. Os dados vêm do servidor, por isso a ligação da
+ * rede social só é aceite se for https (nunca `javascript:` nem outros esquemas).
+ */
+export function mergeContact(s: Partial<Contact>): Contact {
+  const c = { ...defaultContact, ...s }
+  if (!/^https:\/\//i.test(c.facebook)) c.facebook = defaultContact.facebook
+  return c
+}
+
 /** Contactos do site: os de origem, com o que o painel (Contactos) tiver alterado. */
 export function getContact(): Contact {
-  return { ...defaultContact, ...readStored<Partial<Contact>>('settings', NO_SETTINGS) }
+  return mergeContact(readStored<Partial<Contact>>('settings', NO_SETTINGS))
 }
 
 export function useContact(): Contact {
   const [s] = useStored<Partial<Contact>>('settings', NO_SETTINGS)
-  return useMemo(() => ({ ...defaultContact, ...s }), [s])
+  return useMemo(() => mergeContact(s), [s])
 }
 
 export const wa = (text: string) => `https://wa.me/${getContact().whatsapp}?text=${encodeURIComponent(text)}`

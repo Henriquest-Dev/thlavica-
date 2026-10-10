@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom'
-import { useMeta } from '../lib/useMeta'
+import { Link, useLocation } from 'react-router-dom'
+import { useSeo } from '../lib/seo'
 
 export default function NotFound() {
-  useMeta('Página não encontrada')
+  const { pathname } = useLocation()
+  useSeo({ title: 'Página não encontrada', path: pathname, noindex: true })
   return (
     <div className="page wrap nf">
       <h1 className="ph__title">Página não encontrada</h1>

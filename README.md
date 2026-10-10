@@ -40,7 +40,7 @@ Sem variáveis de ambiente, tudo funciona só neste navegador (protótipo). Com 
 
 Preparar o projeto (uma vez):
 
-1. **Esquema e segurança:** `supabase login`, `supabase link --project-ref ezmbcwaxcjumgucbatpg` e `supabase db push` (a pasta `supabase/` já existe: não correr `supabase init`). Ou colar `supabase/migrations/20261009000000_inicio.sql` no SQL Editor.
+1. **Esquema e segurança:** `supabase login`, `supabase link --project-ref ezmbcwaxcjumgucbatpg` e `supabase db push` (a pasta `supabase/` já existe: não correr `supabase init`). Ou colar no SQL Editor, por ordem, `supabase/migrations/20261009000000_inicio.sql` (esquema e segurança) e `20261010000000_antiabuso.sql` (limites dos pedidos e máximo de 60 pedidos em 10 minutos).
 2. **Administrador (sem email):** abrir `supabase/admin.sql`, preencher o utilizador e a palavra-passe nas duas primeiras linhas e executar no SQL Editor. Cria o utilizador e torna-o administrador; correr de novo troca a palavra-passe. O painel pede só utilizador e palavra-passe; o domínio interno `@admin.tlhavika.local` é acrescentado por trás. Não guardar a palavra-passe no Git.
 3. **Recomendado:** Authentication → Sign In / Providers → Email → desligar "Allow new users to sign up".
 4. Pôr as duas variáveis em `.env.ghpages` (ou `.env.local`) e voltar a compilar.
@@ -50,6 +50,17 @@ O que o site pode ler sem conta: catálogo, promoções, vídeos e contactos. Qu
 Os dados do protótipo que estiverem no aparelho do administrador sobem para o Supabase na primeira entrada (se o servidor estiver vazio). Se um envio falhar (sem rede), fica marcado como "por guardar" e repete-se; os pedidos dos visitantes sem rede ficam numa caixa de saída e seguem na visita seguinte.
 
 Nunca pôr no código nem no repositório a palavra-passe da base de dados nem a chave `secret`/`service_role`.
+
+Os visitantes não carregam a biblioteca do Supabase: leem o catálogo e enviam pedidos com `fetch` direto à API REST (`publicSelect`/`publicInsert` em `supabase.ts`). A biblioteca só carrega no painel.
+
+## SEO e publicação
+
+`npm run build:ghpages` compila, **pré-renderiza** cada página (`scripts/prerender.mjs`) e gera `sitemap.xml` e `robots.txt`. Cada rota passa a ter o seu `index.html` com título, descrição, endereço canónico, Open Graph/Twitter, dados estruturados (LocalBusiness, WebSite, FAQPage, Product, BreadcrumbList) e o conteúdo, e responde com 200 (o GitHub Pages devolveria 404 às rotas só de JavaScript). O `<head>` de cada página vem de `useSeo` em `src/lib/seo.ts`.
+
+- As rotas descobrem-se seguindo as ligações a partir da página inicial. As páginas de produto e de categoria usam os produtos e contactos **publicados no Supabase** à hora do build: depois de criar ou editar produtos no painel, voltar a correr `npm run build:ghpages` e publicar, para o Google ver as páginas novas.
+- Precisa do Playwright com Chromium (`CHROMIUM_PATH` se não estiver no sítio habitual). `VITE_SITE_URL` (em `.env.ghpages`) define o endereço público usado no canónico e no sitemap.
+- **Domínio próprio:** o Google só lê `robots.txt` na raiz do domínio. Em `…github.io/thlavica-/` o ficheiro não é lido; submeter `sitemap.xml` no Google Search Console resolve, e um domínio próprio é o ideal (mudar `VITE_SITE_URL` e `VITE_BASE_PATH`).
+- Segurança do site: política de segurança de conteúdo (meta `Content-Security-Policy`, só no build), ligações sociais só `https`, campos do formulário com limite de tamanho, campo-isco anti-robôs e limite de pedidos no servidor. O GitHub Pages não permite cabeçalhos HTTP próprios (HSTS, X-Frame-Options); um domínio atrás do Cloudflare ou Netlify permite-os.
 
 ## Estrutura (módulos em `src/lib`)
 

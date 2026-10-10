@@ -3,7 +3,7 @@ import { categories, solutions, wa } from '../data/site'
 import { useCatalog } from '../lib/catalog'
 import { img } from '../lib/asset'
 import { useReveal } from '../lib/useReveal'
-import { useMeta } from '../lib/useMeta'
+import { breadcrumbSchema, useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
 import { Arrow } from '../components/Arrow'
 import NotFound from './NotFound'
@@ -12,7 +12,14 @@ export default function Solution() {
   const { id } = useParams()
   const models = useCatalog()
   const s = solutions.find((x) => x.id === id)
-  useMeta(s?.name ?? 'Página não encontrada', s?.lead)
+  useSeo({
+    title: s ? `${s.name} em Moçambique` : 'Página não encontrada',
+    description: s ? `${s.lead.split('. ')[0].replace(/\.$/, '')}. Peça cotação à Tlhavika.` : undefined,
+    path: `/solucoes/${id}`,
+    image: s ? `img/${s.image}.webp` : undefined,
+    noindex: !s,
+    jsonLd: s ? [breadcrumbSchema([{ name: 'Início', path: '/' }, { name: 'Serviços', path: '/servicos' }, { name: s.name, path: `/solucoes/${s.id}` }])] : [],
+  })
   useReveal(id)
   if (!s) return <NotFound />
   const cats = categories.filter((c) => s.categories.includes(c.id))
@@ -71,7 +78,7 @@ export default function Solution() {
             const n = models.filter((m) => m.category === c.id).length
             return (
               <li key={c.id} className="reveal">
-                <Link to={`/produtos?categoria=${c.id}`}>
+                <Link to={`/categoria/${c.id}`}>
                   <span>{c.name}</span>
                   <span className="muted">{n ? `${n} ${n === 1 ? 'produto' : 'produtos'}` : 'Sob consulta'}</span>
                   <Arrow />

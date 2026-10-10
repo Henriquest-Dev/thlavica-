@@ -1,22 +1,40 @@
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Ico } from '../components/Ico'
 import { categories, type CategoryId } from '../data/site'
 import { useCatalog } from '../lib/catalog'
 import { useReveal } from '../lib/useReveal'
-import { useMeta } from '../lib/useMeta'
+import { breadcrumbSchema, useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
 import { ProductCard } from '../components/ProductCard'
+import NotFound from './NotFound'
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
 export default function Products() {
-  const [params, setParams] = useSearchParams()
-  const cat = (params.get('categoria') ?? '') as CategoryId | ''
+  const [params] = useSearchParams()
+  const { cat: catParam } = useParams()
+  const navigate = useNavigate()
+  // /categoria/:cat é o endereço de cada categoria; ?categoria= fica só para ligações antigas
+  const cat = (catParam ?? params.get('categoria') ?? '') as CategoryId | ''
   const products = useCatalog()
   const [q, setQ] = useState('')
   const current = categories.find((c) => c.id === cat)
-  useMeta(current ? current.name : 'Catálogo')
+  useSeo({
+    title: current ? `${current.name} em Moçambique` : 'Catálogo de energia solar e bombas de água',
+    description: current
+      ? `${current.name} na Tlhavika, em Maputo: ${current.text.charAt(0).toLowerCase()}${current.text.slice(1).replace(/\.$/, '')}. Veja os modelos e peça cotação.`
+      : 'Painéis solares, inversores, baterias, bombas de água e termoacumuladores solares. Veja o catálogo da Tlhavika e peça cotação.',
+    path: current ? `/categoria/${current.id}` : '/produtos',
+    noindex: Boolean(catParam) && !current,
+    jsonLd: [
+      breadcrumbSchema([
+        { name: 'Início', path: '/' },
+        { name: 'Catálogo', path: '/produtos' },
+        ...(current ? [{ name: current.name, path: `/categoria/${current.id}` }] : []),
+      ]),
+    ],
+  })
   const list = useMemo(
     () =>
       products.filter(
@@ -27,6 +45,7 @@ export default function Products() {
     [cat, q, products],
   )
   useReveal(`${cat}-${q}`)
+  if (catParam && !current) return <NotFound />
 
   return (
     <div className="page">
@@ -38,13 +57,13 @@ export default function Products() {
       <div className="wrap">
         <div className="cat-bar">
           <div className="tabs" role="tablist" aria-label="Categorias">
-            <button role="tab" aria-selected={!cat} onClick={() => setParams({}, { replace: true })}>
+            <button role="tab" aria-selected={!cat} onClick={() => navigate('/produtos', { replace: true })}>
               Todos <span>{products.length}</span>
             </button>
             {categories.map((c) => {
               const n = products.filter((p) => p.category === c.id).length
               return (
-                <button key={c.id} role="tab" aria-selected={cat === c.id} onClick={() => setParams({ categoria: c.id }, { replace: true })}>
+                <button key={c.id} role="tab" aria-selected={cat === c.id} onClick={() => navigate(`/categoria/${c.id}`, { replace: true })}>
                   {c.name} <span>{n}</span>
                 </button>
               )

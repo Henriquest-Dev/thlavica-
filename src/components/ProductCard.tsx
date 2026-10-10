@@ -15,7 +15,13 @@ export function AddToList({ p, className = '', label = false }: { p: CatalogProd
       type="button"
       className={`addlist${on ? ' is-on' : ''} ${className}`}
       aria-pressed={on}
-      aria-label={on ? `Retirar ${p.name} da lista de cotação` : `Adicionar ${p.name} à lista de cotação`}
+      aria-label={
+        label
+          ? `${on ? 'Na lista de cotação' : 'Adicionar à cotação'}: ${p.name}` // o nome acessível começa pelo texto visível
+          : on
+            ? `Retirar ${p.name} da lista de cotação`
+            : `Adicionar ${p.name} à lista de cotação`
+      }
       onClick={() => {
         if (on) remove(p.id)
         else {

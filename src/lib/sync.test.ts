@@ -46,6 +46,7 @@ function fakeServer() {
     calls,
     t,
     fail: (m: string | null) => (failNext = m),
+    failing: () => failNext,
   }
 }
 
@@ -53,7 +54,20 @@ let server: ReturnType<typeof fakeServer>
 
 async function load() {
   vi.resetModules()
-  vi.doMock('./supabase', () => ({ remoteEnabled: true, getClient: () => Promise.resolve(server.client), adminEmail: (u: string) => u, BUCKET: 'site' }))
+  vi.doMock('./supabase', () => ({
+    remoteEnabled: true,
+    getClient: () => Promise.resolve(server.client),
+    adminEmail: (u: string) => u,
+    BUCKET: 'site',
+    // acesso de visitante: lê e insere no mesmo servidor falso
+    publicSelect: async (table: string) => [...server.t(table).values()].sort((a, b) => a.pos - b.pos),
+    publicInsert: async (table: string, row: { id: string; data: unknown }) => {
+      server.calls.push(`insert ${table} ${row.id}`)
+      if (server.failing()) throw new Error(server.failing()!)
+      server.t(table).set(row.id, { ...row, pos: 0 })
+      return null
+    },
+  }))
   const store = await import('./store')
   store.setAdapter(store.memoryAdapter())
   const sync = await import('./sync')

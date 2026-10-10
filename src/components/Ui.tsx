@@ -104,7 +104,7 @@ export function SmartLink({ to, children, className, onClick }: { to: string; ch
       </a>
     )
   return (
-    <Link to={to.startsWith('/') ? to : `/${to}`} className={className} onClick={onClick}>
+    <Link to={/^\/(?!\/)/.test(to) ? to : `/${to.replace(/^\/+/, '')}`} className={className} onClick={onClick}>
       {children}
     </Link>
   )

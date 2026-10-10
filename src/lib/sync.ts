@@ -1,5 +1,5 @@
 import { hydrateStored, readStored, setWriteHook, writeStored } from './store'
-import { getClient, remoteEnabled } from './supabase'
+import { getClient, publicInsert, publicSelect, remoteEnabled } from './supabase'
 import type { QuoteRequest } from '../data/admin'
 
 /**
@@ -108,14 +108,20 @@ export function setAdminSession(on: boolean) {
 /* ---------------------------------------------------------------- servidor → aplicação */
 
 async function pullSpec(spec: Spec) {
-  const c = await getClient()
-  if (!c) return
   if (dirty.has(spec.key)) return flush(spec.key)
-  let q = c.from(spec.table).select('id,data,pos')
-  q = spec.order === 'created' ? q.order('created_at', { ascending: false }) : q.order('pos', { ascending: true })
-  const { data, error } = await q
-  if (error) throw error
-  const rows = (data ?? []) as Row[]
+  const order = spec.order === 'created' ? 'created_at.desc' : 'pos.asc'
+  let rows: Row[]
+  if (admin) {
+    const c = await getClient()
+    if (!c) return
+    let q = c.from(spec.table).select('id,data,pos')
+    q = spec.order === 'created' ? q.order('created_at', { ascending: false }) : q.order('pos', { ascending: true })
+    const { data, error } = await q
+    if (error) throw error
+    rows = (data ?? []) as Row[]
+  } else {
+    rows = (await publicSelect(spec.table, order)) as Row[]
+  }
   const local = readStored<unknown>(spec.key, null)
   if (rows.length === 0 && admin && !isEmpty(local) && !spec.keepWhenEmpty) {
     // Servidor ainda vazio e este aparelho tem dados do protótipo: sobem para o servidor.
@@ -188,13 +194,14 @@ export function retryNow() {
 
 /* ---------------------------------------------------------------- pedidos dos visitantes */
 
+const PERMANENT = '23514'
+
 /** Envia o pedido; se não houver rede, fica na caixa de saída e segue na próxima visita. */
 export async function submitQuote(q: QuoteRequest): Promise<void> {
   try {
-    const c = await getClient()
-    if (!c) throw new Error('sem cliente')
-    const { error } = await c.from('quote_requests').insert({ id: q.id, data: q })
-    if (error) throw error
+    const error = await publicInsert('quote_requests', { id: q.id, data: q })
+    // 23514 = o servidor recusou o conteúdo (campos fora dos limites): repetir não adianta
+    if (error && error.code !== PERMANENT) throw new Error(error.message)
   } catch {
     writeStored('quotes.outbox', [...readStored<QuoteRequest[]>('quotes.outbox', []), q])
   }
@@ -203,13 +210,11 @@ export async function submitQuote(q: QuoteRequest): Promise<void> {
 async function flushOutbox() {
   const out = readStored<QuoteRequest[]>('quotes.outbox', [])
   if (!out.length) return
-  const c = await getClient()
-  if (!c) return
   const left: QuoteRequest[] = []
   for (const q of out) {
-    const { error } = await c.from('quote_requests').insert({ id: q.id, data: q })
+    const error = await publicInsert('quote_requests', { id: q.id, data: q }).catch(() => ({ code: 'rede', message: 'sem rede' }))
     // 23505 = já existe (foi enviado antes): conta como entregue
-    if (error && error.code !== '23505') left.push(q)
+    if (error && error.code !== '23505' && error.code !== PERMANENT) left.push(q)
   }
   hydrateStored('quotes.outbox', left)
 }

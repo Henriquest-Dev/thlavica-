@@ -43,7 +43,7 @@ export function Footer() {
       </div>
       <div className="wrap ft__legal">
         <p>
-          <button type="button" className="ft__year" onClick={openLogin} aria-label="Entrar na administração">
+          <button type="button" className="ft__year" onClick={openLogin} aria-label={`© ${new Date().getFullYear()}, entrada da administração`}>
             © {new Date().getFullYear()}
           </button>{' '}
           Tlhavika

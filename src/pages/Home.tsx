@@ -8,10 +8,10 @@ import { Faq } from '../sections/Faq'
 import { Closing } from '../sections/Closing'
 import { PromoBanner } from '../components/Promos'
 import { useReveal } from '../lib/useReveal'
-import { useMeta } from '../lib/useMeta'
+import { faqSchema, useSeo } from '../lib/seo'
 
 export default function Home() {
-  useMeta('')
+  useSeo({ title: '', path: '/', jsonLd: [faqSchema()] })
   useReveal()
   return (
     <>

@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { categories, categoryPic, wa } from '../data/site'
 import { productImage, useCatalog } from '../lib/catalog'
-import { useMeta } from '../lib/useMeta'
+import { breadcrumbSchema, fileUrl, productSchema, useSeo } from '../lib/seo'
 import { useReveal } from '../lib/useReveal'
 import { AddToList, ProductCard } from '../components/ProductCard'
 import { Ico } from '../components/Ico'
@@ -13,10 +13,28 @@ export default function ProductPage() {
   const { id = '' } = useParams()
   const catalog = useCatalog()
   const p = catalog.find((x) => x.id === id)
-  useMeta(p?.name ?? 'Produto não encontrado', p?.summary)
+  const cat = categories.find((c) => c.id === p?.category)
+  const pic = p ? productImage(p) : undefined
+  useSeo({
+    title: p ? `${p.name}${p.brand && !p.name.toLowerCase().includes(p.brand.toLowerCase()) ? ` · ${p.brand}` : ''}` : 'Produto não encontrado',
+    description: p ? `${p.summary} Peça cotação à Tlhavika, em Maputo.` : undefined,
+    path: `/produtos/${id}`,
+    image: pic,
+    noindex: !p,
+    jsonLd: p
+      ? [
+          productSchema({ id: p.id, name: p.name, summary: p.summary, brand: p.brand, model: p.model, categoryName: cat?.name, imageUrl: fileUrl(pic) }),
+          breadcrumbSchema([
+            { name: 'Início', path: '/' },
+            { name: 'Catálogo', path: '/produtos' },
+            ...(cat ? [{ name: cat.name, path: `/categoria/${cat.id}` }] : []),
+            { name: p.name, path: `/produtos/${p.id}` },
+          ]),
+        ]
+      : [],
+  })
   useReveal(id)
   if (!p) return <NotFound />
-  const cat = categories.find((c) => c.id === p.category)
   const related = catalog.filter((x) => x.id !== p.id && x.category === p.category).slice(0, 4)
   const text = `Olá Tlhavika, gostaria de uma cotação para: ${p.name}${p.brand ? ` (${p.brand})` : ''}.`
   const src = productImage(p)
@@ -25,7 +43,7 @@ export default function ProductPage() {
     <div className="page">
       <div className="wrap pdp">
         <nav className="crumbs" aria-label="Localização">
-          <Link to="/produtos">Catálogo</Link> / <Link to={`/produtos?categoria=${p.category}`}>{cat?.name}</Link>
+          <Link to="/produtos">Catálogo</Link> / <Link to={`/categoria/${p.category}`}>{cat?.name}</Link>
         </nav>
         <div className="pdp__grid">
           <div className="pdp__media reveal">
