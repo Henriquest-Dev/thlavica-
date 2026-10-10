@@ -43,7 +43,7 @@ Preparar o projeto (uma vez):
 1. **Esquema e segurança:** `supabase login`, `supabase link --project-ref ezmbcwaxcjumgucbatpg` e `supabase db push` (a pasta `supabase/` já existe: não correr `supabase init`). Ou colar `supabase/migrations/20261009000000_inicio.sql` no SQL Editor.
 2. **Administrador (sem email):** abrir `supabase/admin.sql`, preencher o utilizador e a palavra-passe nas duas primeiras linhas e executar no SQL Editor. Cria o utilizador e torna-o administrador; correr de novo troca a palavra-passe. O painel pede só utilizador e palavra-passe; o domínio interno `@admin.tlhavika.local` é acrescentado por trás. Não guardar a palavra-passe no Git.
 3. **Recomendado:** Authentication → Sign In / Providers → Email → desligar "Allow new users to sign up".
-5. Pôr as duas variáveis em `.env.ghpages` (ou `.env.local`) e voltar a compilar.
+4. Pôr as duas variáveis em `.env.ghpages` (ou `.env.local`) e voltar a compilar.
 
 O que o site pode ler sem conta: catálogo, promoções, vídeos e contactos. Qualquer visitante pode **enviar** um pedido de cotação, mas só administradores o leem. Propostas e escrita no site: só administradores (tabela `admins`). Imagens: balde público `site`, só administradores enviam. `supabase/tests/migracao.test.ts` confirma estas regras num Postgres em memória.
 
