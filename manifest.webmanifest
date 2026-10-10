@@ -1,0 +1,16 @@
+{
+  "name": "Tlhavika — Energia solar e água",
+  "short_name": "Tlhavika",
+  "description": "Painéis solares, inversores, baterias, bombas de água e termoacumuladores solares em Moçambique.",
+  "lang": "pt-PT",
+  "start_url": "./",
+  "scope": "./",
+  "display": "browser",
+  "background_color": "#081c36",
+  "theme_color": "#081c36",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
