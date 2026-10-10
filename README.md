@@ -53,6 +53,13 @@ Nunca pôr no código nem no repositório a palavra-passe da base de dados nem a
 
 Os visitantes não carregam a biblioteca do Supabase: leem o catálogo e enviam pedidos com `fetch` direto à API REST (`publicSelect`/`publicInsert` em `supabase.ts`). A biblioteca só carrega no painel.
 
+## Cotação em PDF
+
+Em **Cotações**, ao preparar uma cotação, o botão **Descarregar PDF** gera o PDF no desenho do modelo da empresa (A4: logótipo e título no topo, dados da cotação à direita, blocos DE / PARA, tabela de linhas com desconto e IVA, notas em baixo à esquerda, totais à direita e valor a pagar em destaque). O nome do cliente, as linhas, o IVA, a validade e o número (`COT-AAAA-NNN`) preenchem-se sozinhos; o ficheiro chama-se `Cotacao-COT-2026-001-Nome-do-Cliente.pdf`.
+
+- Os dados da empresa (nome legal, NUIT, dados de pagamento, condições) escrevem-se em **Contactos → Dados da empresa na cotação em PDF**. O que estiver vazio não aparece no PDF. Não inventar dados bancários nem NUIT: só o que a Tlhavika confirmar.
+- Gerado no navegador (`src/lib/proposalPdf.ts`, jsPDF carregado só ao descarregar), sem enviar dados a nenhum serviço. Várias páginas quando há muitas linhas. Logótipo: `public/img/logo-cotacao.png`.
+
 ## Avisos de novos pedidos por email
 
 A empresa não quer instalar apps: quando um visitante envia um pedido de cotação, a base de dados avisa por **email** (para o Gmail da empresa) e a empresa abre o painel e responde ao cliente. Nada para instalar. É gratuito: o email sai de um pequeno script do Google (Apps Script) chamado pela base de dados (`pg_net`).

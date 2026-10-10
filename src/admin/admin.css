@@ -1285,7 +1285,7 @@
 .lines li {
   display: grid;
   grid-template-columns: 1fr 72px 120px 44px;
-  grid-template-areas: 'd q p x' 'o o o o';
+  grid-template-areas: 'd q p x' 'o g g .';
   gap: 8px;
   align-items: center;
   padding-bottom: 12px;
@@ -1299,6 +1299,9 @@
 }
 .lines__p {
   grid-area: p;
+}
+.lines__g {
+  grid-area: g;
 }
 .lines li .icon {
   grid-area: x;

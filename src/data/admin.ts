@@ -24,6 +24,8 @@ export interface ProposalLine {
   descricao: string
   qtd: number
   preco: number
+  /** Desconto da linha em percentagem (0–100). */
+  desconto?: number
 }
 
 export interface Proposal {
@@ -31,7 +33,9 @@ export interface Proposal {
   numero: string
   pedidoId?: string
   criadaEm: string
-  cliente: { nome: string; telefone: string; local: string }
+  cliente: { nome: string; telefone: string; local: string; nuit?: string }
+  /** Quem fez a cotação (aparece no PDF). */
+  vendedor?: string
   linhas: ProposalLine[]
   /** IVA em percentagem (0 = sem IVA). */
   iva: number

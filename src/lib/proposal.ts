@@ -7,10 +7,22 @@ export const money = (n: number) => `${n.toLocaleString('pt-PT', { minimumFracti
 
 export const DEFAULT_IVA = 16
 
+/** Valores de uma linha: bruto, desconto, total sem IVA e total com IVA. */
+export function lineAmounts(l: Pick<ProposalLine, 'qtd' | 'preco' | 'desconto'>, iva: number = DEFAULT_IVA) {
+  const bruto = l.qtd * l.preco
+  const desconto = bruto * (Math.min(100, Math.max(0, l.desconto ?? 0)) / 100)
+  const semIva = bruto - desconto
+  return { bruto, desconto, semIva, comIva: semIva * (1 + iva / 100) }
+}
+
 export function proposalTotals(p: Pick<Proposal, 'linhas' | 'iva'>) {
-  const subtotal = p.linhas.reduce((n, l) => n + l.qtd * l.preco, 0)
-  const tax = subtotal * ((p.iva ?? DEFAULT_IVA) / 100)
-  return { subtotal, tax, total: subtotal + tax }
+  const iva = p.iva ?? DEFAULT_IVA
+  const parts = p.linhas.map((l) => lineAmounts(l, iva))
+  const bruto = parts.reduce((n, x) => n + x.bruto, 0)
+  const desconto = parts.reduce((n, x) => n + x.desconto, 0)
+  const subtotal = bruto - desconto // total sem IVA, já com os descontos
+  const tax = subtotal * (iva / 100)
+  return { bruto, desconto, subtotal, tax, total: subtotal + tax }
 }
 
 /** COT-AAAA-NNN, a seguir ao maior número já usado nesse ano (não repete depois de apagar). */

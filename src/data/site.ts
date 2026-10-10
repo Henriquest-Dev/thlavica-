@@ -17,7 +17,18 @@ export const defaultContact = {
   facebook: 'https://www.facebook.com/people/Tlhavika/61560557742444/',
 }
 
-export type Contact = typeof defaultContact
+/** Dados da empresa que aparecem nas cotações em PDF (todos opcionais; vazio = não aparece). */
+export interface CompanyInfo {
+  /** Nome legal, ex.: TLHAVIKA, LDA. */
+  empresa?: string
+  nuit?: string
+  /** Dados bancários e referência de pagamento, tal como devem aparecer no PDF. */
+  pagamento?: string
+  /** Condições gerais (prazo de entrega, garantia…), tal como devem aparecer no PDF. */
+  condicoes?: string
+}
+
+export type Contact = typeof defaultContact & CompanyInfo
 
 const NO_SETTINGS: Partial<Contact> = {}
 

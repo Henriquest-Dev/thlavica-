@@ -19,7 +19,7 @@ export default function Settings() {
   const { toast } = useFeedback()
   const [v, setV] = useState<Contact>(current)
   const [err, setErr] = useState<Partial<Record<keyof Contact, string>>>({})
-  const set = (k: keyof Contact) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const set = (k: keyof Contact) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setV({ ...v, [k]: e.target.value })
     setErr({ ...err, [k]: undefined })
   }
@@ -35,7 +35,18 @@ export default function Settings() {
     if (v.facebook.trim() && !/^https?:\/\//.test(v.facebook.trim())) n.facebook = 'O endereço tem de começar por https://'
     setErr(n)
     if (Object.keys(n).length) return
-    const next: Contact = { phone: v.phone.trim(), whatsapp: wa, email: v.email.trim(), address: v.address.trim(), facebook: v.facebook.trim() }
+    const next: Contact = {
+      phone: v.phone.trim(),
+      whatsapp: wa,
+      email: v.email.trim(),
+      address: v.address.trim(),
+      facebook: v.facebook.trim(),
+      // dados da cotação em PDF (vazio = não aparece)
+      empresa: v.empresa?.trim() || undefined,
+      nuit: v.nuit?.trim() || undefined,
+      pagamento: v.pagamento?.trim() || undefined,
+      condicoes: v.condicoes?.trim() || undefined,
+    }
     setV(next)
     const ok = writeStored('settings', next)
     toast(ok ? 'Contactos guardados. Já aparecem no site.' : 'Não foi possível guardar.', ok ? 'ok' : 'erro')
@@ -66,6 +77,22 @@ export default function Settings() {
             <Field label="Morada *" wide>
               <input value={v.address} onChange={set('address')} />
               {err.address && <span className="ferr">{err.address}</span>}
+            </Field>
+          </div>
+          <h3 className="sub">Dados da empresa na cotação em PDF</h3>
+          <p className="muted small">Aparecem na cotação em PDF que o cliente recebe. O que deixar vazio não aparece.</p>
+          <div className="grid2">
+            <Field label="Nome da empresa" hint="Como deve aparecer, por exemplo TLHAVIKA, LDA.">
+              <input value={v.empresa ?? ''} onChange={set('empresa')} placeholder="TLHAVIKA, LDA" />
+            </Field>
+            <Field label="NUIT da empresa">
+              <input value={v.nuit ?? ''} onChange={set('nuit')} inputMode="numeric" />
+            </Field>
+            <Field label="Dados para pagamento" hint="Banco, número da conta, NIB… Escreva como quer que apareça no PDF." wide>
+              <textarea rows={3} value={v.pagamento ?? ''} onChange={set('pagamento')} />
+            </Field>
+            <Field label="Condições" hint="Prazo de entrega, garantia, o que está incluído…" wide>
+              <textarea rows={3} value={v.condicoes ?? ''} onChange={set('condicoes')} />
             </Field>
           </div>
           <div className="row">

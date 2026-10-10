@@ -3,7 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useStored, uid } from '../lib/store'
 import { useCatalog } from '../lib/catalog'
 import { STATUS_LABEL, type Proposal, type ProposalLine, type QuoteRequest, type QuoteStatus } from '../data/admin'
-import { DEFAULT_IVA, lineFromProduct, newProposal, proposalMessage, proposalTotals } from '../lib/proposal'
+import { DEFAULT_IVA, lineAmounts, lineFromProduct, newProposal, proposalMessage, proposalTotals } from '../lib/proposal'
+import { downloadProposalPdf } from '../lib/proposalPdf'
+import { useContact } from '../data/site'
 import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
 import { useMatch } from '../lib/useMatch'
@@ -26,6 +28,8 @@ const digits = (s: string) => s.replace(/\D/g, '')
 function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onSave: (p: Proposal, send?: boolean) => void; onClose: () => void }) {
   const { toast } = useFeedback()
   const catalog = useCatalog(true)
+  const contact = useContact()
+  const [pdfBusy, setPdfBusy] = useState(false)
   const [p, setP] = useState(proposal)
   const set = <K extends keyof Proposal>(k: K, v: Proposal[K]) => setP((x) => ({ ...x, [k]: v }))
   const setLine = (id: string, patch: Partial<ProposalLine>) => set('linhas', p.linhas.map((l) => (l.id === id ? { ...l, ...patch } : l)))
@@ -47,6 +51,12 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
             <Field label="Local" wide>
               <input value={p.cliente.local} onChange={(e) => set('cliente', { ...p.cliente, local: e.target.value })} />
             </Field>
+            <Field label="NUIT do cliente" hint="Só se o cliente o pedir. Aparece no PDF.">
+              <input value={p.cliente.nuit ?? ''} onChange={(e) => set('cliente', { ...p.cliente, nuit: e.target.value })} inputMode="numeric" />
+            </Field>
+            <Field label="Quem faz a cotação" hint="O nome aparece no PDF.">
+              <input value={p.vendedor ?? ''} onChange={(e) => set('vendedor', e.target.value)} />
+            </Field>
           </div>
 
           <h3 className="sub">Produtos e preços</h3>
@@ -62,7 +72,18 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
                 />
                 <input className="lines__n" type="number" min={1} value={l.qtd} onChange={(e) => setLine(l.id, { qtd: Math.max(1, Number(e.target.value) || 1) })} aria-label="Quantidade" />
                 <input className="lines__p" type="number" min={0} step="0.01" value={l.preco || ''} placeholder="Preço" onChange={(e) => setLine(l.id, { preco: Math.max(0, Number(e.target.value) || 0) })} aria-label="Preço unitário (MZN)" />
-                <output>{money(l.qtd * l.preco)}</output>
+                <input
+                  className="lines__g"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step="0.5"
+                  value={l.desconto || ''}
+                  placeholder="Desconto %"
+                  onChange={(e) => setLine(l.id, { desconto: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })}
+                  aria-label="Desconto desta linha (%)"
+                />
+                <output>{money(lineAmounts(l, iva).semIva)}</output>
                 <button type="button" className="icon" onClick={() => set('linhas', p.linhas.filter((x) => x.id !== l.id))} aria-label="Retirar linha">
                   <Ico name="fechar" size={16} />
                 </button>
@@ -155,8 +176,23 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
             <button type="button" className="btn btn--line" onClick={() => navigator.clipboard?.writeText(text()).then(() => toast('Texto copiado'), () => toast('Não foi possível copiar', 'erro'))}>
               <Ico name="copiar" size={16} /> Copiar texto
             </button>
-            <button type="button" className="btn btn--line" onClick={() => window.print()}>
-              <Ico name="imprimir" size={16} /> Imprimir / PDF
+            <button
+              type="button"
+              className="btn"
+              disabled={pdfBusy}
+              onClick={async () => {
+                setPdfBusy(true)
+                try {
+                  await downloadProposalPdf(p, contact)
+                  toast('PDF da cotação descarregado.')
+                } catch {
+                  toast('Não foi possível criar o PDF. Tente outra vez.', 'erro')
+                } finally {
+                  setPdfBusy(false)
+                }
+              }}
+            >
+              <Ico name="imprimir" size={16} /> {pdfBusy ? 'A criar o PDF…' : 'Descarregar PDF'}
             </button>
             {digits(p.cliente.telefone) && (
               <a className="btn btn--line" href={`https://wa.me/${digits(p.cliente.telefone)}?text=${encodeURIComponent(text())}`} target="_blank" rel="noopener noreferrer">

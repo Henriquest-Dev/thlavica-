@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { QuoteRequest } from '../data/admin'
-import { DEFAULT_IVA, newProposal, nextNumber, proposalMessage, proposalTotals } from './proposal'
+import { DEFAULT_IVA, lineAmounts, newProposal, nextNumber, proposalMessage, proposalTotals } from './proposal'
 
 describe('nextNumber', () => {
   it('começa em 001 e segue o maior número do ano', () => {
@@ -23,7 +23,14 @@ describe('proposalTotals', () => {
     { id: '2', descricao: 'B', qtd: 1, preco: 500 },
   ]
   it('soma linhas e aplica o IVA', () => {
-    expect(proposalTotals({ linhas, iva: 16 })).toEqual({ subtotal: 2500, tax: 400, total: 2900 })
+    expect(proposalTotals({ linhas, iva: 16 })).toEqual({ bruto: 2500, desconto: 0, subtotal: 2500, tax: 400, total: 2900 })
+  })
+  it('o desconto de cada linha baixa o total sem IVA e o IVA incide sobre o que sobra', () => {
+    const r = proposalTotals({ linhas: [{ id: 'a', descricao: 'x', qtd: 2, preco: 1000, desconto: 10 }, { id: 'b', descricao: 'y', qtd: 1, preco: 500 }], iva: 16 })
+    expect(r).toEqual({ bruto: 2500, desconto: 200, subtotal: 2300, tax: 368, total: 2668 })
+    expect(lineAmounts({ qtd: 2, preco: 1000, desconto: 10 }, 16)).toEqual({ bruto: 2000, desconto: 200, semIva: 1800, comIva: 2088 })
+    expect(lineAmounts({ qtd: 1, preco: 100, desconto: 250 }, 0).semIva).toBe(0) // o desconto nunca passa de 100%
+    expect(lineAmounts({ qtd: 1, preco: 100, desconto: -5 }, 0).semIva).toBe(100)
   })
   it('IVA 0 não acrescenta nada', () => {
     expect(proposalTotals({ linhas, iva: 0 }).total).toBe(2500)
