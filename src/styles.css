@@ -1888,10 +1888,13 @@ main:focus {
   }
   /* o cartaz aparece inteiro; as três áreas ficam numa fila por baixo, sobre o fundo azul */
   .hero__band {
-    position: static;
+    position: relative;
     width: 100%;
     gap: 10px;
-    padding: 18px var(--gut) 4px;
+    /* sobe um pouco sobre a base do cartaz e o fade leva a imagem para o azul das áreas */
+    margin-top: -26px;
+    padding: 46px var(--gut) 4px;
+    background: linear-gradient(180deg, rgb(8 28 54 / 0%) 0, rgb(8 28 54 / 88%) 30px, var(--navy-900) 52px);
   }
   .hero__band::before {
     display: none;
