@@ -1,10 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { DATA_KEYS, clearData, exportData, importData, memoryAdapter, removeStored, setAdapter, updateStored, usageKb, writeStored } from './store'
+import { DATA_KEYS, clearData, exportData, importData, memoryAdapter, readStored, removeStored, setAdapter, updateStored, usageKb, writeStored } from './store'
 import { saveQuoteRequest } from './quotes'
 
 beforeEach(() => setAdapter(memoryAdapter()))
 
 describe('store', () => {
+  it('sem nada gravado, cada leitor recebe a sua omissão (a de outro não fica em cache)', () => {
+    const omissao = [{ id: 'a' }]
+    expect(readStored('media', null)).toBeNull()
+    expect(readStored('media', omissao)).toBe(omissao)
+    expect(readStored('media', null)).toBeNull()
+  })
+
   it('updateStored lê, transforma e grava de uma vez', () => {
     updateStored<number[]>('list', [], (l) => [...l, 1])
     updateStored<number[]>('list', [], (l) => [...l, 2])

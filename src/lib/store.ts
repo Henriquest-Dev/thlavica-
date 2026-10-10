@@ -84,15 +84,16 @@ const emit = () => listeners.forEach((l) => l())
 
 function read<T>(key: string, fallback: T): T {
   const raw = adapter.get(key)
+  // Sem nada gravado devolve-se sempre o valor por omissão de quem pergunta (não se guarda em cache:
+  // dois leitores da mesma chave podem ter omissões diferentes).
+  if (raw === null) return fallback
   const hit = cache.get(key)
   if (hit && hit.raw === raw) return hit.value as T
   let value: T = fallback
-  if (raw !== null) {
-    try {
-      value = JSON.parse(raw) as T
-    } catch {
-      value = fallback
-    }
+  try {
+    value = JSON.parse(raw) as T
+  } catch {
+    value = fallback
   }
   cache.set(key, { raw, value })
   return value
