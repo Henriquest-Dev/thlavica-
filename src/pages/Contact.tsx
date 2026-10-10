@@ -59,7 +59,7 @@ export default function Contact() {
     const trap = (e.currentTarget.elements.namedItem('website') as HTMLInputElement | null)?.value
     const n: Record<string, string> = {}
     if (!v.nome.trim()) n.nome = 'Indique o seu nome.'
-    if (!PHONE_RE.test(v.telefone.trim())) n.telefone = 'Indique um número válido, ex.: 84 123 4567.'
+    if (!PHONE_RE.test(v.telefone.trim())) n.telefone = 'Indique o número do seu WhatsApp, ex.: 84 123 4567.'
     if (!v.local.trim()) n.local = 'Indique a cidade ou província.'
     if (!v.uso) n.uso = 'Escolha uma opção.'
     setErr(n)
@@ -121,7 +121,16 @@ export default function Contact() {
           <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hp" />
           <div className="form__grid">
             {field('nome', 'Nome *', <input id="f-nome" value={v.nome} onChange={set('nome')} autoComplete="name" maxLength={120} />)}
-            {field('telefone', 'WhatsApp / telefone *', <input id="f-telefone" value={v.telefone} onChange={set('telefone')} inputMode="tel" autoComplete="tel" maxLength={40} placeholder="+258 8X XXX XXXX" />)}
+            {field(
+              'telefone',
+              'Número do WhatsApp *',
+              <>
+                <input id="f-telefone" value={v.telefone} onChange={set('telefone')} inputMode="tel" autoComplete="tel" maxLength={40} placeholder="+258 8X XXX XXXX" aria-describedby="f-telefone-dica" />
+                <small id="f-telefone-dica" className="field__hint">
+                  Escreva o número que tem WhatsApp: é por lá que lhe respondemos.
+                </small>
+              </>,
+            )}
             {field('local', 'Local *', <input id="f-local" value={v.local} onChange={set('local')} maxLength={160} placeholder="Cidade ou província" />)}
             {field(
               'uso',

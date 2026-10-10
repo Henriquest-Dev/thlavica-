@@ -196,7 +196,7 @@ describe('avisos de novos pedidos (ntfy)', () => {
   it('cria o tópico aleatório uma vez e não o troca ao repetir a migração', async () => {
     const t = ((await db.query('select ntfy_topic from public.notify_config')).rows[0] as { ntfy_topic: string }).ntfy_topic
     expect(t).toMatch(/^tlhavika-[0-9a-f]{32}$/)
-    await db.exec(readFileSync('supabase/migrations/20261012000000_avisos_email.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261013000000_email_whatsapp.sql', 'utf8'))
     expect(((await db.query('select ntfy_topic from public.notify_config')).rows[0] as { ntfy_topic: string }).ntfy_topic).toBe(t)
   })
 
@@ -249,6 +249,7 @@ describe('avisos de novos pedidos (ntfy)', () => {
       const texto = (c[0].body as { texto: string }).texto
       expect(texto).toContain('Nome: Maria')
       expect(texto).toContain('Telefone: +258 84 000 0000')
+      expect(texto).toContain('Falar no WhatsApp: https://wa.me/258840000000')
       expect(texto).toContain('/admin/cotacoes/')
     })
 

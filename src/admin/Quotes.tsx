@@ -5,6 +5,7 @@ import { useCatalog } from '../lib/catalog'
 import { STATUS_LABEL, type Proposal, type ProposalLine, type QuoteRequest, type QuoteStatus } from '../data/admin'
 import { DEFAULT_IVA, lineAmounts, lineFromProduct, newProposal, proposalMessage, proposalTotals } from '../lib/proposal'
 import { downloadProposalPdf } from '../lib/proposalPdf'
+import { telLink, whatsappLink } from '../lib/phone'
 import { useContact } from '../data/site'
 import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
@@ -21,7 +22,6 @@ const FILTERS: { id: 'todas' | QuoteStatus; label: string }[] = [
   { id: 'fechada', label: 'Fechadas' },
 ]
 
-const digits = (s: string) => s.replace(/\D/g, '')
 
 /* ------------------------------------------------------------------ */
 
@@ -194,8 +194,8 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
             >
               <Ico name="imprimir" size={16} /> {pdfBusy ? 'A criar o PDF…' : 'Descarregar PDF'}
             </button>
-            {digits(p.cliente.telefone) && (
-              <a className="btn btn--line" href={`https://wa.me/${digits(p.cliente.telefone)}?text=${encodeURIComponent(text())}`} target="_blank" rel="noopener noreferrer">
+            {whatsappLink(p.cliente.telefone) && (
+              <a className="btn btn--line" href={whatsappLink(p.cliente.telefone, text())} target="_blank" rel="noopener noreferrer">
                 <Ico name="whatsapp" size={16} /> WhatsApp
               </a>
             )}
@@ -351,12 +351,21 @@ export default function Quotes() {
                 </div>
                 {sel.telefone && (
                   <div>
-                    <dt>Telefone</dt>
-                    <dd>
-                      <a href={`tel:${digits(sel.telefone)}`}>{sel.telefone}</a> ·{' '}
-                      <a href={`https://wa.me/${digits(sel.telefone)}`} target="_blank" rel="noopener noreferrer">
-                        WhatsApp
-                      </a>
+                    <dt>WhatsApp</dt>
+                    <dd className="wa">
+                      {whatsappLink(sel.telefone) ? (
+                        <a
+                          className="btn btn--wa"
+                          href={whatsappLink(sel.telefone, `Olá ${sel.nome.split(' ')[0]}, aqui é da Tlhavika. Recebemos o seu pedido de cotação e gostaríamos de falar consigo.`)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Ico name="whatsapp" size={18} /> {sel.telefone}
+                        </a>
+                      ) : (
+                        sel.telefone
+                      )}
+                      {telLink(sel.telefone) && <a href={telLink(sel.telefone)}>Ligar</a>}
                     </dd>
                   </div>
                 )}

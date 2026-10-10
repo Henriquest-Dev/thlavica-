@@ -2,16 +2,12 @@ import { useState } from 'react'
 import { defaultContact, useContact, type Contact } from '../data/site'
 import { removeStored, writeStored } from '../lib/store'
 import { useFeedback } from './feedback'
+import { whatsappDigits } from '../lib/phone'
 import { NotifyPanel } from './NotifyPanel'
 import { Field, PageTitle, Panel } from './ui'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-/** Só dígitos; um número moçambicano sem indicativo (9 dígitos a começar por 8) passa a levar o 258. */
-export function normalizeWhatsapp(text: string): string {
-  const d = text.replace(/\D/g, '').replace(/^00/, '')
-  return d.length === 9 && d.startsWith('8') ? `258${d}` : d
-}
 
 /** Contactos que aparecem no site (rodapé, Contacto, Sobre e links do WhatsApp). */
 export default function Settings() {
@@ -27,7 +23,7 @@ export default function Settings() {
   const save = (e: React.FormEvent) => {
     e.preventDefault()
     const n: typeof err = {}
-    const wa = normalizeWhatsapp(v.whatsapp)
+    const wa = whatsappDigits(v.whatsapp)
     if (!v.phone.trim()) n.phone = 'Indique o telefone.'
     if (wa.length < 9 || wa.length > 15) n.whatsapp = 'Escreva o número completo, por exemplo +258 87 119 1481.'
     if (!EMAIL.test(v.email.trim())) n.email = 'Indique um email válido.'

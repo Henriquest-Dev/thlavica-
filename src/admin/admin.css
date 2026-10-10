@@ -1921,3 +1921,26 @@
     grid-row: span 2;
   }
 }
+
+/* número do cliente: um toque abre o WhatsApp */
+.kv dd.wa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.btn--wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #1fa855;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+.btn--wa:hover {
+  background: #178a45;
+}

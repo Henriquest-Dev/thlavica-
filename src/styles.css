@@ -3667,3 +3667,10 @@ a.optional {
   padding: 1px 7px;
   font-size: 12px;
 }
+
+.field__hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
