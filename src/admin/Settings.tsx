@@ -7,6 +7,12 @@ import { Field, PageTitle, Panel } from './ui'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/** Só dígitos; um número moçambicano sem indicativo (9 dígitos a começar por 8) passa a levar o 258. */
+export function normalizeWhatsapp(text: string): string {
+  const d = text.replace(/\D/g, '').replace(/^00/, '')
+  return d.length === 9 && d.startsWith('8') ? `258${d}` : d
+}
+
 /** Contactos que aparecem no site (rodapé, Contacto, Sobre e links do WhatsApp). */
 export default function Settings() {
   const current = useContact()
@@ -21,9 +27,9 @@ export default function Settings() {
   const save = (e: React.FormEvent) => {
     e.preventDefault()
     const n: typeof err = {}
-    const wa = v.whatsapp.replace(/\D/g, '')
+    const wa = normalizeWhatsapp(v.whatsapp)
     if (!v.phone.trim()) n.phone = 'Indique o telefone.'
-    if (wa.length < 9 || wa.length > 15) n.whatsapp = 'Use só dígitos com o indicativo, por exemplo 258871191481.'
+    if (wa.length < 9 || wa.length > 15) n.whatsapp = 'Escreva o número completo, por exemplo +258 87 119 1481.'
     if (!EMAIL.test(v.email.trim())) n.email = 'Indique um email válido.'
     if (!v.address.trim()) n.address = 'Indique a morada.'
     if (v.facebook.trim() && !/^https?:\/\//.test(v.facebook.trim())) n.facebook = 'O endereço tem de começar por https://'
@@ -45,7 +51,7 @@ export default function Settings() {
               <input value={v.phone} onChange={set('phone')} inputMode="tel" />
               {err.phone && <span className="ferr">{err.phone}</span>}
             </Field>
-            <Field label="WhatsApp *" hint="Só dígitos, com o indicativo (258…).">
+            <Field label="WhatsApp *" hint="Pode escrever como quiser, por exemplo +258 87 119 1481.">
               <input value={v.whatsapp} onChange={set('whatsapp')} inputMode="numeric" />
               {err.whatsapp && <span className="ferr">{err.whatsapp}</span>}
             </Field>

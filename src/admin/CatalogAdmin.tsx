@@ -111,7 +111,7 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
         </button>
 
         <div className="grid2">
-          <Field label="Incluído (um por linha)" wide>
+          <Field label="O que vem na caixa" hint="Escreva uma coisa por linha. Ex.: Bomba, Cabo de 30 m." wide>
             <textarea rows={3} value={d.includes} onChange={(e) => set('includes', e.target.value)} />
           </Field>
         </div>

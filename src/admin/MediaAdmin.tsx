@@ -101,7 +101,7 @@ export default function MediaAdmin() {
             }}
           >
             <div className="seg" role="radiogroup" aria-label="Tipo de item">
-              {(Object.keys(KIND_LABEL) as MediaKind[]).map((k) => (
+              {(Object.keys(KIND_LABEL) as MediaKind[]).filter((k) => k !== 'video' || tipo === 'video').map((k) => (
                 <button key={k} type="button" role="radio" aria-checked={tipo === k} onClick={() => { setTipo(k); setUrl('') }}>
                   {KIND_LABEL[k]}
                 </button>
@@ -142,8 +142,8 @@ export default function MediaAdmin() {
               </div>
             ) : (
               <Field
-                label={tipo === 'youtube' ? 'Endereço do YouTube *' : 'Endereço do ficheiro MP4 *'}
-                hint={tipo === 'youtube' ? 'Ex.: https://youtu.be/…' : 'O vídeo tem de estar alojado online (por exemplo, no Supabase Storage). Os vídeos não cabem na memória do navegador.'}
+                label={tipo === 'youtube' ? 'Link do vídeo no YouTube *' : 'Endereço do ficheiro MP4 *'}
+                hint={tipo === 'youtube' ? 'No YouTube, abra o vídeo, toque em Partilhar, Copiar link e cole aqui.' : 'O vídeo tem de estar alojado online (por exemplo, no Supabase Storage). Os vídeos não cabem na memória do navegador.'}
               >
                 <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" inputMode="url" />
               </Field>

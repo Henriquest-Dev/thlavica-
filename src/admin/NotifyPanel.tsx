@@ -120,14 +120,20 @@ export function NotifyPanel() {
                 <Field label="Receber os avisos em" hint="Um ou mais emails, separados por vírgula." wide>
                   <input value={para} onChange={(e) => setPara(e.target.value)} inputMode="email" placeholder="empresa@exemplo.com" />
                 </Field>
-                <Field label="Endereço do script do Google" hint="Dado pelo Google no passo 5 das instruções.">
-                  <input value={url} onChange={(e) => setUrl(e.target.value)} inputMode="url" placeholder="https://script.google.com/macros/s/…/exec" spellCheck={false} />
-                </Field>
-                <Field label="Chave" hint="A mesma que está no script.">
-                  <input type="password" value={chave} onChange={(e) => setChave(e.target.value)} autoComplete="off" spellCheck={false} />
-                </Field>
               </div>
               {formErr && <p className="ferr">{formErr}</p>}
+
+              <details className="notify__adv" open={!cfg.email_url}>
+                <summary>Ligação ao Google (configuração técnica, feita uma só vez por quem instalou o site)</summary>
+                <div className="grid2">
+                <Field label="Endereço do script do Google" hint="Dado pelo Google no passo 5 das instruções.">
+                    <input value={url} onChange={(e) => setUrl(e.target.value)} inputMode="url" placeholder="https://script.google.com/macros/s/…/exec" spellCheck={false} />
+                  </Field>
+                  <Field label="Chave" hint="A mesma que está no script.">
+                    <input type="password" value={chave} onChange={(e) => setChave(e.target.value)} autoComplete="off" spellCheck={false} />
+                  </Field>
+                </div>
+              </details>
 
               <div className="row">
                 <button type="button" className="btn" disabled={busy} onClick={() => void saveEmail()}>
@@ -173,8 +179,10 @@ export function NotifyPanel() {
       </Panel>
 
       {state === 'ok' && cfg && (
-        <Panel title="Opção para técnicos: avisos por app no telemóvel (ntfy)">
-          <div className="notify">
+        <Panel title="Opções técnicas">
+          <details className="notify__adv">
+            <summary>Avisos por app no telemóvel (ntfy)</summary>
+            <div className="notify">
             <p className="notify__lead">
               Alternativa gratuita ao email: um aviso no telemóvel ou no computador através da app ntfy. Só é necessária se alguém quiser os avisos
               também por aí; a empresa não precisa disto.
@@ -226,7 +234,8 @@ export function NotifyPanel() {
                 </button>
               </div>
             </details>
-          </div>
+            </div>
+          </details>
         </Panel>
       )}
     </div>

@@ -42,6 +42,12 @@ export interface Proposal {
 
 export type PromoFormat = 'faixa' | 'destaque' | 'popup'
 
+/** Aspeto da promoção: cores escolhidas por clique no painel. */
+export type PromoStyle = 'azul' | 'ambar' | 'claro'
+
+/** Para onde leva o botão da promoção. */
+export type PromoTarget = 'produto' | 'catalogo' | 'cotacao' | 'simuladores' | 'link'
+
 export interface Promo {
   id: string
   formato: PromoFormat
@@ -49,8 +55,14 @@ export interface Promo {
   texto: string
   selo?: string
   cta: string
-  /** Rota interna (ex.: /produtos/…) ou endereço completo. */
+  /** Rota interna ou endereço completo (promoções antigas e destino "outro endereço"). */
   destino: string
+  /** Produtos a que a promoção se aplica (até 4); aparecem na faixa, no banner e no pop-up. */
+  produtos?: string[]
+  /** Para onde leva o botão. Sem isto (promoções antigas), usa-se `destino`. */
+  alvo?: PromoTarget
+  /** Cores. Sem isto, cada formato tem a sua por omissão. */
+  estilo?: PromoStyle
   imagem?: string
   inicio?: string
   fim?: string
