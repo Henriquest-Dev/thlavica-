@@ -205,7 +205,7 @@ describe('avisos de novos pedidos (ntfy)', () => {
     const c = await calls()
     expect(c).toHaveLength(1)
     expect(c[0].url).toBe('https://ntfy.sh')
-    expect(c[0].body).toMatchObject({ title: 'Novo pedido de cotação', message: 'Maria · Matola', priority: 4 })
+    expect(c[0].body).toMatchObject({ title: 'Tlhavika: novo pedido de cotação', message: 'Maria · Matola', priority: 4, icon: expect.stringMatching(/icon-192\.png$/) })
     expect(JSON.stringify(c[0].body)).not.toContain('258')
     expect(c[0].headers).toEqual({ 'Content-Type': 'application/json' })
   })

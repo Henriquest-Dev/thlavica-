@@ -13,11 +13,12 @@ export interface NotifyConfig {
   ntfy_topic: string
   ntfy_token: string | null
   admin_url: string
+  icon_url: string
 }
 
 export const notifyAvailable = remoteEnabled
 
-const COLUMNS = 'ativo,ntfy_server,ntfy_topic,ntfy_token,admin_url'
+const COLUMNS = 'ativo,ntfy_server,ntfy_topic,ntfy_token,admin_url,icon_url'
 
 export async function loadNotify(): Promise<NotifyConfig | null> {
   const c = await getClient()
@@ -46,8 +47,8 @@ export function newTopic(): string {
 export const topicUrl = (c: Pick<NotifyConfig, 'ntfy_server' | 'ntfy_topic'>) => `${c.ntfy_server.replace(/\/$/, '')}/${c.ntfy_topic}`
 
 /** Corpo do aviso (o mesmo formato que a base de dados usa). */
-export function noticeBody(c: Pick<NotifyConfig, 'ntfy_topic' | 'admin_url'>, title: string, message: string) {
-  return { topic: c.ntfy_topic, title, message, priority: 4, tags: ['bell'], click: c.admin_url }
+export function noticeBody(c: Pick<NotifyConfig, 'ntfy_topic' | 'admin_url' | 'icon_url'>, title: string, message: string) {
+  return { topic: c.ntfy_topic, title, message, priority: 4, tags: ['bell'], click: c.admin_url, icon: c.icon_url }
 }
 
 /** Envia um aviso de teste a partir do navegador, para confirmar que o telemóvel/computador o recebe. */
@@ -55,7 +56,7 @@ export async function sendTest(c: NotifyConfig): Promise<void> {
   const r = await fetch(c.ntfy_server, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(c.ntfy_token ? { Authorization: `Bearer ${c.ntfy_token}` } : {}) },
-    body: JSON.stringify(noticeBody(c, 'Aviso de teste', 'Se vê isto, os avisos de novos pedidos estão a funcionar.')),
+    body: JSON.stringify(noticeBody(c, 'Tlhavika: aviso de teste', 'Se vê isto, os avisos de novos pedidos estão a funcionar.')),
   })
   if (r.status === 429) throw new Error('O ntfy atingiu o limite diário deste endereço. Crie uma conta gratuita em ntfy.sh e cole o token em "Avançado".')
   if (!r.ok) throw new Error(`O ntfy recusou o aviso (${r.status}).`)

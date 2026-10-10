@@ -20,8 +20,11 @@ create table if not exists public.notify_config (
   ntfy_topic text not null,
   ntfy_token text,                                        -- opcional: token de uma conta gratuita no ntfy (limite por conta e não por IP)
   admin_url text not null default 'https://henriquest-dev.github.io/thlavica-/admin/cotacoes/',
+  icon_url text not null default 'https://henriquest-dev.github.io/thlavica-/icon-192.png',   -- logótipo que aparece no aviso
   updated_at timestamptz not null default now()
 );
+-- (se a tabela já existia de uma versão anterior deste ficheiro)
+alter table public.notify_config add column if not exists icon_url text not null default 'https://henriquest-dev.github.io/thlavica-/icon-192.png';
 alter table public.notify_config enable row level security;
 
 drop policy if exists "administradores gerem avisos" on public.notify_config;
@@ -56,11 +59,12 @@ begin
       url := c.ntfy_server,
       body := jsonb_build_object(
         'topic', c.ntfy_topic,
-        'title', 'Novo pedido de cotação',
+        'title', 'Tlhavika: novo pedido de cotação',
         'message', coalesce(nullif(quem, ''), 'Abra o painel para ver o pedido.'),
         'priority', 4,
         'tags', jsonb_build_array('bell'),
-        'click', c.admin_url
+        'click', c.admin_url,
+        'icon', c.icon_url
       ),
       headers := jsonb_build_object('Content-Type', 'application/json')
         || case when coalesce(c.ntfy_token, '') <> '' then jsonb_build_object('Authorization', 'Bearer ' || c.ntfy_token) else '{}'::jsonb end
