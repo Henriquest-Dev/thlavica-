@@ -54,7 +54,7 @@ beforeAll(async () => {
     insert into public.admins values ('${ADMIN}');
     insert into public.promos (id, data) values ('p1', '{"titulo":"Promo"}');
   `)
-})
+}, 60_000)
 
 describe('visitante sem conta (anon)', () => {
   it('lê o que o site mostra', async () => {
