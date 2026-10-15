@@ -28,7 +28,7 @@ export interface Product {
   illustrative?: boolean
 }
 
-export const products: Product[] = [
+const catalogo: Product[] = [
   {
     id: 'astronergy-astron7-625w',
     name: 'Painel bifacial ASTRON 7 2.0',
@@ -339,5 +339,42 @@ export const products: Product[] = [
     source: 25,
   },
 ]
+
+/**
+ * PREÇOS DE EXEMPLO (MZN), só para ver o site completo. NÃO são preços da Tlhavika.
+ * Substituir pelos preços reais no painel (Catálogo → produto → Preço); o que for guardado no painel prevalece sobre isto.
+ * [preço, desconto %, desconto válido até]
+ */
+const PRECOS_EXEMPLO: Record<string, [number, number?, string?]> = {
+  'astronergy-astron7-625w': [9800],
+  'ja-solar-jam72s40-615w': [8900, 10, '2026-12-31'],
+  'hanchus-ess-3-5kw': [185000],
+  'dongyin-pkm60-dsk1': [14500],
+  'dongyin-pkm80-dsk1': [17900, 8, '2026-12-31'],
+  'dongyin-3sdm2-8': [16500],
+  'dongyin-3sdm2-11': [18900],
+  'dongyin-3sdm2-15': [21500, 5, '2026-12-31'],
+  'dongyin-3sdm3-16': [26800],
+  'dongyin-3sdm3-21': [31500],
+  'bomba-4sa-16-17-4kw': [78000],
+  'bomba-4sa-2-2kw-380v': [42500],
+  'bomba-4sa-2-2kw-220v': [44900],
+  'bomba-4sd-1-5kw': [36800, 10, '2026-12-31'],
+  'bomba-drenagem-0-75kw': [9500],
+  'dongyin-3sds-800w': [38500],
+  'dongyin-4sds-1500w': [64500],
+  'dongyin-4sds-2200w': [82000],
+  'bomba-solar-zjlmet-400w': [27500],
+  'bomba-solar-hibrida-1500w-kit': [118000, 7, '2026-12-31'],
+  'motores-4': [19500],
+  'termoacumulador-100l': [24500],
+  'termoacumulador-hibrido-200l': [46500],
+  'candeeiro-solar-rua': [6200],
+}
+
+export const products: Product[] = catalogo.map((p) => {
+  const e = PRECOS_EXEMPLO[p.id]
+  return e ? { ...p, price: e[0], ...(e[1] ? { discount: e[1], discountUntil: e[2] } : {}) } : p
+})
 
 export const productById = (id: string) => products.find((p) => p.id === id)
