@@ -199,7 +199,7 @@ export default function Overview() {
                   title: remoteEnabled ? 'Limpar a cópia deste aparelho?' : 'Apagar todos os dados?',
                   text: remoteEnabled
                     ? 'Só apaga a cópia neste aparelho. Os dados no a base de dados mantêm-se e voltam a carregar.'
-                    : 'Pedidos, propostas, promoções, vídeos, contactos e alterações ao catálogo deste aparelho. Exporte uma cópia antes, se precisar.',
+                    : 'Pedidos, propostas, promoções, vídeos, contactos e alterações aos produtos deste aparelho. Exporte uma cópia antes, se precisar.',
                   confirmLabel: remoteEnabled ? 'Limpar a cópia' : 'Apagar tudo',
                   danger: true,
                 })

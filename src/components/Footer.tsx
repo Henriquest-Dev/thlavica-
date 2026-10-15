@@ -23,7 +23,7 @@ export function Footer() {
         </nav>
         <nav aria-label="Empresa">
           <p className="ft__h">Tlhavika</p>
-          <Link to="/produtos">Catálogo</Link>
+          <Link to="/produtos">Produtos</Link>
           <Link to="/servicos">Serviços</Link>
           <Link to="/aplicacoes">Aplicações</Link>
           <Link to="/sobre">Sobre</Link>

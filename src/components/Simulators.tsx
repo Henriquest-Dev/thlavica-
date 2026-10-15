@@ -229,7 +229,7 @@ function PumpSim() {
         {r.needsSubmersible && <p className="sim__note">Com a água a mais de 7 m de profundidade, use uma bomba submersível: as de superfície não conseguem aspirar tanta altura.</p>}
         {matches.length > 0 ? (
           <div className="sim__match">
-            <p>Modelos do catálogo que cobrem este ponto (dados do anúncio, a confirmar):</p>
+            <p>Modelos dos nossos produtos que cobrem este ponto (dados do anúncio, a confirmar):</p>
             <ul>
               {matches.map((p) => (
                 <li key={p.id}>
@@ -239,7 +239,7 @@ function PumpSim() {
             </ul>
           </div>
         ) : (
-          <p className="sim__note">Nenhum modelo do catálogo cobre este ponto com os dados do anúncio. Peça-nos uma proposta: podemos propor outra solução.</p>
+          <p className="sim__note">Nenhum dos nossos modelos cobre este ponto com os dados do anúncio. Peça-nos uma proposta: podemos propor outra solução.</p>
         )}
         <p className="sim__note">
           Estimativa orientativa: perdas na tubagem de {Math.round(ASSUMPTIONS.frictionRate * 100)}% da altura vertical mais 1 m por cada 100 m, rendimento da bomba de {Math.round(ASSUMPTIONS.pumpEff * 100)}% e margem de {Math.round((ASSUMPTIONS.panelMargin - 1) * 100)}% nos painéis. A escolha final depende da curva da bomba e da ficha técnica.

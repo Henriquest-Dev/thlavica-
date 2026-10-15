@@ -8,7 +8,7 @@ import { useQuoteList } from '../lib/quotes'
 import { smooth } from '../lib/smooth'
 
 const LINKS = [
-  { to: '/produtos', label: 'Catálogo' },
+  { to: '/produtos', label: 'Produtos' },
   { to: '/servicos', label: 'Serviços' },
   { to: '/aplicacoes', label: 'Aplicações' },
   { to: '/sobre', label: 'Sobre' },

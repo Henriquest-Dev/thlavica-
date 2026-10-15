@@ -226,7 +226,7 @@ export default function CatalogAdmin() {
   return (
     <>
       <PageTitle
-        title="Catálogo"
+        title="Produtos"
         lead="Produtos que aparecem no site. Acrescente produtos, troque imagens e oculte o que não está disponível."
         action={
           <button type="button" className="btn" onClick={() => setDraft(blankDraft())}>

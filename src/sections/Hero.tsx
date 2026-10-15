@@ -76,7 +76,7 @@ export function Hero() {
                 </span>
               </Link>
               <Link to="/produtos" className="pill pill--ghost">
-                Ver catálogo
+                Ver produtos
               </Link>
             </div>
           </div>

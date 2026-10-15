@@ -21,16 +21,16 @@ export default function Products() {
   const [q, setQ] = useState('')
   const current = categories.find((c) => c.id === cat)
   useSeo({
-    title: current ? `${current.name} em Moçambique` : 'Catálogo de energia solar e bombas de água',
+    title: current ? `${current.name} em Moçambique` : 'Produtos de energia solar e bombas de água',
     description: current
       ? `${current.name} na Tlhavika, em Maputo: ${current.text.charAt(0).toLowerCase()}${current.text.slice(1).replace(/\.$/, '')}. Veja os modelos e peça cotação.`
-      : 'Painéis solares, inversores, baterias, bombas de água e termoacumuladores solares. Veja o catálogo da Tlhavika e peça cotação.',
+      : 'Painéis solares, inversores, baterias, bombas de água e termoacumuladores solares. Veja os produtos da Tlhavika e peça cotação.',
     path: current ? `/categoria/${current.id}` : '/produtos',
     noindex: Boolean(catParam) && !current,
     jsonLd: [
       breadcrumbSchema([
         { name: 'Início', path: '/' },
-        { name: 'Catálogo', path: '/produtos' },
+        { name: 'Produtos', path: '/produtos' },
         ...(current ? [{ name: current.name, path: `/categoria/${current.id}` }] : []),
       ]),
     ],
@@ -50,8 +50,8 @@ export default function Products() {
   return (
     <div className="page">
       <PageHead
-        back={current ? { to: '/produtos', label: 'Todo o catálogo' } : undefined}
-        title={current ? current.name : 'Catálogo'}
+        back={current ? { to: '/produtos', label: 'Todos os produtos' } : undefined}
+        title={current ? current.name : 'Produtos'}
         lead="Painéis, inversores, baterias, bombas e termoacumuladores. Escolha o que precisa e peça a sua cotação."
       />
       <div className="wrap">

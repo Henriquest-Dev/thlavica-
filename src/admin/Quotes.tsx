@@ -97,9 +97,9 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
                 const prod = catalog.find((c) => c.id === e.target.value)
                 if (prod) set('linhas', [...p.linhas, lineFromProduct(prod)])
               }}
-              aria-label="Acrescentar produto do catálogo"
+              aria-label="Acrescentar produto"
             >
-              <option value="">+ Produto do catálogo…</option>
+              <option value="">+ Acrescentar produto…</option>
               {catalog.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}

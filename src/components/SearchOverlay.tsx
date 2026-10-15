@@ -8,7 +8,7 @@ import { Ico } from './Ico'
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
 const PAGES = [
-  { label: 'Catálogo completo', to: '/produtos', hint: 'Todos os produtos' },
+  { label: 'Todos os produtos', to: '/produtos', hint: 'Ver tudo o que vendemos' },
   { label: 'Serviços', to: '/servicos', hint: 'Energia solar, bombas de água e aquecimento solar' },
   { label: 'Simulador solar', to: '/servicos#simuladores', hint: 'Estime painéis, inversor e bateria' },
   { label: 'Simulador de bomba', to: '/servicos#simuladores', hint: 'Estime caudal, altura e potência' },

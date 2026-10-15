@@ -55,7 +55,7 @@ export function QuoteDrawer() {
                 nav('/produtos')
               }}
             >
-              Ver o catálogo
+              Ver os produtos
             </button>
           </div>
         ) : (

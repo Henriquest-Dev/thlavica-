@@ -28,7 +28,7 @@ interface Item {
 const MAIN: Item[] = [
   { to: '/admin', label: 'Resumo', icon: 'painel', end: true },
   { to: '/admin/cotacoes', label: 'Cotações', icon: 'cotacao' },
-  { to: '/admin/catalogo', label: 'Catálogo', icon: 'caixa' },
+  { to: '/admin/catalogo', label: 'Produtos', icon: 'caixa' },
   { to: '/admin/promocoes', label: 'Promoções', icon: 'etiqueta' },
 ]
 const MORE: Item[] = [
@@ -42,7 +42,7 @@ function Gate({ onEnter }: { onEnter: () => void }) {
       <div className="gate">
         <Logo className="logo--dark" />
         <h1>Administração</h1>
-        <p className="muted">Gerir catálogo, cotações, promoções e vídeos do site.</p>
+        <p className="muted">Gerir produtos, cotações, promoções e vídeos do site.</p>
         <AdminLoginForm onSuccess={onEnter} />
         <Link to="/" className="gate__back">
           Voltar ao site

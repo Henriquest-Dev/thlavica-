@@ -1,3 +1,4 @@
+import { ProductPic } from '../components/ProductPic'
 import { Link, useParams } from 'react-router-dom'
 import { categories, categoryPic, wa } from '../data/site'
 import { productImage, useCatalog } from '../lib/catalog'
@@ -25,7 +26,7 @@ export default function ProductPage() {
           productSchema({ id: p.id, name: p.name, summary: p.summary, brand: p.brand, model: p.model, categoryName: cat?.name, imageUrl: fileUrl(pic), price: finalPrice(p), priceUntil: activeDiscount(p) ? p.discountUntil : undefined }),
           breadcrumbSchema([
             { name: 'Início', path: '/' },
-            { name: 'Catálogo', path: '/produtos' },
+            { name: 'Produtos', path: '/produtos' },
             ...(cat ? [{ name: cat.name, path: `/categoria/${cat.id}` }] : []),
             { name: p.name, path: `/produtos/${p.id}` },
           ]),
@@ -44,11 +45,11 @@ export default function ProductPage() {
     <div className="page">
       <div className="wrap pdp">
         <nav className="crumbs" aria-label="Localização">
-          <Link to="/produtos">Catálogo</Link> / <Link to={`/categoria/${p.category}`}>{cat?.name}</Link>
+          <Link to="/produtos">Produtos</Link> / <Link to={`/categoria/${p.category}`}>{cat?.name}</Link>
         </nav>
         <div className="pdp__grid">
           <div className="pdp__media reveal">
-            {src ? <img src={src} alt={p.name} /> : <Ico name={categoryPic(p.category)} size={160} className="pdp__picto" />}
+            {src ? <ProductPic src={src} alt={p.name} /> : <Ico name={categoryPic(p.category)} size={160} className="pdp__picto" />}
           </div>
           <div className="pdp__info reveal">
             <p className="pdp__cat">

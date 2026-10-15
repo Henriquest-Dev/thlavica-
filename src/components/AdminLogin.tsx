@@ -30,7 +30,7 @@ export function AdminLogin() {
         </button>
         <Logo className="logo--dark" />
         <h2 id="alogin-title">Administração</h2>
-        <p className="muted">Entre para gerir o catálogo, as cotações, as promoções e os vídeos.</p>
+        <p className="muted">Entre para gerir os produtos, as cotações, as promoções e os vídeos.</p>
         <AdminLoginForm
           onSuccess={() => {
             closeLogin()

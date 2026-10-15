@@ -282,7 +282,7 @@ function PromoForm({ promo, onSave, onClose }: { promo: Promo; onSave: (p: Promo
                   <Choice on={p.alvo === 'produto'} disabled={chosen.length === 0} onClick={() => set('alvo', 'produto')}>
                     {chosen.length > 1 ? 'Ao primeiro produto' : 'Ao produto'}
                   </Choice>
-                  <Choice on={p.alvo === 'catalogo'} onClick={() => set('alvo', 'catalogo')}>Ao catálogo</Choice>
+                  <Choice on={p.alvo === 'catalogo'} onClick={() => set('alvo', 'catalogo')}>Aos produtos</Choice>
                   <Choice on={p.alvo === 'cotacao'} onClick={() => set('alvo', 'cotacao')}>Ao pedido de cotação</Choice>
                   <Choice on={p.alvo === 'simuladores'} onClick={() => set('alvo', 'simuladores')}>Aos simuladores</Choice>
                   {p.alvo === 'link' && <Choice on onClick={() => undefined}>Outro endereço (mantido)</Choice>}

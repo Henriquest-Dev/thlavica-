@@ -52,7 +52,7 @@ export function ThankYou({ nome, telefone, onClose }: { nome: string; telefone: 
               Voltar ao site
             </button>
             <Link to="/produtos" className="pill pill--line-dark" onClick={onClose}>
-              Ver o catálogo
+              Ver os produtos
             </Link>
           </div>
         </div>
