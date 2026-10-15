@@ -508,26 +508,15 @@ main:focus {
 .hero__banner {
   position: relative;
 }
-/* As três áreas ficam por cima do cartaz, com um fade de azul-marinho por baixo. */
+/* As três áreas ficam por baixo do cartaz (o cartaz já traz o seu próprio texto), sobre o fundo azul. */
 .hero__band {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  z-index: 1;
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  width: 53%;
-  padding: clamp(56px, 6vw, 96px) clamp(10px, 1.6vw, 24px) clamp(16px, 1.8vw, 28px) var(--hp);
-  isolation: isolate;
-}
-.hero__band::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(0deg, rgb(8 28 54 / 96%) 0%, rgb(8 28 54 / 80%) 42%, rgb(8 28 54 / 0%) 100%);
-  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 80%, transparent 100%);
-  mask-image: linear-gradient(90deg, #000 0, #000 80%, transparent 100%);
+  gap: clamp(16px, 3vw, 48px);
+  max-width: 1360px;
+  margin-inline: auto;
+  padding: clamp(22px, 2.6vw, 38px) var(--gut) 0;
 }
 .hero__stat {
   position: relative;
@@ -719,7 +708,7 @@ main:focus {
   position: relative;
   align-self: center;
   width: min(1080px, 92vw, calc((100svh - 220px) * 2.24));
-  aspect-ratio: 1877 / 838;
+  aspect-ratio: 1983 / 793;
   perspective: 1800px;
   transform: scale(calc(0.45 + 0.55 * var(--a)));
 }
@@ -1000,15 +989,17 @@ main:focus {
 }
 .brands__row {
   display: flex;
-  gap: 70px;
+  gap: clamp(44px, 6vw, 84px);
   width: max-content;
-  animation: marquee 40s linear infinite;
+  animation: marquee 50s linear infinite;
 }
-.brands__row span {
-  font-size: clamp(22px, 2.4vw, 34px);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: rgb(14 47 87 / 62%);
+.brands__row {
+  align-items: center;
+}
+.brands__row img {
+  height: clamp(30px, 3.4vw, 44px);
+  width: auto;
+  flex: none;
 }
 @keyframes marquee {
   to {

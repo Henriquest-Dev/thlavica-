@@ -26,7 +26,7 @@ export function Solutions() {
           {solutions.map((s, i) => (
             <div key={s.id} className="sol__panel" style={{ '--k': i } as React.CSSProperties}>
               <div className="sol__inner">
-                <div className="sol__face sol__front" style={{ backgroundImage: `url(${img('banner-1877')})` }} aria-hidden="true" />
+                <div className="sol__face sol__front" style={{ backgroundImage: `url(${img('banner-1983')})` }} aria-hidden="true" />
                 <Link to={`/solucoes/${s.id}`} className={`sol__face sol__back scard scard--${i}`}>
                   <span className="scard__top">
                     <span className="scard__icon">

@@ -18,10 +18,10 @@ export default function Home() {
       <Hero />
       <PromoBanner />
       <Intro />
+      <Brands />
       <Solutions />
       <Featured />
       <Tools />
-      <Brands />
       <Faq />
       <Closing />
     </>

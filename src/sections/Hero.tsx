@@ -12,13 +12,13 @@ const WORD: Record<SolutionId, string> = {
 }
 
 const ALT =
-  'Tlhavika Dongyin: tudo em energia solar num só lugar. Painéis solares, termoacumuladores solares, inversores, baterias de lítio e equipamento para soluções completas de energia solar. Marcas: Growatt, LuxPower, Sungrow, Veichi, JA Solar, Deye, Dyness, Hanchu ESS e Canadian Solar.'
+  'Tlhavika, soluções energéticas: energia solar e bombas de água para residências, comércios, agricultura e indústria. Painéis solares, inversores, baterias, bombas e termoacumuladores solares.'
 
 /** Telemóvel: o cartaz mostra-se inteiro, à largura do ecrã (sem deslizar). */
 function MobileBanner() {
   return (
     <div className="hero__m">
-      <img src={img('banner-1200')} alt={ALT} width={1200} height={535} fetchPriority="high" decoding="async" />
+      <img src={img('banner-1200')} alt={ALT} width={1200} height={480} fetchPriority="high" decoding="async" />
     </div>
   )
 }
@@ -37,12 +37,12 @@ export function Hero() {
         ) : (
           <img
             className="hero__img"
-            src={img('banner-1877')}
-            srcSet={`${img('banner-800')} 800w, ${img('banner-1200')} 1200w, ${img('banner-1600')} 1600w, ${img('banner-1877')} 1877w`}
+            src={img('banner-1983')}
+            srcSet={`${img('banner-800')} 800w, ${img('banner-1200')} 1200w, ${img('banner-1600')} 1600w, ${img('banner-1983')} 1983w`}
             sizes="100vw"
             alt={ALT}
-            width={1877}
-            height={838}
+            width={1983}
+            height={793}
             fetchPriority="high"
           />
         )}
