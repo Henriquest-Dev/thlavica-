@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -70 510 570">
+  <!-- Símbolo Tlhavika reconstruído a partir da publicação oficial (lâmpada com casa e raios). -->
+  <g stroke="#ee8c30" stroke-width="27" stroke-linecap="round" fill="none">
+    <path d="M255 -45V60"/>
+    <path d="M110 70l48 48"/>
+    <path d="M400 70l-48 48"/>
+    <path d="M30 218h78"/>
+    <path d="M402 218h78"/>
+  </g>
+  <path d="M255 103a112 112 0 0 1 72 197.6V355H183v-54.4A112 112 0 0 1 255 103z" fill="#f7ab4c"/>
+  <path d="M183 355V300l72-62 35 30.2V252h18v31.7L327 300v55z" fill="#ef8a2c"/>
+  <rect x="193" y="392" width="125" height="22" rx="11" fill="#fff"/>
+  <path d="M203 426h105v8a52.5 52.5 0 0 1-105 0z" fill="#fff"/>
+  <path d="M228 438h55a27.5 27.5 0 0 1-55 0z" fill="#0e2f57"/>
+</svg>

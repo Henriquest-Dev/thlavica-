@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /thlavica-/admin/
+
+Sitemap: https://henriquest-dev.github.io/thlavica-/sitemap.xml

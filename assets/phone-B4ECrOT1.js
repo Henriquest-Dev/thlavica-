@@ -1,0 +1,1 @@
+function e(e){let t=e.replace(/\D/g,``).replace(/^00/,``);return t.length===9&&t.startsWith(`8`)?`258${t}`:t}function t(t,n){let r=e(t);if(!(r.length<10||r.length>15))return`https://wa.me/${r}${n?`?text=${encodeURIComponent(n)}`:``}`}function n(t){let n=e(t);return n.length>=10?`tel:+${n}`:void 0}export{e as n,t as r,n as t};
