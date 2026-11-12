@@ -125,8 +125,7 @@ const catalogo: Product[] = [
     model,
     category: 'bombas-submersiveis' as const,
     summary: 'Bomba submersível de 3 polegadas para furos, com control box e 30 m de cabo.',
-    img: extra ? `bomba-${model.toLowerCase().replace('/', '-')}` : 'bomba-3sdm',
-    ...(extra ? { photo: true } : {}),
+    img: `bomba-${model.toLowerCase().replace('/', '-')}`,
     specs: [
       { label: 'Potência', value: power },
       { label: 'Alimentação', value: '220–240 V, 50 Hz, monofásica' },
@@ -155,7 +154,6 @@ const catalogo: Product[] = [
     category: 'bombas-submersiveis',
     summary: 'Bomba trifásica para furos profundos e caudais elevados.',
     img: 'bomba-4sa-16-17',
-    photo: true,
     specs: [
       { label: 'Potência', value: '4 kW (5,5 HP)' },
       { label: 'Alimentação', value: '380–415 V, 50 Hz, trifásica' },
@@ -179,7 +177,6 @@ const catalogo: Product[] = [
     category: 'bombas-submersiveis',
     summary: 'Bomba trifásica de 5,5 kW para furos muito profundos.',
     img: 'bomba-4sa-16-21',
-    photo: true,
     specs: [
       { label: 'Potência', value: '5,5 kW (7,5 HP)' },
       { label: 'Alimentação', value: '380–415 V, 50 Hz, trifásica' },
@@ -201,7 +198,6 @@ const catalogo: Product[] = [
     category: 'bombas-submersiveis',
     summary: 'Bomba submersível de 4 polegadas, de 2,2 kW, para grandes caudais.',
     img: 'bomba-4sa-12-12',
-    photo: true,
     specs: [
       { label: 'Potência', value: '2,2 kW (3 HP)' },
       { label: 'Alimentação', value: '380–415 V, 50 Hz, trifásica' },
@@ -240,7 +236,6 @@ const catalogo: Product[] = [
     category: 'bombas-submersiveis',
     summary: 'Bomba trifásica de 2,2 kW para furos fundos com caudal moderado.',
     img: 'bomba-4sa-6-21',
-    photo: true,
     specs: [
       { label: 'Potência', value: '2,2 kW (3 HP)' },
       { label: 'Alimentação', value: '380–415 V, 50 Hz, trifásica' },
@@ -262,7 +257,6 @@ const catalogo: Product[] = [
     category: 'bombas-submersiveis',
     summary: 'Bomba submersível de 4 polegadas e 10 HP, para furos profundos e grandes caudais.',
     img: 'bomba-4sp-15-26',
-    photo: true,
     specs: [
       { label: 'Potência', value: '7,5 kW (10 HP)' },
       { label: 'Frequência', value: '50 Hz' },
@@ -283,7 +277,6 @@ const catalogo: Product[] = [
     category: 'bombas-submersiveis',
     summary: 'Bomba submersível de 1,5 kW distribuída pela Ebara Pumps South Africa.',
     img: 'bomba-giraffe',
-    photo: true,
     specs: [
       { label: 'Potência', value: '1,5 kW (2 HP)' },
       { label: 'Frequência', value: '50 Hz' },
@@ -329,7 +322,6 @@ const catalogo: Product[] = [
     category: 'bombas-solares',
     summary: 'Bomba solar de 400 W que liga diretamente aos painéis, através do controlador 3DYS-60-400.',
     img: 'bomba-3sds-400',
-    photo: true,
     specs: [
       { label: 'Potência', value: '400 W (0,55 HP)' },
       { label: 'Alimentação', value: 'DC 65–100 V' },
@@ -352,7 +344,6 @@ const catalogo: Product[] = [
     category: 'bombas-solares',
     summary: 'Funciona com painéis (DC) ou com a rede (AC), com controlador.',
     img: 'bomba-4sds-800',
-    photo: true,
     specs: [
       { label: 'Potência', value: '800 W (1 HP)' },
       { label: 'Alimentação', value: 'DC 90–350 V / AC 220–240 V' },
@@ -373,7 +364,6 @@ const catalogo: Product[] = [
     category: 'bombas-solares',
     summary: 'Bomba solar de 4 polegadas com controlador.',
     img: 'bomba-4sds-1500',
-    photo: true,
     specs: [
       { label: 'Potência', value: '1500 W (2 HP)' },
       { label: 'Alimentação', value: 'DC 160–240 V' },
@@ -445,7 +435,6 @@ const catalogo: Product[] = [
     category: 'acessorios',
     summary: 'Controlador para a bomba solar de 400 W, com ecrã e botões de comando.',
     img: 'ctrl-3dys-400',
-    photo: true,
     specs: [
       { label: 'Potência da bomba', value: '400 W' },
       { label: 'Corrente máx. de entrada', value: '18 A' },
@@ -462,7 +451,6 @@ const catalogo: Product[] = [
     category: 'acessorios',
     summary: 'Controlador da bomba solar híbrida de 800 W, funciona com painéis ou com a rede.',
     img: 'ctrl-4dys-800',
-    photo: true,
     specs: [
       { label: 'Potência da bomba', value: '800 W' },
       { label: 'Corrente máx. de entrada', value: 'DC 18 A / AC 15 A' },
@@ -480,7 +468,6 @@ const catalogo: Product[] = [
     category: 'acessorios',
     summary: 'Caixa de comando para bombas submersíveis, com ecrã e botões RUN, MODE e STOP.',
     img: 'ctrl-dya-t06',
-    photo: true,
     specs: [
       { label: 'Ecrã', value: 'LCD' },
       { label: 'Comandos', value: 'RUN, MODE e STOP' },
@@ -495,7 +482,6 @@ const catalogo: Product[] = [
     category: 'inversores',
     summary: 'Inversor para bombas solares, em versões monofásica e trifásica.',
     img: 'inversor-ke300',
-    photo: true,
     specs: [
       { label: 'KE300-01 (1 fase, 220 V)', value: '0,4–5,5 kW' },
       { label: 'AE300-01 (3 fases, 220 V)', value: '0,4–11 kW' },
@@ -519,7 +505,6 @@ const catalogo: Product[] = [
     category: 'acessorios' as const,
     summary: `Motor submersível de 4 polegadas, ${power.split(' (')[0]}.`,
     img,
-    photo: true,
     specs: [
       { label: 'Potência', value: power },
       { label: 'Alimentação', value: supply },
@@ -539,7 +524,6 @@ const catalogo: Product[] = [
     category: 'acessorios',
     summary: 'Cabo para ligar os painéis solares, em bobina.',
     img: 'cabo-solar',
-    photo: true,
     specs: [{ label: 'Cores', value: 'Vermelho e preto' }],
     source: 0,
   },
@@ -549,7 +533,6 @@ const catalogo: Product[] = [
     category: 'acessorios',
     summary: 'Cabo flexível para ligar bombas e motores submersíveis, em bobina.',
     img: 'cabo-submersivel',
-    photo: true,
     specs: [
       { label: 'Cor', value: 'Azul' },
       { label: 'Formato', value: 'Plano' },
@@ -563,7 +546,6 @@ const catalogo: Product[] = [
     category: 'termoacumuladores',
     summary: 'Aquecimento de água com tubos de vácuo e depósito isolado.',
     img: 'termo-100',
-    photo: true,
     specs: [
       { label: 'Capacidade', value: '100 L' },
       { label: 'Tipo', value: 'Alta pressão' },
@@ -579,7 +561,6 @@ const catalogo: Product[] = [
     category: 'termoacumuladores',
     summary: 'Solar com apoio elétrico, para famílias maiores.',
     img: 'termo-200',
-    photo: true,
     specs: [
       { label: 'Capacidade', value: '200 L' },
       { label: 'Tipo', value: 'Híbrido, alta pressão' },
@@ -642,9 +623,18 @@ const PRECOS_EXEMPLO: Record<string, [number, number?, string?]> = {
   'candeeiro-solar-rua': [6200],
 }
 
+/** Bombas e motores redesenhados a partir das fotografias da loja e das etiquetas (imagem ilustrativa). */
+const ILUSTRADAS = new Set([
+  'bomba-3sdm2-8', 'bomba-3sdm2-11', 'bomba-3sdm2-15', 'bomba-3sdm3-16', 'bomba-3sdm3-21',
+  'bomba-4sa-16-17', 'bomba-4sa-16-21', 'bomba-4sa-12-12', 'bomba-4sa-6-21', 'bomba-4sp-15-26',
+  'bomba-3sds-400', 'bomba-4sds-1500', 'bomba-4sds-800', 'bomba-giraffe',
+  'motor-4sd1500t', 'motor-4sd2200t', 'motor-4sd2200s', 'motor-4sd4000t', 'motor-4sd7500t',
+])
+
 export const products: Product[] = catalogo.map((p) => {
   const e = PRECOS_EXEMPLO[p.id]
-  return e ? { ...p, price: e[0], ...(e[1] ? { discount: e[1], discountUntil: e[2] } : {}) } : p
+  const q = ILUSTRADAS.has(p.img) ? { ...p, illustrative: true } : p
+  return e ? { ...q, price: e[0], ...(e[1] ? { discount: e[1], discountUntil: e[2] } : {}) } : q
 })
 
 export const productById = (id: string) => products.find((p) => p.id === id)
