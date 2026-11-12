@@ -47,7 +47,7 @@ export function ProductCard({ p, size = 'md' }: { p: CatalogProduct; size?: 'md'
   return (
     <div className="pcw">
       <Link to={`/produtos/${p.id}`} className={`pc pc--${size}`}>
-        <span className="pc__media">{src ? <ProductPic src={src} alt={p.name} lazy /> : <Ico name={categoryPic(p.category)} size={96} className="pc__picto" />}</span>
+        <span className="pc__media">{src ? <ProductPic src={src} alt={p.name} lazy photo={p.photo && !p.imgData} /> : <Ico name={categoryPic(p.category)} size={96} className="pc__picto" />}</span>
         {chip && <span className="pc__chip">{chip}</span>}
         {off > 0 && <span className="pc__sale">-{off}%</span>}
         <span className="pc__body">

@@ -931,6 +931,21 @@ main:focus {
 .pc:hover .pc__media img.is-tall {
   transform: translate(-50%, -50%) rotate(34deg) scale(1.06);
 }
+.pc__media img.is-photo {
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 80%, transparent 100%);
+}
+.pc:hover .pc__media img.is-photo {
+  transform: scale(1.04);
+}
 .pc:hover .pc__media img {
   transform: scale(1.06);
 }
@@ -1395,6 +1410,13 @@ main:focus {
   height: 80%;
   object-fit: contain;
   filter: drop-shadow(0 24px 26px rgb(0 0 0 / 35%));
+}
+.pdp__media img.is-photo {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: none;
 }
 .pdp__media img.is-tall {
   inset: auto;
@@ -2062,9 +2084,21 @@ main:focus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
+  /* o cartão cresce com o texto; a imagem ocupa um quadrado inteiro (antes ficava com o que sobrava e quase não se via) */
+  .pc {
+    aspect-ratio: auto;
+    grid-template-rows: auto auto;
+  }
+  .pc__media {
+    aspect-ratio: 1 / 1;
+  }
   .pc__media img {
-    top: 44px;
-    height: calc(100% - 50px);
+    left: 8%;
+    right: 8%;
+    width: 84%;
+    top: 36px;
+    bottom: 4px;
+    height: calc(100% - 40px);
   }
   .pc__name {
     font-size: 14px;

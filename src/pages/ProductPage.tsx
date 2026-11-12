@@ -49,7 +49,7 @@ export default function ProductPage() {
         </nav>
         <div className="pdp__grid">
           <div className="pdp__media reveal">
-            {src ? <ProductPic src={src} alt={p.name} /> : <Ico name={categoryPic(p.category)} size={160} className="pdp__picto" />}
+            {src ? <ProductPic src={src} alt={p.name} photo={p.photo && !p.imgData} /> : <Ico name={categoryPic(p.category)} size={160} className="pdp__picto" />}
           </div>
           <div className="pdp__info reveal">
             <p className="pdp__cat">
