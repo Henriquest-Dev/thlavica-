@@ -68,6 +68,7 @@ escondido (modo técnico `?tecnico=1`), e as escolhas fazem-se por cliques, não
   Reaplicar sempre a mais recente.
 - **Restrições SQL com NULL**: um `CHECK` deixa passar NULL. Usar `coalesce(..., false)` para campos obrigatórios.
 - **`pkill -f` dentro do próprio comando** mata o comando (o texto do `pkill` casa consigo mesmo): fazer noutra chamada.
+- **Supabase gratuito pausa sozinho** ao fim de 7 dias sem pedidos: o endereço do projeto deixa de existir, o site não guarda pedidos e os avisos por email param. Restaurar em supabase.com → projeto → Restore project. Prevenir: acionador diário `manterAtivo` no script do Google (ver `avisos.gs`) ou plano pago.
 - **Dados de teste**: apagar sempre o que o teste criou (pedidos, promoções, imagens no Storage) e nunca o que é do cliente.
 - **Texto para o cliente final**: sem prazos nem garantias inventados; NUIT, dados bancários e preços só os que a empresa confirmar.
 

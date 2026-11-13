@@ -8,6 +8,20 @@
  */
 const CHAVE = 'COLOQUE_AQUI_UMA_CHAVE_COMPRIDA'
 
+// Manter o Supabase acordado: a conta gratuita pausa o projeto ao fim de 7 dias sem pedidos à base de dados.
+// Cole aqui o endereço do projeto e a chave "publishable" (as mesmas do site; são públicas) e crie um
+// acionador diário para a função manterAtivo (relógio no menu à esquerda → Adicionar acionador).
+const SUPABASE_URL = 'COLOQUE_AQUI_O_ENDERECO_DO_SUPABASE'
+const SUPABASE_CHAVE_PUBLICA = 'COLOQUE_AQUI_A_CHAVE_PUBLISHABLE'
+
+function manterAtivo() {
+  if (SUPABASE_URL.indexOf('COLOQUE_') === 0) return
+  UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/site_settings?select=id&limit=1', {
+    headers: { apikey: SUPABASE_CHAVE_PUBLICA },
+    muteHttpExceptions: true,
+  })
+}
+
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function doPost(e) {
