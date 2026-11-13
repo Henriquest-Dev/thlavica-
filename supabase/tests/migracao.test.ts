@@ -280,3 +280,26 @@ describe('avisos de novos pedidos (ntfy)', () => {
     })
   })
 })
+
+describe('ficheiros de instalação (supabase/instalar)', () => {
+  it('1-esquema.sql reúne as migrações certas, por ordem', () => {
+    const sql = readFileSync('supabase/instalar/1-esquema.sql', 'utf8')
+    let pos = -1
+    for (const m of ['20261009000000_inicio', '20261010000000_antiabuso', '20261012000000_avisos_email', '20261013000000_email_whatsapp']) {
+      const body = readFileSync(`supabase/migrations/${m}.sql`, 'utf8').trim()
+      const i = sql.indexOf(body)
+      expect(i).toBeGreaterThan(pos)
+      pos = i
+    }
+    expect(sql).not.toContain('20261011000000')
+  })
+
+  it('3-avisos.sql recusa os valores por preencher e liga o aviso com os certos', async () => {
+    const sql = readFileSync('supabase/instalar/3-avisos.sql', 'utf8')
+    await fails(db.exec(sql))
+    await fails(db.exec(sql.replace('COLOQUE_AQUI_O_ENDERECO_DO_SCRIPT', 'http://exemplo.com/x').replace('COLOQUE_AQUI_A_CHAVE', 'abc')))
+    await db.exec(sql.replace('COLOQUE_AQUI_O_ENDERECO_DO_SCRIPT', 'https://script.google.com/macros/s/AKX/exec').replace('COLOQUE_AQUI_A_CHAVE', 'chave-de-teste'))
+    const r = (await db.query('select email_ativo, email_para, email_url, email_chave from public.notify_config where id = 1')).rows[0] as Record<string, unknown>
+    expect(r).toMatchObject({ email_ativo: true, email_para: 'tlhavika.solar@gmail.com', email_url: 'https://script.google.com/macros/s/AKX/exec', email_chave: 'chave-de-teste' })
+  })
+})

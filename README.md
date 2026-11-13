@@ -40,7 +40,7 @@ Sem variáveis de ambiente, tudo funciona só neste navegador (protótipo). Com 
 
 Preparar o projeto (uma vez):
 
-1. **Esquema e segurança:** `supabase login`, `supabase link --project-ref ezmbcwaxcjumgucbatpg` e `supabase db push` (a pasta `supabase/` já existe: não correr `supabase init`). Ou colar no SQL Editor, por ordem, `supabase/migrations/20261009000000_inicio.sql` (esquema e segurança) e `20261010000000_antiabuso.sql` (limites dos pedidos e máximo de 60 pedidos em 10 minutos).
+1. **Esquema e segurança:** `supabase login`, `supabase link --project-ref vvizmmfdfaylqsllgoqw` e `supabase db push` (a pasta `supabase/` já existe: não correr `supabase init`). Ou colar no SQL Editor, por ordem, `supabase/migrations/20261009000000_inicio.sql` (esquema e segurança) e `20261010000000_antiabuso.sql` (limites dos pedidos e máximo de 60 pedidos em 10 minutos).
 2. **Administrador (sem email):** abrir `supabase/admin.sql`, preencher o utilizador e a palavra-passe nas duas primeiras linhas e executar no SQL Editor. Cria o utilizador e torna-o administrador; correr de novo troca a palavra-passe. O painel pede só utilizador e palavra-passe; o domínio interno `@admin.tlhavika.local` é acrescentado por trás. Não guardar a palavra-passe no Git.
 3. **Recomendado:** Authentication → Sign In / Providers → Email → desligar "Allow new users to sign up".
 4. Pôr as duas variáveis em `.env.ghpages` (ou `.env.local`) e voltar a compilar.
