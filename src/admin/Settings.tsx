@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { defaultContact, useContact, type Contact } from '../data/site'
+import { MAX_BANK_ACCOUNTS, cleanBankAccounts, defaultContact, useContact, type BankAccount, type Contact } from '../data/site'
 import { removeStored, writeStored } from '../lib/store'
 import { useFeedback } from './feedback'
 import { whatsappDigits } from '../lib/phone'
@@ -19,6 +19,11 @@ export default function Settings() {
     setV({ ...v, [k]: e.target.value })
     setErr({ ...err, [k]: undefined })
   }
+
+  const bancos = v.bancos ?? []
+  const setBanco = (i: number, k: keyof BankAccount, value: string) => setV({ ...v, bancos: bancos.map((b, j) => (j === i ? { ...b, [k]: value } : b)) })
+  const addBanco = () => setV({ ...v, bancos: [...bancos, { titular: v.empresa?.trim() || '', banco: '', conta: '', nib: '', swift: '' }] })
+  const removeBanco = (i: number) => setV({ ...v, bancos: bancos.filter((_, j) => j !== i) })
 
   const save = (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,6 +47,7 @@ export default function Settings() {
       nuit: v.nuit?.trim() || undefined,
       pagamento: v.pagamento?.trim() || undefined,
       condicoes: v.condicoes?.trim() || undefined,
+      bancos: cleanBankAccounts(v.bancos),
     }
     setV(next)
     const ok = writeStored('settings', next)
@@ -84,12 +90,46 @@ export default function Settings() {
             <Field label="NUIT da empresa">
               <input value={v.nuit ?? ''} onChange={set('nuit')} inputMode="numeric" />
             </Field>
-            <Field label="Dados para pagamento" hint="Banco, número da conta, NIB… Escreva como quer que apareça no PDF." wide>
-              <textarea rows={3} value={v.pagamento ?? ''} onChange={set('pagamento')} />
+            <Field label="Outros dados para pagamento" hint="Opcional: referência de pagamento ou outro texto livre. As contas bancárias ficam em baixo." wide>
+              <textarea rows={2} value={v.pagamento ?? ''} onChange={set('pagamento')} />
             </Field>
             <Field label="Condições" hint="Prazo de entrega, garantia, o que está incluído…" wide>
               <textarea rows={3} value={v.condicoes ?? ''} onChange={set('condicoes')} />
             </Field>
+          </div>
+          <h3 className="sub">Dados bancários na cotação</h3>
+          <p className="muted small">Aparecem no fim da cotação em PDF, em “Dados bancários” (até {MAX_BANK_ACCOUNTS} contas), para o cliente saber onde pagar.</p>
+          <div className="banks">
+            {bancos.map((b, i) => (
+              <fieldset key={i} className="bank">
+                <legend>Conta {i + 1}</legend>
+                <div className="grid2">
+                  <Field label="Titular" hint="Em nome de quem está a conta.">
+                    <input value={b.titular} onChange={(e) => setBanco(i, 'titular', e.target.value)} placeholder="Tlhavika Sociedade Unipessoal, LDA" />
+                  </Field>
+                  <Field label="Banco">
+                    <input value={b.banco} onChange={(e) => setBanco(i, 'banco', e.target.value)} placeholder="Millennium BIM" />
+                  </Field>
+                  <Field label="Número da conta">
+                    <input value={b.conta} onChange={(e) => setBanco(i, 'conta', e.target.value)} inputMode="numeric" />
+                  </Field>
+                  <Field label="NIB" hint="21 números.">
+                    <input value={b.nib} onChange={(e) => setBanco(i, 'nib', e.target.value)} inputMode="numeric" />
+                  </Field>
+                  <Field label="SWIFT" hint="Só para pagamentos do estrangeiro.">
+                    <input value={b.swift} onChange={(e) => setBanco(i, 'swift', e.target.value)} />
+                  </Field>
+                </div>
+                <button type="button" className="btn btn--line btn--sm" onClick={() => removeBanco(i)}>
+                  Tirar esta conta
+                </button>
+              </fieldset>
+            ))}
+            {bancos.length < MAX_BANK_ACCOUNTS && (
+              <button type="button" className="btn btn--line" onClick={addBanco}>
+                + Adicionar conta bancária
+              </button>
+            )}
           </div>
           <div className="row">
             <button type="submit" className="btn">

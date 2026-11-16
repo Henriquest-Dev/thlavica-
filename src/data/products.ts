@@ -28,6 +28,8 @@ export interface Product {
   illustrative?: boolean
   /** A imagem é uma fotografia (recorte retangular), não um recorte do produto sem fundo. */
   photo?: boolean
+  /** Fotografias extra (endereços), até 4, mostradas por baixo da imagem principal na página do produto. */
+  gallery?: string[]
 }
 
 const catalogo: Product[] = [

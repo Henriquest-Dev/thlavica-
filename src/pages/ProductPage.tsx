@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { ProductPic } from '../components/ProductPic'
 import { Link, useParams } from 'react-router-dom'
 import { categories, categoryPic, wa } from '../data/site'
@@ -34,6 +35,9 @@ export default function ProductPage() {
       : [],
   })
   useReveal(id)
+  // fotografia extra escolhida (-1 = a principal); volta à principal ao mudar de produto
+  const [gi, setGi] = useState(-1)
+  useEffect(() => setGi(-1), [id])
   if (!p) return <NotFound />
   const related = catalog.filter((x) => x.id !== p.id && x.category === p.category).slice(0, 4)
   const off = activeDiscount(p)
@@ -49,7 +53,27 @@ export default function ProductPage() {
         </nav>
         <div className="pdp__grid">
           <div className="pdp__media reveal">
-            {src ? <ProductPic src={src} alt={p.name} photo={p.photo && !p.imgData} /> : <Ico name={categoryPic(p.category)} size={160} className="pdp__picto" />}
+            {gi >= 0 && p.gallery?.[gi] ? (
+              <ProductPic src={p.gallery[gi]} alt={`${p.name}, fotografia ${gi + 1}`} photo />
+            ) : src ? (
+              <ProductPic src={src} alt={p.name} photo={p.photo && !p.imgData} />
+            ) : (
+              <Ico name={categoryPic(p.category)} size={160} className="pdp__picto" />
+            )}
+            {(p.gallery?.length ?? 0) > 0 && (
+              <div className="pdp__thumbs" role="group" aria-label="Fotografias do produto">
+                {src && (
+                  <button type="button" className={gi < 0 ? 'is-on' : ''} aria-label="Imagem principal" aria-pressed={gi < 0} onClick={() => setGi(-1)}>
+                    <img src={src} alt="" />
+                  </button>
+                )}
+                {p.gallery!.map((g, i) => (
+                  <button key={g + i} type="button" className={gi === i ? 'is-on' : ''} aria-label={`Fotografia ${i + 1}`} aria-pressed={gi === i} onClick={() => setGi(i)}>
+                    <img src={g} alt="" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="pdp__info reveal">
             <p className="pdp__cat">

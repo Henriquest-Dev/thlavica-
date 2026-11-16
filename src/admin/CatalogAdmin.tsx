@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { categories, type CategoryId } from '../data/site'
-import { blankDraft, draftFromProduct, useCatalogEditor, type ProductDraft } from '../lib/catalogEdit'
+import { categories, categoryPic, type CategoryId } from '../data/site'
+import { MAX_GALLERY, blankDraft, draftFromProduct, parsePrice, useCatalogEditor, type ProductDraft } from '../lib/catalogEdit'
+import { PRODUCT_TYPES, SPEC_SUGGESTIONS, exampleFor, typeOfCategory } from '../lib/specPresets'
 import { asset } from '../lib/asset'
 import { saveImage } from '../lib/images'
+import { activeDiscount, finalPrice, priceLabel } from '../lib/pricing'
 import { Ico } from '../components/Ico'
 import { ProductThumb } from '../components/ProductThumb'
 import { useFeedback } from './feedback'
@@ -14,15 +16,144 @@ const DESCONTOS = [5, 10, 15, 20, 25, 30]
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
+const lines = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean)
+
+/** "O que vem na caixa": cada item é uma etiqueta; escreve-se e carrega-se em Enter (ou em Adicionar). */
+function IncludesEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const items = lines(value)
+  const [text, setText] = useState('')
+  const add = (t: string) => {
+    const v = t.trim()
+    if (!v || items.includes(v)) return setText('')
+    onChange([...items, v].join('\n'))
+    setText('')
+  }
+  return (
+    <div className="inc">
+      {items.length > 0 && (
+        <ul className="inc__list">
+          {items.map((it) => (
+            <li key={it}>
+              {it}
+              <button type="button" aria-label={`Retirar ${it}`} onClick={() => onChange(items.filter((x) => x !== it).join('\n'))}>
+                <Ico name="fechar" size={12} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="inc__add">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              add(text)
+            }
+          }}
+          placeholder="Ex.: Bomba, Cabo de 30 m, Manual…"
+          aria-label="Novo item"
+          maxLength={80}
+        />
+        <button type="button" className="btn btn--line" onClick={() => add(text)}>
+          Adicionar
+        </button>
+      </div>
+      <div className="choices">
+        {['Bomba', 'Control box', 'Cabo', 'Manual', 'Garantia'].filter((x) => !items.includes(x)).map((x) => (
+          <Choice key={x} on={false} onClick={() => add(x)}>
+            + {x}
+          </Choice>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** Cartão tal como aparece na lista de produtos do site, para ver o resultado enquanto se escreve. */
+function Preview({ d, src }: { d: ProductDraft; src?: string }) {
+  const price = parsePrice(d.price)
+  const off = activeDiscount({ discount: d.discount, discountUntil: d.discountUntil })
+  const final = price ? finalPrice({ price, discount: d.discount, discountUntil: d.discountUntil }) : undefined
+  const cat = categories.find((c) => c.id === d.category)
+  const chip = d.specs.find((s) => /Potência|Capacidade|Versões/.test(s.label) && s.value.trim() && s.value.length < 22)?.value
+  return (
+    <aside className="prev" aria-label="Pré-visualização">
+      <p className="prev__h">Assim aparece no site</p>
+      <div className="pc pc--md pcprev" aria-hidden="true">
+        <span className="pc__media">{src ? <img src={src} alt="" /> : <Ico name={categoryPic(d.category)} size={96} className="pc__picto" />}</span>
+        {chip && <span className="pc__chip">{chip}</span>}
+        {off > 0 && <span className="pc__sale">-{off}%</span>}
+        <span className="pc__body">
+          <span className="pc__cat">
+            {cat?.name}
+            {d.brand.trim() ? ` · ${d.brand.trim()}` : ''}
+          </span>
+          <span className="pc__name">{d.name.trim() || 'Nome do produto'}</span>
+          {final !== undefined && (
+            <span className="pc__price">
+              {off > 0 && price !== undefined && <s>{priceLabel(price)}</s>} {priceLabel(final)}
+            </span>
+          )}
+        </span>
+      </div>
+      {d.hidden && <p className="prev__off">Este produto está oculto: não aparece no site.</p>}
+    </aside>
+  )
+}
+
 function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: (d: ProductDraft) => void; onClose: () => void }) {
   const [d, setD] = useState(draft)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const file = useRef<HTMLInputElement>(null)
+  const galleryFile = useRef<HTMLInputElement>(null)
   const set = <K extends keyof ProductDraft>(k: K, v: ProductDraft[K]) => setD((x) => ({ ...x, [k]: v }))
   const preview = d.imgData ?? (d.img ? asset(`img/produtos/${d.img}.webp`) : undefined)
   const [descOutro, setDescOutro] = useState(d.discount > 0 && !DESCONTOS.includes(d.discount))
   const [dur, setDur] = useState<'sem' | '7' | '15' | '30' | 'data'>(d.discountUntil ? 'data' : 'sem')
+  // tipo de produto: só ao criar (escolhe a categoria e as especificações com que começa)
+  const [typeId, setTypeId] = useState<string | undefined>(draft.isNew ? undefined : typeOfCategory(draft.category)?.id)
+  const lastSpec = useRef<HTMLInputElement>(null)
+  const sugest = SPEC_SUGGESTIONS[d.category]
+  const priceBad = d.price.trim() !== '' && parsePrice(d.price) === undefined
+
+  const pickType = (id: string) => {
+    const t = PRODUCT_TYPES.find((x) => x.id === id)
+    if (!t) return
+    setTypeId(id)
+    setD((x) => ({
+      ...x,
+      category: t.category,
+      // só substitui as especificações se ainda não escreveu nenhuma
+      specs: x.specs.every((s) => !s.value.trim()) ? t.specs.map((label) => ({ label, value: '' })) : x.specs,
+    }))
+  }
+  const addSpec = (label = '') => {
+    set('specs', [...d.specs.filter((s) => s.label.trim() || s.value.trim()), { label, value: '' }])
+    setTimeout(() => lastSpec.current?.focus(), 30)
+  }
+  const moveSpec = (i: number, to: number) => {
+    if (to < 0 || to >= d.specs.length) return
+    const next = [...d.specs]
+    ;[next[i], next[to]] = [next[to], next[i]]
+    set('specs', next)
+  }
+  const usedLabels = new Set(d.specs.map((s) => norm(s.label.trim())))
+
+  const upload = async (f: File, target: 'main' | 'gallery') => {
+    setBusy(true)
+    try {
+      const url = await saveImage(f, { folder: 'produtos', max: target === 'main' ? 900 : 1100 })
+      if (target === 'main') set('imgData', url)
+      else set('gallery', [...d.gallery, url].slice(0, MAX_GALLERY))
+      setErr('')
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Não foi possível processar essa imagem.')
+    }
+    setBusy(false)
+  }
 
   return (
     <Modal title={d.isNew ? 'Novo produto' : 'Editar produto'} onClose={onClose} wide>
@@ -31,143 +162,222 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
         onSubmit={(e) => {
           e.preventDefault()
           if (!d.name.trim()) return setErr('Indique o nome do produto.')
+          if (priceBad) return setErr('O preço não é válido. Escreva só números, por exemplo 15 500.')
           onSave(d)
         }}
       >
-        <div className="grid2">
-          <Field label="Nome *" wide>
-            <input value={d.name} onChange={(e) => set('name', e.target.value)} placeholder="Ex.: Painel solar 600 W" />
-          </Field>
-          <Field label="Marca">
-            <input value={d.brand} onChange={(e) => set('brand', e.target.value)} />
-          </Field>
-          <Field label="Modelo">
-            <input value={d.model} onChange={(e) => set('model', e.target.value)} />
-          </Field>
-          <Field label="Categoria *">
-            <select value={d.category} onChange={(e) => set('category', e.target.value as CategoryId)}>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Aparece no site">
-            <span className="check check--box">
-              <input type="checkbox" checked={!d.hidden} onChange={(e) => set('hidden', !e.target.checked)} />
-              <span>{d.hidden ? 'Oculto' : 'Visível'}</span>
-            </span>
-          </Field>
-          <Field label="Resumo" wide>
-            <textarea rows={2} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="Uma frase sobre o produto." />
-          </Field>
-        </div>
-
-        <h3 className="sub">Preço e desconto (opcional)</h3>
-        <div className="grid2">
-          <Field label="Preço (MZN)" hint="Deixe vazio se o preço só se dá na cotação.">
-            <input value={d.price} onChange={(e) => set('price', e.target.value)} inputMode="decimal" placeholder="Ex.: 15 500" />
-          </Field>
-        </div>
-        <div className="f">
-          <span className="f__l">Desconto neste produto</span>
-          <div className="choices" role="radiogroup" aria-label="Desconto">
-            <Choice on={d.discount === 0} onClick={() => { set('discount', 0); setDescOutro(false) }}>Sem desconto</Choice>
-            {DESCONTOS.map((x) => (
-              <Choice key={x} on={d.discount === x && !descOutro} onClick={() => { set('discount', x); setDescOutro(false) }}>
-                -{x}%
-              </Choice>
-            ))}
-            <Choice on={descOutro} onClick={() => { setDescOutro(true); if (DESCONTOS.includes(d.discount)) set('discount', 0) }}>Outro</Choice>
-          </div>
-          {descOutro && (
-            <input type="number" min={1} max={90} value={d.discount || ''} onChange={(e) => set('discount', Math.max(0, Math.min(90, Number(e.target.value) || 0)))} placeholder="Percentagem, ex.: 12" aria-label="Percentagem de desconto" />
-          )}
-        </div>
-        {d.discount > 0 && (
+        {d.isNew && (
           <div className="f">
-            <span className="f__l">Quanto tempo dura o desconto?</span>
-            <div className="choices" role="radiogroup" aria-label="Duração do desconto">
-              {([['sem', 'Sem data de fim'], ['7', '7 dias'], ['15', '15 dias'], ['30', '30 dias'], ['data', 'Escolher data']] as const).map(([id, label]) => (
-                <Choice
-                  key={id}
-                  on={dur === id}
-                  onClick={() => {
-                    setDur(id)
-                    if (id === 'sem') set('discountUntil', '')
-                    else if (id !== 'data') set('discountUntil', endInDays(Number(id)))
-                  }}
-                >
-                  {label}
+            <span className="f__l">Que tipo de produto é?</span>
+            <div className="choices" role="radiogroup" aria-label="Tipo de produto">
+              {PRODUCT_TYPES.map((t) => (
+                <Choice key={t.id} on={typeId === t.id} onClick={() => pickType(t.id)}>
+                  {t.label}
                 </Choice>
               ))}
             </div>
-            {dur === 'data' && <input type="date" value={d.discountUntil} onChange={(e) => set('discountUntil', e.target.value)} aria-label="Último dia do desconto" />}
-            {dur !== 'sem' && dur !== 'data' && d.discountUntil && <small className="muted">Termina no dia {new Date(d.discountUntil + 'T12:00').toLocaleDateString('pt-PT')}.</small>}
+            <small className="muted">Ao escolher, já ficam as especificações certas para preencher.</small>
           </div>
         )}
 
-        <h3 className="sub">Imagem</h3>
-        <div className="imgup">
-          <span className="imgup__box">{d.imgData ? <img src={d.imgData} alt="" /> : preview ? <img src={preview} alt="" /> : <Ico name="caixa" size={36} />}</span>
-          <div>
-            <input
-              ref={file}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={async (e) => {
-                const f = e.target.files?.[0]
-                if (!f) return
-                setBusy(true)
-                try {
-                  set('imgData', await saveImage(f, { folder: 'produtos' }))
-                  setErr('')
-                } catch (e) {
-                  setErr(e instanceof Error ? e.message : 'Não foi possível processar essa imagem.')
-                }
-                setBusy(false)
-                e.target.value = ''
-              }}
-            />
-            <button type="button" className="btn btn--line" onClick={() => file.current?.click()} disabled={busy}>
-              <Ico name="carregar" size={16} /> {busy ? 'A processar…' : d.imgData ? 'Trocar imagem' : 'Enviar imagem'}
-            </button>
-            {d.imgData && (
-              <button type="button" className="btn btn--ghost" onClick={() => set('imgData', undefined)}>
-                Retirar
-              </button>
+        <div className="pform__grid">
+          <div className="pform__main">
+            <h3 className="sub sub--first">Identificação</h3>
+            <div className="grid2">
+              <Field label="Nome *" hint="Como o cliente lê no site. Ex.: Bomba submersível 4SA 6/21" wide>
+                <input value={d.name} onChange={(e) => set('name', e.target.value)} placeholder="Ex.: Painel solar 600 W" maxLength={120} />
+              </Field>
+              <Field label="Marca">
+                <input value={d.brand} onChange={(e) => set('brand', e.target.value)} placeholder="Ex.: Dongyin" maxLength={60} />
+              </Field>
+              <Field label="Modelo">
+                <input value={d.model} onChange={(e) => set('model', e.target.value)} placeholder="Ex.: 4SA6/21" maxLength={60} />
+              </Field>
+              <Field label="Categoria *">
+                <select value={d.category} onChange={(e) => set('category', e.target.value as CategoryId)}>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Aparece no site">
+                <span className="check check--box">
+                  <input type="checkbox" checked={!d.hidden} onChange={(e) => set('hidden', !e.target.checked)} />
+                  <span>{d.hidden ? 'Oculto' : 'Visível'}</span>
+                </span>
+              </Field>
+              <Field label="Resumo" hint="Uma ou duas frases: para que serve e o que o distingue." wide>
+                <textarea rows={2} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="Uma frase sobre o produto." maxLength={300} />
+              </Field>
+            </div>
+
+            <h3 className="sub">Preço e desconto (opcional)</h3>
+            <div className="grid2">
+              <Field label="Preço (MZN)" hint="Deixe vazio se o preço só se dá na cotação.">
+                <input value={d.price} onChange={(e) => set('price', e.target.value)} inputMode="decimal" placeholder="Ex.: 15 500" aria-invalid={priceBad} />
+                {priceBad && <span className="ferr">Escreva só números, por exemplo 15 500.</span>}
+              </Field>
+            </div>
+            <div className="f">
+              <span className="f__l">Desconto neste produto</span>
+              <div className="choices" role="radiogroup" aria-label="Desconto">
+                <Choice on={d.discount === 0} onClick={() => { set('discount', 0); setDescOutro(false) }}>Sem desconto</Choice>
+                {DESCONTOS.map((x) => (
+                  <Choice key={x} on={d.discount === x && !descOutro} onClick={() => { set('discount', x); setDescOutro(false) }}>
+                    -{x}%
+                  </Choice>
+                ))}
+                <Choice on={descOutro} onClick={() => { setDescOutro(true); if (DESCONTOS.includes(d.discount)) set('discount', 0) }}>Outro</Choice>
+              </div>
+              {descOutro && (
+                <input type="number" min={1} max={90} value={d.discount || ''} onChange={(e) => set('discount', Math.max(0, Math.min(90, Number(e.target.value) || 0)))} placeholder="Percentagem, ex.: 12" aria-label="Percentagem de desconto" />
+              )}
+            </div>
+            {d.discount > 0 && (
+              <div className="f">
+                <span className="f__l">Quanto tempo dura o desconto?</span>
+                <div className="choices" role="radiogroup" aria-label="Duração do desconto">
+                  {([['sem', 'Sem data de fim'], ['7', '7 dias'], ['15', '15 dias'], ['30', '30 dias'], ['data', 'Escolher data']] as const).map(([id, label]) => (
+                    <Choice
+                      key={id}
+                      on={dur === id}
+                      onClick={() => {
+                        setDur(id)
+                        if (id === 'sem') set('discountUntil', '')
+                        else if (id !== 'data') set('discountUntil', endInDays(Number(id)))
+                      }}
+                    >
+                      {label}
+                    </Choice>
+                  ))}
+                </div>
+                {dur === 'data' && <input type="date" value={d.discountUntil} onChange={(e) => set('discountUntil', e.target.value)} aria-label="Último dia do desconto" />}
+                {dur !== 'sem' && dur !== 'data' && d.discountUntil && <small className="muted">Termina no dia {new Date(d.discountUntil + 'T12:00').toLocaleDateString('pt-PT')}.</small>}
+              </div>
             )}
-            <p className="muted small">A imagem é reduzida para 900 px. Fundo limpo (recortado) fica melhor no site.</p>
+
+            <h3 className="sub">Imagens</h3>
+            <div className="imgup">
+              <span className="imgup__box">{d.imgData ? <img src={d.imgData} alt="" /> : preview ? <img src={preview} alt="" /> : <Ico name="caixa" size={36} />}</span>
+              <div>
+                <input
+                  ref={file}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0]
+                    e.target.value = ''
+                    if (f) await upload(f, 'main')
+                  }}
+                />
+                <button type="button" className="btn btn--line" onClick={() => file.current?.click()} disabled={busy}>
+                  <Ico name="carregar" size={16} /> {busy ? 'A processar…' : d.imgData ? 'Trocar imagem principal' : 'Enviar imagem principal'}
+                </button>
+                {d.imgData && (
+                  <button type="button" className="btn btn--ghost" onClick={() => set('imgData', undefined)}>
+                    Retirar
+                  </button>
+                )}
+                <p className="muted small">É a imagem da lista e do topo da página do produto. Fundo limpo (recortado) fica melhor; uma fotografia também serve.</p>
+              </div>
+            </div>
+            <div className="f">
+              <span className="f__l">Mais fotografias (até {MAX_GALLERY})</span>
+              <ul className="gal">
+                {d.gallery.map((g, i) => (
+                  <li key={g + i}>
+                    <img src={g} alt="" />
+                    <button type="button" aria-label={`Retirar fotografia ${i + 1}`} onClick={() => set('gallery', d.gallery.filter((_, j) => j !== i))}>
+                      <Ico name="fechar" size={12} />
+                    </button>
+                  </li>
+                ))}
+                {d.gallery.length < MAX_GALLERY && (
+                  <li>
+                    <button type="button" className="gal__add" disabled={busy} onClick={() => galleryFile.current?.click()}>
+                      <Ico name="mais" size={20} />
+                      <span>Adicionar</span>
+                    </button>
+                  </li>
+                )}
+              </ul>
+              <input
+                ref={galleryFile}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={async (e) => {
+                  const f = e.target.files?.[0]
+                  e.target.value = ''
+                  if (f) await upload(f, 'gallery')
+                }}
+              />
+            </div>
+
+            <h3 className="sub">Especificações técnicas</h3>
+            <p className="muted small">Cada linha é um dado do produto (potência, caudal…). Pode mudar a ordem com as setas. O que ficar vazio não aparece.</p>
+            <datalist id="spec-names">
+              {sugest.map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+            <ul className="specs-ed">
+              {d.specs.map((s, i) => (
+                <li key={i}>
+                  <input
+                    list="spec-names"
+                    value={s.label}
+                    placeholder="Ex.: Potência"
+                    aria-label="Nome da especificação"
+                    onChange={(e) => set('specs', d.specs.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+                    maxLength={40}
+                  />
+                  <input
+                    ref={i === d.specs.length - 1 ? lastSpec : undefined}
+                    value={s.value}
+                    placeholder={exampleFor(typeId, s.label) ? `Ex.: ${exampleFor(typeId, s.label)}` : 'Valor, com a unidade (ex.: 625 W)'}
+                    aria-label="Valor"
+                    onChange={(e) => set('specs', d.specs.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))}
+                    maxLength={120}
+                  />
+                  <span className="specs-ed__act">
+                    <button type="button" className="icon" aria-label="Subir" disabled={i === 0} onClick={() => moveSpec(i, i - 1)}>
+                      <Ico name="cima" size={14} />
+                    </button>
+                    <button type="button" className="icon" aria-label="Descer" disabled={i === d.specs.length - 1} onClick={() => moveSpec(i, i + 1)}>
+                      <Ico name="baixo" size={14} />
+                    </button>
+                    <button type="button" className="icon" aria-label="Retirar especificação" onClick={() => set('specs', d.specs.filter((_, j) => j !== i))}>
+                      <Ico name="fechar" size={16} />
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="choices">
+              {sugest.filter((x) => !usedLabels.has(norm(x))).slice(0, 8).map((x) => (
+                <Choice key={x} on={false} onClick={() => addSpec(x)}>
+                  + {x}
+                </Choice>
+              ))}
+              <Choice on={false} onClick={() => addSpec()}>
+                + Outra
+              </Choice>
+            </div>
+
+            <h3 className="sub">O que vem na caixa</h3>
+            <IncludesEditor value={d.includes} onChange={(v) => set('includes', v)} />
+
+            <label className="check">
+              <input type="checkbox" checked={d.featured} onChange={(e) => set('featured', e.target.checked)} />
+              <span>Mostrar em “Produtos em destaque” na página inicial</span>
+            </label>
           </div>
+          <Preview d={d} src={preview} />
         </div>
-
-        <h3 className="sub">Especificações</h3>
-        <ul className="specs-ed">
-          {d.specs.map((s, i) => (
-            <li key={i}>
-              <input value={s.label} placeholder="Ex.: Potência" aria-label="Nome da especificação" onChange={(e) => set('specs', d.specs.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} />
-              <input value={s.value} placeholder="Ex.: 625 W" aria-label="Valor" onChange={(e) => set('specs', d.specs.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} />
-              <button type="button" className="icon" aria-label="Retirar especificação" onClick={() => set('specs', d.specs.filter((_, j) => j !== i))}>
-                <Ico name="fechar" size={16} />
-              </button>
-            </li>
-          ))}
-        </ul>
-        <button type="button" className="btn btn--ghost" onClick={() => set('specs', [...d.specs, { label: '', value: '' }])}>
-          + Especificação
-        </button>
-
-        <div className="grid2">
-          <Field label="O que vem na caixa" hint="Escreva uma coisa por linha. Ex.: Bomba, Cabo de 30 m." wide>
-            <textarea rows={3} value={d.includes} onChange={(e) => set('includes', e.target.value)} />
-          </Field>
-        </div>
-        <label className="check">
-          <input type="checkbox" checked={d.featured} onChange={(e) => set('featured', e.target.checked)} />
-          <span>Mostrar em “Produtos em destaque” na página inicial</span>
-        </label>
 
         {err && (
           <p className="ferr" role="alert">
@@ -178,7 +388,7 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
           <button type="button" className="btn btn--line" onClick={onClose}>
             Cancelar
           </button>
-          <button type="submit" className="btn">
+          <button type="submit" className="btn" disabled={busy}>
             Guardar produto
           </button>
         </div>
@@ -187,13 +397,33 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
   )
 }
 
+/** Preço na lista: escreve-se e guarda-se ao sair do campo ou com Enter. */
+function QuickPrice({ value, onSave }: { value: number | undefined; onSave: (text: string) => void }) {
+  const [t, setT] = useState(value ? String(value) : '')
+  useEffect(() => setT(value ? String(value) : ''), [value])
+  const commit = () => {
+    if (t.trim() === (value ? String(value) : '')) return
+    if (t.trim() !== '' && parsePrice(t) === undefined) return setT(value ? String(value) : '')
+    onSave(t)
+  }
+  return (
+    <label className="qprice">
+      <span className="visually-hidden">Preço em meticais</span>
+      <input value={t} onChange={(e) => setT(e.target.value)} onBlur={commit} onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()} inputMode="decimal" placeholder="Sem preço" />
+      <span aria-hidden="true">MZN</span>
+    </label>
+  )
+}
+
+type Filter = 'todos' | 'visiveis' | 'ocultos' | 'novos' | 'sem-preco' | 'sem-imagem'
+
 export default function CatalogAdmin() {
-  const { all, save, toggleHidden, remove, reset, duplicate } = useCatalogEditor()
+  const { all, save, toggleHidden, remove, reset, duplicate, setPrice } = useCatalogEditor()
   const { toast, confirm } = useFeedback()
   const [params, setParams] = useSearchParams()
   const [q, setQ] = useState('')
   const [cat, setCat] = useState<'' | CategoryId>('')
-  const [show, setShow] = useState<'todos' | 'visiveis' | 'ocultos' | 'novos'>('todos')
+  const [show, setShow] = useState<Filter>('todos')
   const [draft, setDraft] = useState<ProductDraft | null>(null)
 
   useEffect(() => {
@@ -204,18 +434,41 @@ export default function CatalogAdmin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const noPrice = (p: (typeof all)[number]) => !p.price || p.price <= 0
+  const noImage = (p: (typeof all)[number]) => !p.imgData && !p.img
+
   const rows = useMemo(
     () =>
       all.filter(
         (p) =>
           (!cat || p.category === cat) &&
-          (show === 'todos' || (show === 'visiveis' && !p.hidden) || (show === 'ocultos' && p.hidden) || (show === 'novos' && p.custom)) &&
+          (show === 'todos' ||
+            (show === 'visiveis' && !p.hidden) ||
+            (show === 'ocultos' && p.hidden) ||
+            (show === 'novos' && p.custom) ||
+            (show === 'sem-preco' && (!p.price || p.price <= 0)) ||
+            (show === 'sem-imagem' && !p.imgData && !p.img)) &&
           (!q || norm(`${p.name} ${p.brand ?? ''} ${p.model ?? ''}`).includes(norm(q))),
       ),
     [all, q, cat, show],
   )
 
-  const counts = { todos: all.length, visiveis: all.filter((p) => !p.hidden).length, ocultos: all.filter((p) => p.hidden).length, novos: all.filter((p) => p.custom).length }
+  const counts: Record<Filter, number> = {
+    todos: all.length,
+    visiveis: all.filter((p) => !p.hidden).length,
+    ocultos: all.filter((p) => p.hidden).length,
+    novos: all.filter((p) => p.custom).length,
+    'sem-preco': all.filter(noPrice).length,
+    'sem-imagem': all.filter(noImage).length,
+  }
+  const FILTERS: [Filter, string][] = [
+    ['todos', 'Todos'],
+    ['visiveis', 'Visíveis'],
+    ['ocultos', 'Ocultos'],
+    ['sem-preco', 'Sem preço'],
+    ['sem-imagem', 'Sem imagem'],
+    ['novos', 'Criados aqui'],
+  ]
 
   const onSave = (d: ProductDraft) => {
     if (save(d)) toast(d.isNew ? 'Produto criado' : 'Alterações guardadas')
@@ -227,28 +480,22 @@ export default function CatalogAdmin() {
     <>
       <PageTitle
         title="Produtos"
-        lead="Produtos que aparecem no site. Acrescente produtos, troque imagens e oculte o que não está disponível."
+        lead="Produtos que aparecem no site. Acrescente produtos, mude preços e fichas técnicas, troque imagens e oculte o que não está disponível."
         action={
           <button type="button" className="btn" onClick={() => setDraft(blankDraft())}>
             + Novo produto
           </button>
         }
       />
-      <select className="filtersel" value={show} onChange={(e) => setShow(e.target.value as typeof show)} aria-label="Estado dos produtos">
-        <option value="todos">Todos ({counts.todos})</option>
-        <option value="visiveis">Visíveis ({counts.visiveis})</option>
-        <option value="ocultos">Ocultos ({counts.ocultos})</option>
-        <option value="novos">Criados aqui ({counts.novos})</option>
+      <select className="filtersel" value={show} onChange={(e) => setShow(e.target.value as Filter)} aria-label="Estado dos produtos">
+        {FILTERS.map(([id, label]) => (
+          <option key={id} value={id}>
+            {label} ({counts[id]})
+          </option>
+        ))}
       </select>
       <div className="atabs" role="tablist" aria-label="Estado dos produtos">
-        {(
-          [
-            ['todos', 'Todos'],
-            ['visiveis', 'Visíveis'],
-            ['ocultos', 'Ocultos'],
-            ['novos', 'Criados aqui'],
-          ] as const
-        ).map(([id, label]) => (
+        {FILTERS.map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={show === id} onClick={() => setShow(id)}>
             {label}
             <span>{counts[id]}</span>
@@ -285,8 +532,17 @@ export default function CatalogAdmin() {
                     {p.custom && <em className="chip chip--new">Novo</em>}
                     {p.edited && <em className="chip chip--ed">Editado</em>}
                     {p.featured && <em className="chip chip--star">Destaque</em>}
+                    {noPrice(p) && <em className="chip chip--warn">Sem preço</em>}
+                    {activeDiscount(p) > 0 && <em className="chip chip--new">-{activeDiscount(p)}%</em>}
                   </span>
                 </div>
+                <QuickPrice
+                  value={p.price}
+                  onSave={(t) => {
+                    if (setPrice(p, t)) toast(t.trim() ? 'Preço guardado' : 'Preço retirado (fica “confirmado na cotação”)')
+                    else toast('Memória cheia.', 'erro')
+                  }}
+                />
                 <Switch on={!p.hidden} onChange={() => { toggleHidden(p); toast(p.hidden ? 'Produto visível no site' : 'Produto ocultado do site') }} label={p.hidden ? 'Oculto' : 'No site'} />
                 <div className="arow__act">
                   <button type="button" className="btn btn--line btn--sm" onClick={() => setDraft(draftFromProduct(p))}>

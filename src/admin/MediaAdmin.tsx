@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useMedia, youtubeId } from '../lib/promos'
-import { saveImage } from '../lib/images'
+import { VIDEO_MAX_BYTES, humanSize, saveImage, saveVideo } from '../lib/images'
 import { uid } from '../lib/store'
 import { type MediaItem, type MediaKind } from '../data/admin'
 import { MediaCarousel } from '../components/MediaCarousel'
@@ -9,7 +9,8 @@ import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
 import { Empty, Field, PageTitle, Panel, Switch } from './ui'
 
-const KIND_LABEL: Record<MediaKind, string> = { imagem: 'Imagem', youtube: 'Vídeo do YouTube', video: 'Vídeo (ficheiro MP4)' }
+const KIND_LABEL: Record<MediaKind, string> = { imagem: 'Fotografia', video: 'Vídeo do telemóvel', youtube: 'Vídeo do YouTube' }
+const TIPOS: MediaKind[] = ['imagem', 'video', 'youtube']
 const src = (u: string) => (/^(https?:|data:|blob:)/.test(u) ? u : asset(u))
 
 export default function MediaAdmin() {
@@ -20,7 +21,9 @@ export default function MediaAdmin() {
   const [titulo, setTitulo] = useState('')
   const [legenda, setLegenda] = useState('')
   const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
   const file = useRef<HTMLInputElement>(null)
+  const videoFile = useRef<HTMLInputElement>(null)
 
   const move = (i: number, d: number) =>
     setItems((l) => {
@@ -34,7 +37,8 @@ export default function MediaAdmin() {
   const add = () => {
     setErr('')
     if (!titulo.trim()) return setErr('Escreva um título.')
-    if (!url.trim()) return setErr(tipo === 'imagem' ? 'Envie uma imagem ou cole o endereço dela.' : 'Cole o endereço do vídeo.')
+    if (busy) return setErr('Espere que o envio termine.')
+    if (!url.trim()) return setErr(tipo === 'imagem' ? 'Envie uma fotografia primeiro.' : tipo === 'video' ? 'Envie o vídeo primeiro.' : 'Cole o endereço do vídeo.')
     if (tipo === 'youtube' && !youtubeId(url.trim())) return setErr('Não reconheço esse endereço do YouTube. Cole o link da barra de endereços ou do botão Partilhar.')
     const item: MediaItem = { id: uid(), tipo, url: url.trim(), titulo: titulo.trim(), legenda: legenda.trim() || undefined, ativo: true }
     if (!setItems((l) => [...l, item])) return setErr('A memória do navegador está cheia. Use uma imagem mais pequena ou um endereço em vez de enviar o ficheiro.')
@@ -46,7 +50,7 @@ export default function MediaAdmin() {
 
   return (
     <>
-      <PageTitle title="Vídeos e fotos" lead="Fotografias e vídeos que passam sozinhos neste painel. Mude a ordem com as setas e pause o que não quer mostrar." />
+      <PageTitle title="Vídeos e fotos" lead="Fotografias e vídeos que aparecem na página inicial, na secção “O nosso trabalho”. Mude a ordem com as setas e pause o que não quer mostrar." />
 
       {items.some((m) => m.ativo) && (
         <Panel title="Em rotação automática">
@@ -62,7 +66,7 @@ export default function MediaAdmin() {
             <ul className="alist">
               {items.map((m, i) => (
                 <li key={m.id} className={`arow${m.ativo ? '' : ' is-off'}`}>
-                  <span className="arow__thumb">{m.tipo === 'imagem' ? <img src={src(m.url)} alt="" /> : <Ico name="video" size={24} />}</span>
+                  <span className="arow__thumb">{m.tipo === 'imagem' ? <img src={src(m.url)} alt="" /> : m.tipo === 'video' ? <video src={`${src(m.url)}#t=0.1`} preload="metadata" muted playsInline aria-hidden="true" /> : <Ico name="video" size={24} />}</span>
                   <div className="arow__main">
                     <strong>{m.titulo}</strong>
                     <small>{KIND_LABEL[m.tipo]}</small>
@@ -103,7 +107,7 @@ export default function MediaAdmin() {
             }}
           >
             <div className="seg" role="radiogroup" aria-label="Tipo de item">
-              {(Object.keys(KIND_LABEL) as MediaKind[]).filter((k) => k !== 'video' || tipo === 'video').map((k) => (
+              {TIPOS.map((k) => (
                 <button key={k} type="button" role="radio" aria-checked={tipo === k} onClick={() => { setTipo(k); setUrl('') }}>
                   {KIND_LABEL[k]}
                 </button>
@@ -138,14 +142,45 @@ export default function MediaAdmin() {
                     }}
                   />
                   <button type="button" className="btn btn--line" onClick={() => file.current?.click()}>
-                    <Ico name="carregar" size={16} /> Enviar imagem
+                    <Ico name="carregar" size={16} /> Enviar fotografia
                   </button>
+                </div>
+              </div>
+            ) : tipo === 'video' ? (
+              <div className="imgup">
+                <span className="imgup__box">{url ? <video src={`${src(url)}#t=0.1`} preload="metadata" muted playsInline /> : <Ico name="video" size={28} />}</span>
+                <div>
+                  <input
+                    ref={videoFile}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,video/*"
+                    hidden
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0]
+                      e.target.value = ''
+                      if (!f) return
+                      setErr('')
+                      setBusy(true)
+                      try {
+                        setUrl(await saveVideo(f, { folder: 'videos' }))
+                        if (!titulo.trim()) setTitulo(f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 60))
+                      } catch (e2) {
+                        setUrl('')
+                        setErr(e2 instanceof Error ? e2.message : 'Não foi possível enviar o vídeo.')
+                      }
+                      setBusy(false)
+                    }}
+                  />
+                  <button type="button" className="btn btn--line" onClick={() => videoFile.current?.click()} disabled={busy}>
+                    <Ico name="carregar" size={16} /> {busy ? 'A enviar o vídeo… não feche' : url ? 'Trocar o vídeo' : 'Escolher vídeo do telemóvel'}
+                  </button>
+                  <p className="muted small">MP4 ou WebM, até {humanSize(VIDEO_MAX_BYTES).replace(',0', '')}. Um vídeo de 1 minuto em 720p costuma ter 20 a 40 MB. Demora um pouco a enviar.</p>
                 </div>
               </div>
             ) : (
               <Field
-                label={tipo === 'youtube' ? 'Link do vídeo no YouTube *' : 'Endereço do ficheiro MP4 *'}
-                hint={tipo === 'youtube' ? 'No YouTube, abra o vídeo, toque em Partilhar, Copiar link e cole aqui.' : 'O vídeo tem de estar alojado online. Prefira um vídeo do YouTube.'}
+                label="Link do vídeo no YouTube *"
+                hint="No YouTube, abra o vídeo, toque em Partilhar, Copiar link e cole aqui."
               >
                 <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" inputMode="url" />
               </Field>
@@ -155,7 +190,7 @@ export default function MediaAdmin() {
                 {err}
               </p>
             )}
-            <button type="submit" className="btn">
+            <button type="submit" className="btn" disabled={busy}>
               Acrescentar ao carrossel
             </button>
           </form>

@@ -3,6 +3,7 @@ import { Intro } from '../sections/Intro'
 import { Solutions } from '../sections/Solutions'
 import { Featured } from '../sections/Featured'
 import { Brands } from '../sections/Brands'
+import { Gallery } from '../sections/Gallery'
 import { Tools } from '../sections/Tools'
 import { Faq } from '../sections/Faq'
 import { Closing } from '../sections/Closing'
@@ -21,6 +22,7 @@ export default function Home() {
       <Brands />
       <Solutions />
       <Featured />
+      <Gallery />
       <Tools />
       <Faq />
       <Closing />

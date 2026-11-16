@@ -170,11 +170,13 @@ describe('administrador', () => {
 })
 
 describe('esquema', () => {
-  it('o balde é público e só aceita imagens', async () => {
+  it('o balde é público e aceita imagens e vídeos (até 50 MB)', async () => {
     const b = (await db.query(`select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'site'`)).rows[0] as { public: boolean; file_size_limit: string | number; allowed_mime_types: string[] }
     expect(b.public).toBe(true)
-    expect(Number(b.file_size_limit)).toBe(5242880)
+    expect(Number(b.file_size_limit)).toBe(52428800)
     expect(b.allowed_mime_types).toContain('image/webp')
+    expect(b.allowed_mime_types).toEqual(expect.arrayContaining(['video/mp4', 'video/webm']))
+    expect(b.allowed_mime_types).not.toContain('text/html')
   })
 
   it('atualiza updated_at ao editar', async () => {
@@ -285,7 +287,7 @@ describe('ficheiros de instalação (supabase/instalar)', () => {
   it('1-esquema.sql reúne as migrações certas, por ordem', () => {
     const sql = readFileSync('supabase/instalar/1-esquema.sql', 'utf8')
     let pos = -1
-    for (const m of ['20261009000000_inicio', '20261010000000_antiabuso', '20261012000000_avisos_email', '20261013000000_email_whatsapp']) {
+    for (const m of ['20261009000000_inicio', '20261010000000_antiabuso', '20261012000000_avisos_email', '20261013000000_email_whatsapp', '20261014000000_videos']) {
       const body = readFileSync(`supabase/migrations/${m}.sql`, 'utf8').trim()
       const i = sql.indexOf(body)
       expect(i).toBeGreaterThan(pos)

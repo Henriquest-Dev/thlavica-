@@ -1,6 +1,6 @@
--- PASSO 1 de 3 — Esquema e segurança (tabelas, regras de acesso, fotos, limites, avisos).
+-- PASSO 1 de 3 — Esquema e segurança (tabelas, regras de acesso, fotos e vídeos, limites, avisos).
 -- Cole TUDO no Supabase → SQL Editor e carregue em Run. Não precisa de editar nada. Pode correr de novo sem problema.
--- Gerado a partir de supabase/migrations (as migrações 1, 2, 4 e 5; a 3 está substituída pela 4).
+-- Gerado a partir de supabase/migrations (as migrações 1, 2, 4, 5 e 6; a 3 está substituída pela 4).
 
 -- ===== 20261009000000_inicio.sql =====
 -- Tlhavika: esquema inicial. Pode ser executado mais de uma vez sem dar erro.
@@ -410,4 +410,12 @@ revoke all on function public.notificar_pedido() from public;
 drop trigger if exists notificar_pedido on public.quote_requests;
 create trigger notificar_pedido after insert on public.quote_requests
   for each row execute function public.notificar_pedido();
+
+-- ===== 20261014000000_videos.sql =====
+-- O balde `site` passa a aceitar também vídeos (MP4 e WebM), até 50 MB por ficheiro (o máximo do plano gratuito).
+-- Pode ser executado mais de uma vez. Quem envia continua a ser só o administrador (regras do 20261009).
+update storage.buckets
+   set file_size_limit = 52428800,
+       allowed_mime_types = array['image/webp', 'image/jpeg', 'image/png', 'video/mp4', 'video/webm']
+ where id = 'site';
 

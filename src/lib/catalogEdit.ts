@@ -29,10 +29,14 @@ export interface ProductDraft {
   specs: { label: string; value: string }[]
   /** Um item por linha. */
   includes: string
+  /** Fotografias extra (até 4). */
+  gallery: string[]
   imgData?: string
   /** Recorte de origem (só leitura, para pré-visualizar). */
   img: string
 }
+
+export const MAX_GALLERY = 4
 
 const NO_CUSTOM: CustomProduct[] = []
 const NO_OVER: Record<string, CatalogOverride> = {}
@@ -53,6 +57,7 @@ export const blankDraft = (): ProductDraft => ({
   discountUntil: '',
   specs: [{ label: 'Potência', value: '' }],
   includes: '',
+  gallery: [],
   img: '',
 })
 
@@ -72,6 +77,7 @@ export const draftFromProduct = (p: CatalogProduct): ProductDraft => ({
   discountUntil: p.discountUntil ?? '',
   specs: p.specs.length ? p.specs.map((s) => ({ ...s })) : [{ label: '', value: '' }],
   includes: (p.includes ?? []).join('\n'),
+  gallery: [...(p.gallery ?? [])],
   imgData: p.imgData,
   img: p.img,
 })
@@ -87,6 +93,7 @@ export function draftFields(d: ProductDraft) {
     summary: d.summary.trim(),
     specs: d.specs.filter((s) => s.label.trim() && s.value.trim()).map((s) => ({ label: s.label.trim(), value: s.value.trim() })),
     includes: includes.length ? includes : undefined,
+    gallery: d.gallery.filter(Boolean).slice(0, MAX_GALLERY).length ? d.gallery.filter(Boolean).slice(0, MAX_GALLERY) : undefined,
     featured: d.featured,
     hidden: d.hidden,
     imgData: d.imgData,
@@ -125,7 +132,15 @@ export function useCatalogEditor() {
         const prod: CustomProduct = { ...f, id: d.id, img: d.img, source: 0, custom: true }
         return setCustom((l) => (l.some((x) => x.id === d.id) ? l.map((x) => (x.id === d.id ? prod : x)) : [prod, ...l]))
       }
-      return setOver((o) => ({ ...o, [d.id]: f }))
+      // num produto de origem só se guarda a diferença; "vazio" tem de ser escrito (um campo em falta repunha o valor de origem)
+      const edit = { ...f, price: f.price ?? 0, discount: f.discount ?? 0, discountUntil: f.discountUntil ?? '', includes: f.includes ?? [], gallery: f.gallery ?? [], brand: f.brand ?? '', model: f.model ?? '' }
+      return setOver((o) => ({ ...o, [d.id]: edit }))
+    },
+    /** Muda só o preço (edição rápida na lista). Texto vazio tira o preço. */
+    setPrice(p: CatalogProduct, text: string): boolean {
+      const price = parsePrice(text)
+      if (p.custom) return setCustom((l) => l.map((x) => (x.id === p.id ? { ...x, price } : x)))
+      return setOver((o) => ({ ...o, [p.id]: { ...o[p.id], price: price ?? 0 } }))
     },
     toggleHidden(p: CatalogProduct) {
       if (p.custom) setCustom((l) => l.map((x) => (x.id === p.id ? { ...x, hidden: !x.hidden } : x)))

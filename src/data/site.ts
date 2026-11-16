@@ -17,6 +17,27 @@ export const defaultContact = {
   facebook: 'https://www.facebook.com/people/Tlhavika/61560557742444/',
 }
 
+/** Conta bancária que aparece nas cotações em PDF. */
+export interface BankAccount {
+  titular: string
+  banco: string
+  conta: string
+  nib: string
+  swift: string
+}
+
+export const MAX_BANK_ACCOUNTS = 3
+
+/** Aceita só contas bem formadas (os dados vêm do servidor) e no máximo três, com texto curto. */
+export function cleanBankAccounts(list: unknown): BankAccount[] {
+  if (!Array.isArray(list)) return []
+  const s = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
+  return list
+    .map((b: Record<string, unknown> | null) => ({ titular: s(b?.titular, 80), banco: s(b?.banco, 60), conta: s(b?.conta, 40), nib: s(b?.nib, 40), swift: s(b?.swift, 20) }))
+    .filter((b) => b.banco || b.conta || b.nib)
+    .slice(0, MAX_BANK_ACCOUNTS)
+}
+
 /** Dados da empresa que aparecem nas cotações em PDF (todos opcionais; vazio = não aparece). */
 export interface CompanyInfo {
   /** Nome legal, ex.: TLHAVIKA, LDA. */
@@ -26,6 +47,8 @@ export interface CompanyInfo {
   pagamento?: string
   /** Condições gerais (prazo de entrega, garantia…), tal como devem aparecer no PDF. */
   condicoes?: string
+  /** Contas bancárias (até 3) que aparecem em "Dados bancários" na cotação. */
+  bancos?: BankAccount[]
 }
 
 export type Contact = typeof defaultContact & CompanyInfo
@@ -39,6 +62,7 @@ const NO_SETTINGS: Partial<Contact> = {}
 export function mergeContact(s: Partial<Contact>): Contact {
   const c = { ...defaultContact, ...s }
   if (!/^https:\/\//i.test(c.facebook)) c.facebook = defaultContact.facebook
+  if ('bancos' in s) c.bancos = cleanBankAccounts(s.bancos)
   return c
 }
 

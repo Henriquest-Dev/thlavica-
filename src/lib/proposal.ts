@@ -8,6 +8,9 @@ export const money = (n: number) => `${n.toLocaleString('pt-PT', { minimumFracti
 
 export const DEFAULT_IVA = 16
 
+/** Termos de pagamento por clique (o primeiro é o de origem). "Outro" deixa escrever. */
+export const PAGAMENTOS = ['Pagamento na entrega', '50% no pedido e 50% na entrega', 'Pagamento adiantado', 'Pagamento a 30 dias']
+
 /** Valores de uma linha: bruto, desconto, total sem IVA e total com IVA. */
 export function lineAmounts(l: Pick<ProposalLine, 'qtd' | 'preco' | 'desconto'>, iva: number = DEFAULT_IVA) {
   const bruto = l.qtd * l.preco
@@ -61,6 +64,7 @@ export function newProposal(existing: Pick<Proposal, 'numero'>[], catalog: Catal
     linhas: linhas.length ? linhas : [{ id: uid(), descricao: '', qtd: 1, preco: 0 }],
     iva: DEFAULT_IVA,
     validadeDias: 15,
+    termoPagamento: PAGAMENTOS[0],
     notas: '',
     estado: 'rascunho',
   }

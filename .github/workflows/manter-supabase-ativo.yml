@@ -1,0 +1,29 @@
+# O plano gratuito do Supabase pausa o projeto ao fim de 7 dias sem pedidos à base de dados.
+# Este agendador faz um pedido de leitura por dia (a mesma que o site faz) para o projeto nunca pausar.
+# Não é preciso configurar nada: o endereço e a chave "publishable" são públicos (vão no próprio site).
+name: Manter o Supabase ativo
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # todos os dias, 06:17 UTC
+  workflow_dispatch: {}
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ler uma linha da base de dados
+        run: |
+          URL="https://vvizmmfdfaylqsllgoqw.supabase.co"
+          KEY="sb_publishable_B6c1MrUq682S_Ti92VTRBg_fgPT3ua1"
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" -H "apikey: $KEY" "$URL/rest/v1/site_settings?select=id&limit=1" || echo 000)
+            echo "tentativa $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 20
+          done
+          echo "O Supabase não respondeu 200. Verifique se o projeto está pausado (supabase.com)." >&2
+          exit 1

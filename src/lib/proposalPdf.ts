@@ -3,6 +3,8 @@ import type { Proposal } from '../data/admin'
 import type { CompanyInfo, Contact } from '../data/site'
 import { asset } from './asset'
 import { DEFAULT_IVA, lineAmounts, proposalTotals } from './proposal'
+import { valorPorExtenso } from './extenso'
+import { cleanBankAccounts } from '../data/site'
 
 /**
  * Cotação em PDF, no desenho do modelo da empresa (A4): logótipo e título no topo, dados da cotação à direita,
@@ -21,8 +23,8 @@ export const COMPANY_NAME = 'TLHAVIKA, LDA'
 const L = 24
 const R = 571
 const COL = { qtd: 235, preco: 251, desc: 320, iva: 359, semIva: 479, comIva: 571 }
-const TABLE = { head: 326, firstRow: 340, limit: 590 }
-const FOOT = 603
+const FOOT = 548
+const TABLE = { head: 326, firstRow: 340, limit: FOOT - 12 }
 
 const GREY = [138, 138, 138] as const
 const INK = [34, 34, 34] as const
@@ -247,7 +249,7 @@ export async function buildProposalPdf(p: Proposal, { company, logo }: PdfOption
 
   rule(FOOT, 1.6)
   font('normal', 7.6)
-  noteLines.slice(0, 22).forEach((line, i) => text(line, L, FOOT + 16 + i * 9.4))
+  noteLines.slice(0, 11).forEach((line, i) => text(line, L, FOOT + 16 + i * 9.4))
 
   const total = (label: string, value: string, yy: number) => {
     font('normal', 8)
@@ -259,12 +261,81 @@ export async function buildProposalPdf(p: Proposal, { company, logo }: PdfOption
   total('Total sem IVA:', pdfMoney(t.subtotal), FOOT + 30)
   total(`IVA (${iva.toFixed(0)}%):`, pdfMoney(t.tax), FOOT + 42)
   total('Subtotal:', pdfMoney(t.total), FOOT + 54)
-  total('Total geral:', pdfMoney(t.total), FOOT + 90)
+  total('Total geral:', pdfMoney(t.total), FOOT + 70)
 
   font('bold', 7.5, GREY)
-  text('VALOR A PAGAR', R, 793, 'right')
+  text('VALOR A PAGAR', R, FOOT + 88, 'right')
   font('bold', 15)
-  text(pdfMoney(t.total), R, 813, 'right')
+  text(pdfMoney(t.total), R, FOOT + 106, 'right')
+
+  // valor por extenso (como nas faturas da empresa)
+  let fy = FOOT + 128
+  const extenso = valorPorExtenso(t.total)
+  if (extenso) {
+    font('italic', 7.6)
+    for (const line of wrap(`Valor por extenso: ${extenso}`, R - L)) {
+      text(line, L, fy)
+      fy += 9.4
+    }
+  }
+
+  // termos da proposta
+  const termo = p.termoPagamento?.trim()
+  const prazo = p.prazoEntrega && p.prazoEntrega > 0 ? `${p.prazoEntrega} dia(s)` : ''
+  if (termo || prazo) {
+    fy += 5
+    const h = 14 + (termo ? 11 : 0) + (prazo ? 11 : 0)
+    doc.setDrawColor(INK[0], INK[1], INK[2])
+    doc.setLineWidth(0.8)
+    doc.rect(L, fy, R - L, h)
+    font('bold', 8)
+    text('Termos da proposta', L + 8, fy + 10)
+    let ty = fy + 21
+    for (const [k, v] of [
+      ['Termo de pagamento:', termo],
+      ['Prazo de entrega:', prazo],
+    ] as const) {
+      if (!v) continue
+      font('normal', 8, GREY)
+      text(k, L + 8, ty)
+      font('normal', 8)
+      text(v, L + 96, ty)
+      ty += 11
+    }
+    fy += h + 4
+  }
+
+  // dados bancários: até três contas lado a lado
+  const bancos = cleanBankAccounts(company.bancos)
+  if (bancos.length) {
+    fy += 8
+    font('bold', 8.5)
+    text('Dados bancários', L, fy)
+    fy += 8
+    const colW = (R - L) / 3
+    bancos.forEach((b, i) => {
+      const x = L + i * colW
+      doc.setDrawColor(INK[0], INK[1], INK[2])
+      doc.setLineWidth(1)
+      doc.line(x, fy, x, fy + 52)
+      let by = fy + 9
+      for (const [k, v] of [
+        ['Titular:', b.titular],
+        ['Banco:', b.banco],
+        ['Conta:', b.conta],
+        ['NIB:', b.nib],
+        ['Swift:', b.swift],
+      ] as const) {
+        if (!v) continue
+        font('normal', 7, GREY)
+        text(k, x + 5, by)
+        font('normal', 7)
+        const lines = wrap(v, colW - 46)
+        lines.slice(0, 2).forEach((l, j) => text(l, x + 36, by + j * 8))
+        by += Math.min(lines.length, 2) * 8 + 2
+      }
+    })
+  }
 
   return doc
 }

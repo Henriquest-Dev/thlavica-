@@ -3,14 +3,14 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useStored, uid } from '../lib/store'
 import { useCatalog } from '../lib/catalog'
 import { STATUS_LABEL, type Proposal, type ProposalLine, type QuoteRequest, type QuoteStatus } from '../data/admin'
-import { DEFAULT_IVA, lineAmounts, lineFromProduct, newProposal, proposalMessage, proposalTotals } from '../lib/proposal'
+import { DEFAULT_IVA, PAGAMENTOS, lineAmounts, lineFromProduct, newProposal, proposalMessage, proposalTotals } from '../lib/proposal'
 import { downloadProposalPdf } from '../lib/proposalPdf'
 import { telLink, whatsappLink } from '../lib/phone'
 import { useContact } from '../data/site'
 import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
 import { useMatch } from '../lib/useMatch'
-import { Empty, Field, Modal, PageTitle, Panel, dateFmt, money } from './ui'
+import { Choice, Empty, Field, Modal, PageTitle, Panel, dateFmt, money } from './ui'
 
 const NO_Q: QuoteRequest[] = []
 const NO_PR: Proposal[] = []
@@ -118,6 +118,31 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
             <Field label="Validade (dias)">
               <input type="number" min={1} max={365} value={p.validadeDias} onChange={(e) => set('validadeDias', Math.max(1, Number(e.target.value) || 1))} />
             </Field>
+            <Field label="Como o cliente paga" hint="Aparece em “Termos da proposta” no PDF. Toque numa opção ou escolha Outro." wide>
+              <div className="choices">
+                {PAGAMENTOS.map((t) => (
+                  <Choice key={t} on={p.termoPagamento === t} onClick={() => set('termoPagamento', t)}>
+                    {t}
+                  </Choice>
+                ))}
+                <Choice on={Boolean(p.termoPagamento) && !PAGAMENTOS.includes(p.termoPagamento ?? '')} onClick={() => set('termoPagamento', PAGAMENTOS.includes(p.termoPagamento ?? '') ? '' : p.termoPagamento)}>
+                  Outro
+                </Choice>
+              </div>
+              {!PAGAMENTOS.includes(p.termoPagamento ?? '') && (
+                <input value={p.termoPagamento ?? ''} onChange={(e) => set('termoPagamento', e.target.value)} placeholder="Escreva como o cliente vai pagar" maxLength={120} />
+              )}
+            </Field>
+            <Field label="Prazo de entrega (dias)" hint="Deixe vazio para não aparecer.">
+              <input
+                type="number"
+                min={1}
+                max={365}
+                value={p.prazoEntrega ?? ''}
+                onChange={(e) => set('prazoEntrega', e.target.value === '' ? undefined : Math.max(1, Math.min(365, Number(e.target.value) || 1)))}
+                inputMode="numeric"
+              />
+            </Field>
             <Field label="Notas para o cliente" wide>
               <textarea rows={3} value={p.notas} onChange={(e) => set('notas', e.target.value)} placeholder="Condições de pagamento, prazo de entrega, o que está incluído…" />
             </Field>
@@ -170,7 +195,11 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
                 </tr>
               </tfoot>
             </table>
-            <p className="sheet__n">Validade: {p.validadeDias} dias. {p.notas}</p>
+            <p className="sheet__n">
+              Validade: {p.validadeDias} dias.
+              {p.termoPagamento ? ` Pagamento: ${p.termoPagamento}.` : ''}
+              {p.prazoEntrega ? ` Entrega em ${p.prazoEntrega} dia(s).` : ''} {p.notas}
+            </p>
           </article>
           <div className="row row--end">
             <button type="button" className="btn btn--line" onClick={() => navigator.clipboard?.writeText(text()).then(() => toast('Texto copiado'), () => toast('Não foi possível copiar', 'erro'))}>

@@ -1944,3 +1944,207 @@
 .btn--wa:hover {
   background: #178a45;
 }
+
+/* Contas bancárias (Contactos) */
+.banks {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.bank {
+  margin: 0;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line, #dfe5ee);
+  border-radius: 14px;
+  background: #fff;
+}
+.bank legend {
+  padding: 0 8px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.bank .btn {
+  margin-top: 10px;
+}
+
+/* Editor de produtos: pré-visualização, etiquetas, galeria, preço rápido */
+.pform__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 28px;
+  align-items: start;
+}
+.sub--first {
+  margin-top: 0;
+}
+.prev {
+  position: sticky;
+  top: 12px;
+  display: grid;
+  gap: 10px;
+}
+.prev__h {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--a-muted);
+}
+.prev__off {
+  margin: 0;
+  font-size: 12.5px;
+  color: #8a1c14;
+}
+.pcprev {
+  pointer-events: none;
+  min-height: 300px;
+}
+.pcprev .pc__media img {
+  position: absolute;
+  inset: 40px 14% 6px;
+  width: 72%;
+  height: calc(100% - 46px);
+  object-fit: contain;
+}
+.specs-ed li {
+  grid-template-columns: 1fr 1.4fr auto;
+}
+.specs-ed__act {
+  display: inline-flex;
+  gap: 2px;
+}
+.specs-ed__act .icon[disabled] {
+  opacity: 0.3;
+}
+.inc {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.inc__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.inc__list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 14px;
+  border-radius: 999px;
+  background: #e6efff;
+  color: #123a73;
+  font-size: 14px;
+}
+.inc__list button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #123a73;
+  cursor: pointer;
+}
+.inc__add {
+  display: flex;
+  gap: 8px;
+}
+.inc__add input {
+  flex: 1;
+  min-width: 0;
+}
+.gal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.gal li {
+  position: relative;
+  width: 84px;
+  height: 84px;
+}
+.gal img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--a-line);
+}
+.gal li > button:not(.gal__add) {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: #123a73;
+  color: #fff;
+  cursor: pointer;
+}
+.gal__add {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed #b4c0d1;
+  border-radius: 12px;
+  background: var(--a-bg);
+  color: var(--a-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.chip--warn {
+  background: #fff0cf;
+  color: #7a4b00;
+}
+.qprice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--a-muted);
+  font-size: 12px;
+}
+.qprice input {
+  width: 108px;
+  min-height: 40px;
+  padding: 0 10px;
+  text-align: right;
+  border: 1px solid var(--a-line);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  color: var(--a-ink, #14213d);
+}
+.arow {
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+}
+@media (max-width: 900px) {
+  .pform__grid {
+    grid-template-columns: 1fr;
+  }
+  .prev {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .arow {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .arow > .qprice {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

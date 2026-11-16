@@ -11,6 +11,11 @@ const company = {
   email: 'Tlhavika.solar@gmail.com',
   pagamento: 'Transferência bancária\nBanco: Exemplo\nNIB: 0000 0000 0000 0000 0000 0',
   condicoes: 'Preços válidos pelo prazo indicado. Entrega a combinar.',
+  bancos: [
+    { titular: 'Tlhavika Sociedade Unipessoal, LDA', banco: 'Standard Bank', conta: '1279609291007', nib: '000301270960929100794', swift: 'SBICMZMX' },
+    { titular: 'Tlhavika Sociedade Unipessoal, LDA', banco: 'Millennium BIM', conta: '1249252137', nib: '000100000124925213757', swift: 'BIMOMZMXXXX' },
+    { titular: 'Tlhavika Sociedade Unipessoal, LDA', banco: 'MozaBanco', conta: '3120473310001', nib: '003400003120473310150', swift: 'MOZAMZMA' },
+  ],
 }
 
 const base: Proposal = {
@@ -24,6 +29,8 @@ const base: Proposal = {
   ],
   iva: 16,
   validadeDias: 15,
+  termoPagamento: 'Pagamento na entrega',
+  prazoEntrega: 7,
   notas: 'Instalação não incluída.',
   vendedor: 'Ana',
   estado: 'rascunho',

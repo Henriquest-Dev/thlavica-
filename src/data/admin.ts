@@ -41,6 +41,10 @@ export interface Proposal {
   /** IVA em percentagem (0 = sem IVA). */
   iva: number
   validadeDias: number
+  /** Termo de pagamento (aparece em "Termos da proposta"), por exemplo "Pagamento na entrega". */
+  termoPagamento?: string
+  /** Prazo de entrega em dias (vazio = não aparece). */
+  prazoEntrega?: number
   notas: string
   estado: 'rascunho' | 'enviada'
 }
