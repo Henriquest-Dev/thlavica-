@@ -40,7 +40,8 @@ const restHeaders = (): Record<string, string> => ({ apikey: KEY!, Authorization
 
 /** Lê uma tabela de leitura pública (id, data, pos). Lança erro se o pedido falhar. */
 export async function publicSelect(table: string, order: string): Promise<PublicRow[]> {
-  const r = await fetch(`${URL}/rest/v1/${table}?select=id,data,pos&order=${order}`, { headers: restHeaders() })
+  // com ligação má o pedido não pode ficar pendurado: ao fim de 12 s desiste e o site usa o que já tem guardado
+  const r = await fetch(`${URL}/rest/v1/${table}?select=id,data,pos&order=${order}`, { headers: restHeaders(), signal: AbortSignal.timeout(12_000) })
   if (!r.ok) throw new Error(`${table}: ${r.status}`)
   return (await r.json()) as PublicRow[]
 }
@@ -51,6 +52,7 @@ export async function publicInsert(table: string, row: { id: string; data: unkno
     method: 'POST',
     headers: { ...restHeaders(), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
     body: JSON.stringify(row),
+    signal: AbortSignal.timeout(30_000),
   })
   if (r.ok) return null
   const e = (await r.json().catch(() => ({}))) as { code?: string; message?: string }

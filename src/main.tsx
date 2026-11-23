@@ -27,6 +27,13 @@ const Settings = lazy(() => import('./admin/Settings'))
 initSmooth()
 startSync()
 
+// Guarda o site no telemóvel: a segunda visita (e as seguintes) abre quase de imediato, mesmo com rede fraca.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {})
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
