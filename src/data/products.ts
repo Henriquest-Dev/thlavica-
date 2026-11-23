@@ -63,21 +63,6 @@ const catalogo: Product[] = [
     source: 24,
   },
   {
-    id: 'hanchus-ess-3-5kw',
-    name: 'Sistema solar caseiro ESS 3,5 kW',
-    brand: 'Hanchus',
-    category: 'inversores',
-    summary: 'Kit com inversor híbrido, bateria de lítio e painéis para uma casa.',
-    img: 'kit-hanchus',
-    specs: [
-      { label: 'Inversor', value: 'Hanchus ESS 3000 W, 24 V, híbrido com MPPT' },
-      { label: 'Bateria', value: 'Lítio 100 Ah, 24 V (2400 Wh)' },
-      { label: 'Painéis', value: '2 × bifacial JA Solar 595 W' },
-    ],
-    source: 26,
-    featured: true,
-  },
-  {
     id: 'dongyin-pkm60-dsk1',
     illustrative: true,
     name: 'Bomba pressurizadora PKM60 + DSK1',
@@ -272,24 +257,6 @@ const catalogo: Product[] = [
     source: 0,
   },
   {
-    id: 'bomba-giraffe-gr6007',
-    name: 'Bomba submersível Giraffe GR 6007',
-    brand: 'Giraffe',
-    model: 'GR 6007',
-    category: 'bombas-submersiveis',
-    summary: 'Bomba submersível de 1,5 kW distribuída pela Ebara Pumps South Africa.',
-    img: 'bomba-giraffe',
-    specs: [
-      { label: 'Potência', value: '1,5 kW (2 HP)' },
-      { label: 'Frequência', value: '50 Hz' },
-      { label: 'Caudal', value: '100 / 240 L/min' },
-      { label: 'Altura', value: '37 / 18 m' },
-      { label: 'Água até', value: '35 °C' },
-      { label: 'Rotação', value: '2800 r/min' },
-    ],
-    source: 0,
-  },
-  {
     id: 'bomba-4sd-1-5kw',
     name: 'Bomba submersível 4SD 1,5 kW',
     model: 'Série 4SD',
@@ -323,7 +290,7 @@ const catalogo: Product[] = [
     model: '3SDS 4-55-60-400',
     category: 'bombas-solares',
     summary: 'Bomba solar de 400 W que liga diretamente aos painéis, através do controlador 3DYS-60-400.',
-    img: 'kit-3sds-400',
+    img: 'bomba-3sds',
     specs: [
       { label: 'Potência', value: '400 W (0,55 HP)' },
       { label: 'Alimentação', value: 'DC 65–100 V' },
@@ -345,7 +312,7 @@ const catalogo: Product[] = [
     model: '4SDS 5-80-90-800AD',
     category: 'bombas-solares',
     summary: 'Funciona com painéis (DC) ou com a rede (AC), com controlador.',
-    img: 'kit-4sds-800',
+    img: 'bomba-4sds',
     specs: [
       { label: 'Potência', value: '800 W (1 HP)' },
       { label: 'Alimentação', value: 'DC 90–350 V / AC 220–240 V' },
@@ -365,7 +332,7 @@ const catalogo: Product[] = [
     model: '4SDS 5-168-170-1500',
     category: 'bombas-solares',
     summary: 'Bomba solar de 4 polegadas com controlador.',
-    img: 'kit-4sds-1500',
+    img: 'bomba-4sds',
     specs: [
       { label: 'Potência', value: '1500 W (2 HP)' },
       { label: 'Alimentação', value: 'DC 160–240 V' },
@@ -387,7 +354,7 @@ const catalogo: Product[] = [
     model: '4SDS 5-235-240-2200',
     category: 'bombas-solares',
     summary: 'Bomba solar de 4 polegadas para furos profundos.',
-    img: 'kit-4sds-1500',
+    img: 'bomba-4sds',
     specs: [
       { label: 'Potência', value: '2200 W (3 HP)' },
       { label: 'Alimentação', value: '220–400 V, 50 Hz' },
@@ -399,33 +366,33 @@ const catalogo: Product[] = [
   },
   {
     id: 'bomba-solar-zjlmet-400w',
-    name: 'Kit bomba solar 400 W + 2 painéis',
+    name: 'Bomba solar Zjlmet 400 W',
     brand: 'Zjlmet',
     model: '48V/400W/3-4',
     category: 'bombas-solares',
-    summary: 'Bomba solar de baixa potência com dois painéis, para pequenos caudais.',
+    summary: 'Bomba solar de baixa potência, para pequenos caudais.',
     img: 'kit-bomba-400w',
     specs: [
       { label: 'Potência', value: '400 W, 48 V' },
       { label: 'Caudal', value: '5,4 m³/h' },
       { label: 'Altura', value: '90 m' },
     ],
-    includes: ['Bomba', '2 painéis'],
+    includes: ['Bomba'],
     source: 39,
   },
   {
     id: 'bomba-solar-hibrida-1500w-kit',
-    name: 'Kit bomba solar híbrida 1500 W + 4 painéis',
+    name: 'Bomba solar híbrida 1500 W',
     model: '4SD 5/168/170-1500 AD',
     category: 'bombas-solares',
-    summary: 'Bomba solar híbrida com quatro painéis, para furos profundos.',
-    img: 'kit-bomba-1500w',
+    summary: 'Bomba solar híbrida, para furos profundos.',
+    img: 'bomba-4sds',
     specs: [
       { label: 'Potência', value: '1500 W' },
       { label: 'Caudal', value: '6 m³/h' },
       { label: 'Altura', value: '168 m' },
     ],
-    includes: ['Bomba', '4 painéis'],
+    includes: ['Bomba'],
     source: 40,
     featured: true,
   },
@@ -491,35 +458,6 @@ const catalogo: Product[] = [
     ],
     source: 0,
   },
-  ...(
-    [
-      ['4SD1500T', 'motor-4sd1500t', '1,5 kW (2 HP)', '380–415 V, 50 Hz, trifásico', '3,8 A', '11,7 kg'],
-      ['4SD2200T', 'motor-4sd2200t', '2,2 kW (3 HP)', '380–415 V, 50 Hz, trifásico', '6,1 A', '16,4 kg'],
-      ['4SD2200S', 'motor-4sd2200s', '2,2 kW (3 HP)', '220–240 V, 50 Hz, monofásico', '15,8 A', '18,7 kg'],
-      ['4SD4000T', 'motor-4sd4000t', '4 kW (5,5 HP)', '380–415 V, 50 Hz, trifásico', '9,9 A', '24,5 kg'],
-      ['4SD7500T', 'motor-4sd7500t', '7,5 kW (10 HP)', '380–415 V, 50 Hz, trifásico', '14,6 A', '34,6 kg'],
-    ] as const
-  ).map(([model, img, power, supply, amps, kg]) => ({
-    id: `motor-${model.toLowerCase()}`,
-    name: `Motor submersível ${model}`,
-    brand: 'Dongyin',
-    model,
-    category: 'acessorios' as const,
-    summary: `Motor submersível de 4 polegadas, ${power.split(' (')[0]}.`,
-    img,
-    specs: [
-      { label: 'Potência', value: power },
-      { label: 'Alimentação', value: supply },
-      { label: 'Corrente', value: amps },
-      ...(model === '4SD2200S' ? [{ label: 'Condensador', value: '80 µF / 450 V' }] : []),
-      { label: 'Rotação', value: '2850 r/min' },
-      { label: 'Proteção', value: 'IP68' },
-      { label: 'Imersão máx.', value: '80 m' },
-      { label: 'Água até', value: '35 °C' },
-      { label: 'Peso', value: kg },
-    ],
-    source: 0,
-  })),
   {
     id: 'cabo-solar',
     name: 'Cabo solar (vermelho e preto)',
@@ -581,10 +519,14 @@ const catalogo: Product[] = [
     name: 'Inversor híbrido Hanchu ESS',
     brand: 'Hanchu ESS',
     category: 'inversores',
-    summary: 'Inversor híbrido de parede para sistemas solares com bateria de lítio. Modelo e potência a confirmar na cotação.',
+    summary: 'Inversor híbrido de parede com seguidor solar (MPPT), para sistemas com bateria de lítio.',
     img: 'inv-hanchu',
-    specs: [{ label: 'Tipo', value: 'Híbrido, para bateria de lítio' }],
-    source: 0,
+    specs: [
+      { label: 'Potência', value: '3000 W' },
+      { label: 'Tensão da bateria', value: '24 V' },
+      { label: 'Tipo', value: 'Híbrido, com MPPT' },
+    ],
+    source: 26,
   },
   {
     id: 'inversor-deye-hibrido',
@@ -735,7 +677,6 @@ const catalogo: Product[] = [
 const PRECOS_EXEMPLO: Record<string, [number, number?, string?]> = {
   'astronergy-astron7-625w': [9800],
   'ja-solar-jam72s40-615w': [8900, 10, '2026-12-31'],
-  'hanchus-ess-3-5kw': [185000],
   'dongyin-pkm60-dsk1': [14500],
   'dongyin-pkm80-dsk1': [17900, 8, '2026-12-31'],
   'dongyin-3sdm2-8': [16500],
@@ -756,17 +697,11 @@ const PRECOS_EXEMPLO: Record<string, [number, number?, string?]> = {
   'bomba-4sa-16-21': [92000],
   'bomba-4sa-6-21': [48500],
   'bomba-4sp-15-26-10hp': [96000],
-  'bomba-giraffe-gr6007': [34500],
   'dongyin-3sds-400w': [24800],
   'controlador-solar-3dys-60-400': [7800],
   'controlador-solar-4dys-90-800ad': [11500],
   'control-box-dya-t06': [5200],
   'inversor-bomba-solar-ke300': [42000],
-  'motor-4sd1500t': [21000],
-  'motor-4sd2200t': [27500],
-  'motor-4sd2200s': [29500],
-  'motor-4sd4000t': [41000],
-  'motor-4sd7500t': [68000],
   'termoacumulador-100l': [24500],
   'termoacumulador-hibrido-200l': [46500],
   'candeeiro-solar-rua': [6200],
@@ -784,16 +719,9 @@ const PRECOS_EXEMPLO: Record<string, [number, number?, string?]> = {
   'bomba-pressurizadora-manometro': [12800],
 }
 
-/** Giraffe e motores: redesenhados a partir das fotografias da loja e das etiquetas (imagem ilustrativa). */
-const ILUSTRADAS = new Set([
-  'bomba-giraffe',
-  'motor-4sd1500t', 'motor-4sd2200t', 'motor-4sd2200s', 'motor-4sd4000t', 'motor-4sd7500t',
-])
-
 export const products: Product[] = catalogo.map((p) => {
   const e = PRECOS_EXEMPLO[p.id]
-  const q = ILUSTRADAS.has(p.img) ? { ...p, illustrative: true } : p
-  return e ? { ...q, price: e[0], ...(e[1] ? { discount: e[1], discountUntil: e[2] } : {}) } : q
+  return e ? { ...p, price: e[0], ...(e[1] ? { discount: e[1], discountUntil: e[2] } : {}) } : p
 })
 
 export const productById = (id: string) => products.find((p) => p.id === id)

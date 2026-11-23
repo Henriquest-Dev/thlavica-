@@ -179,7 +179,7 @@ export const categories: { id: CategoryId; name: string; solution: SolutionId; t
   { id: 'bombas-submersiveis', name: 'Bombas submersíveis', solution: 'bombagem', text: 'Extração de furos e poços.', pic: 'submersivel' },
   { id: 'bombas-solares', name: 'Bombas solares', solution: 'bombagem', text: 'Alimentadas por painéis.', pic: 'bombasolar' },
   { id: 'termoacumuladores', name: 'Termoacumuladores', solution: 'aquecimento-solar', text: 'Água quente solar.', pic: 'termo' },
-  { id: 'acessorios', name: 'Acessórios', solution: 'energia-solar', text: 'Cabos, estruturas, motores.', pic: 'candeeiro' },
+  { id: 'acessorios', name: 'Acessórios', solution: 'energia-solar', text: 'Cabos, quadros de proteção e caixas de comando.', pic: 'candeeiro' },
 ]
 
 export const faqs = [
