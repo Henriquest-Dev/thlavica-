@@ -41,7 +41,7 @@ export function AddToList({ p, className = '', label = false }: { p: CatalogProd
 export function ProductCard({ p, size = 'md' }: { p: CatalogProduct; size?: 'md' | 'lg' }) {
   const cat = categories.find((c) => c.id === p.category)
   const chip = p.specs.find((s) => /Potência|Capacidade|Versões/.test(s.label) && s.value.length < 22)?.value
-  const src = productImage(p)
+  const src = productImage(p, true)
   const off = activeDiscount(p)
   const price = finalPrice(p)
   return (

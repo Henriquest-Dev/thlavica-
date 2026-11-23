@@ -29,7 +29,7 @@ function PromoProducts({ list, onNavigate }: { list: CatalogProduct[]; onNavigat
   return (
     <ul className="pprods" aria-label="Produtos em promoção">
       {list.map((p) => {
-        const src = productImage(p)
+        const src = productImage(p, true)
         return (
           <li key={p.id}>
             <Link to={`/produtos/${p.id}`} className="pprods__item" onClick={onNavigate}>
@@ -144,7 +144,7 @@ export function PromoBanner() {
   if (!promo) return null
   const list = promoProducts(promo, catalog)
   // sem foto própria, a promoção mostra a foto do primeiro produto
-  const pic = promo.imagem ?? (list[0] ? productImage(list[0]) : undefined)
+  const pic = promo.imagem ?? (list[0] ? productImage(list[0], true) : undefined)
   return (
     <section className="pbanner wrap" aria-label="Promoção">
       <div className="pbanner__card" data-estilo={promoStyle(promo)}>

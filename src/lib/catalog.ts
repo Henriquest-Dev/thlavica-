@@ -32,8 +32,9 @@ export function useProduct(id: string) {
 }
 
 /** Endereço da imagem do produto (recorte do site, imagem enviada no painel ou nenhuma). */
-export function productImage(p: CatalogProduct): string | undefined {
+export function productImage(p: CatalogProduct, thumb = false): string | undefined {
   if (p.imgData) return p.imgData
-  if (p.img) return asset(`img/produtos/${p.img}.webp`)
+  // miniatura (440 px, cerca de 10 KB) para listas e cartões; a página do produto usa a imagem inteira
+  if (p.img) return asset(`img/produtos/${p.img}${thumb ? '-t' : ''}.webp`)
   return undefined
 }

@@ -3766,3 +3766,64 @@ a.optional {
 .gal-sec__lead {
   margin: 0 0 24px;
 }
+
+/* Carregamento das imagens de produto: brilho a deslizar enquanto chega e fade quando aparece */
+@media (scripting: enabled) {
+  .pic {
+    opacity: 0;
+    transition: opacity 0.5s var(--ease, ease);
+  }
+  .pic.is-loaded {
+    opacity: 1;
+  }
+}
+.pc__media::before,
+.pdp__media::before,
+.thumb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 14%) 50%, transparent 80%);
+  background-size: 220% 100%;
+  animation: pic-shimmer 1.3s linear infinite;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.4s;
+}
+.pc__media:has(img.is-loaded)::before,
+.pdp__media:has(img.is-loaded)::before,
+.thumb:has(img.is-loaded)::before {
+  opacity: 0;
+  animation: none;
+}
+.pc__media img,
+.pdp__media img {
+  z-index: 1;
+}
+.thumb {
+  position: relative;
+  overflow: hidden;
+}
+.thumb::before {
+  background: linear-gradient(100deg, transparent 20%, rgb(14 47 87 / 12%) 50%, transparent 80%);
+  background-size: 220% 100%;
+}
+@keyframes pic-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc__media::before,
+  .pdp__media::before,
+  .thumb::before {
+    animation: none;
+  }
+  .pic {
+    transition: none;
+  }
+}
