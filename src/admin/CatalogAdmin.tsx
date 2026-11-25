@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { categories, categoryPic, type CategoryId } from '../data/site'
 import { MAX_GALLERY, blankDraft, draftFromProduct, parsePrice, useCatalogEditor, type ProductDraft } from '../lib/catalogEdit'
+import { MAX_OPTION_GROUPS, MAX_OPTION_VALUES, OPTION_PRESETS } from '../lib/variants'
 import { PRODUCT_TYPES, SPEC_SUGGESTIONS, exampleFor, typeOfCategory } from '../lib/specPresets'
 import { asset } from '../lib/asset'
 import { saveImage } from '../lib/images'
@@ -67,6 +68,75 @@ function IncludesEditor({ value, onChange }: { value: string; onChange: (v: stri
           </Choice>
         ))}
       </div>
+    </div>
+  )
+}
+
+/** Grupo de opções (ex.: Cor: Preto, Branco, Vermelho): o nome e os valores em etiquetas. */
+function OptionsEditor({ value, onChange }: { value: { name: string; values: string[] }[]; onChange: (v: { name: string; values: string[] }[]) => void }) {
+  const [draft, setDraft] = useState<Record<number, string>>({})
+  const setGroup = (i: number, g: { name: string; values: string[] }) => onChange(value.map((x, j) => (j === i ? g : x)))
+  const addValue = (i: number, raw: string) => {
+    const g = value[i]
+    const vals = raw.split(',').map((x) => x.trim()).filter(Boolean).filter((x) => !g.values.includes(x))
+    if (vals.length) setGroup(i, { ...g, values: [...g.values, ...vals].slice(0, MAX_OPTION_VALUES) })
+    setDraft({ ...draft, [i]: '' })
+  }
+  return (
+    <div className="optg">
+      {value.map((g, i) => (
+        <fieldset key={i} className="optg__grp">
+          <div className="optg__head">
+            <input value={g.name} onChange={(e) => setGroup(i, { ...g, name: e.target.value })} placeholder="O que o cliente escolhe (ex.: Cor)" aria-label="Nome da escolha" maxLength={30} />
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => onChange(value.filter((_, j) => j !== i))}>
+              Tirar
+            </button>
+          </div>
+          {g.values.length > 0 && (
+            <ul className="inc__list">
+              {g.values.map((v) => (
+                <li key={v}>
+                  {v}
+                  <button type="button" aria-label={`Retirar ${v}`} onClick={() => setGroup(i, { ...g, values: g.values.filter((x) => x !== v) })}>
+                    <Ico name="fechar" size={12} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="inc__add">
+            <input
+              value={draft[i] ?? ''}
+              onChange={(e) => setDraft({ ...draft, [i]: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  addValue(i, draft[i] ?? '')
+                }
+              }}
+              placeholder="Ex.: Preto (Enter para juntar)"
+              aria-label="Nova opção"
+              maxLength={40}
+            />
+            <button type="button" className="btn btn--line" onClick={() => addValue(i, draft[i] ?? '')}>
+              Adicionar
+            </button>
+          </div>
+        </fieldset>
+      ))}
+      {value.length < MAX_OPTION_GROUPS && (
+        <div className="choices">
+          {OPTION_PRESETS.filter((p) => !value.some((g) => g.name === p.name)).map((p) => (
+            <Choice key={p.name} on={false} onClick={() => onChange([...value, { name: p.name, values: [...p.values] }])}>
+              + {p.name}
+              {p.values.length ? ` (${p.values.slice(0, 3).join(', ')}…)` : ''}
+            </Choice>
+          ))}
+          <Choice on={false} onClick={() => onChange([...value, { name: '', values: [] }])}>
+            + Outra escolha
+          </Choice>
+        </div>
+      )}
     </div>
   )
 }
@@ -215,7 +285,7 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
 
             <h3 className="sub">Preço e desconto (opcional)</h3>
             <div className="grid2">
-              <Field label="Preço (MZN)" hint="Deixe vazio se o preço só se dá na cotação.">
+              <Field label={d.unit === 'm' ? 'Preço por metro (MZN)' : 'Preço (MZN)'} hint="Deixe vazio se o preço só se dá na cotação.">
                 <input value={d.price} onChange={(e) => set('price', e.target.value)} inputMode="decimal" placeholder="Ex.: 15 500" aria-invalid={priceBad} />
                 {priceBad && <span className="ferr">Escreva só números, por exemplo 15 500.</span>}
               </Field>
@@ -257,6 +327,25 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
                 {dur !== 'sem' && dur !== 'data' && d.discountUntil && <small className="muted">Termina no dia {new Date(d.discountUntil + 'T12:00').toLocaleDateString('pt-PT')}.</small>}
               </div>
             )}
+
+            <h3 className="sub">Como se vende</h3>
+            <div className="f">
+              <div className="choices" role="radiogroup" aria-label="Como se vende">
+                <Choice on={d.unit === ''} onClick={() => set('unit', '')}>
+                  Por unidade
+                </Choice>
+                <Choice on={d.unit === 'm'} onClick={() => set('unit', 'm')}>
+                  Ao metro
+                </Choice>
+              </div>
+              <small className="muted">
+                {d.unit === 'm' ? 'O preço acima é por metro. O cliente escolhe quantos metros quer e vê o total.' : 'O preço acima é por cada unidade.'}
+              </small>
+            </div>
+
+            <h3 className="sub">Opções para o cliente escolher</h3>
+            <p className="muted small">Por exemplo a cor, ou a tensão. O cliente tem de escolher uma opção de cada antes de pedir. Deixe vazio se o produto só tem uma versão.</p>
+            <OptionsEditor value={d.options} onChange={(v) => set('options', v)} />
 
             <h3 className="sub">Imagens</h3>
             <div className="imgup">
@@ -398,7 +487,7 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
 }
 
 /** Preço na lista: escreve-se e guarda-se ao sair do campo ou com Enter. */
-function QuickPrice({ value, onSave }: { value: number | undefined; onSave: (text: string) => void }) {
+function QuickPrice({ value, onSave, suffix = 'MZN' }: { value: number | undefined; onSave: (text: string) => void; suffix?: string }) {
   const [t, setT] = useState(value ? String(value) : '')
   useEffect(() => setT(value ? String(value) : ''), [value])
   const commit = () => {
@@ -410,7 +499,7 @@ function QuickPrice({ value, onSave }: { value: number | undefined; onSave: (tex
     <label className="qprice">
       <span className="visually-hidden">Preço em meticais</span>
       <input value={t} onChange={(e) => setT(e.target.value)} onBlur={commit} onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()} inputMode="decimal" placeholder="Sem preço" />
-      <span aria-hidden="true">MZN</span>
+      <span aria-hidden="true">{suffix}</span>
     </label>
   )
 }
@@ -533,11 +622,14 @@ export default function CatalogAdmin() {
                     {p.edited && <em className="chip chip--ed">Editado</em>}
                     {p.featured && <em className="chip chip--star">Destaque</em>}
                     {noPrice(p) && <em className="chip chip--warn">Sem preço</em>}
+                    {p.unit === 'm' && <em className="chip chip--ed">Ao metro</em>}
+                    {(p.options?.length ?? 0) > 0 && <em className="chip chip--ed">{p.options!.map((g) => g.name).join(' · ')}</em>}
                     {activeDiscount(p) > 0 && <em className="chip chip--new">-{activeDiscount(p)}%</em>}
                   </span>
                 </div>
                 <QuickPrice
                   value={p.price}
+                  suffix={p.unit === 'm' ? 'MZN/m' : 'MZN'}
                   onSave={(t) => {
                     if (setPrice(p, t)) toast(t.trim() ? 'Preço guardado' : 'Preço retirado (fica “confirmado na cotação”)')
                     else toast('Memória cheia.', 'erro')

@@ -3,6 +3,7 @@ import { products as base, type Product } from '../data/products'
 import type { CatalogOverride, CustomProduct } from '../data/admin'
 import { useStored } from './store'
 import { asset } from './asset'
+import { cleanOptions } from './variants'
 
 const NO_CUSTOM: CustomProduct[] = []
 const NO_OVERRIDES: Record<string, CatalogOverride> = {}
@@ -13,7 +14,9 @@ export type CatalogProduct = Product & { custom?: boolean; imgData?: string; hid
 export function mergeCatalog(baseList: Product[], custom: CustomProduct[], over: Record<string, CatalogOverride>, includeHidden = false): CatalogProduct[] {
   const merged: CatalogProduct[] = baseList.map((p) => {
     const o = over[p.id]
-    return o ? { ...p, ...o, id: p.id, edited: true } : p
+    const m = o ? { ...p, ...o, id: p.id, edited: true } : p
+    // os dados das opções e da unidade vêm do servidor: só se aceita o que está bem formado
+    return m.options || m.unit ? { ...m, options: cleanOptions(m.options), unit: m.unit === 'm' ? ('m' as const) : undefined } : m
   })
   const all = [...merged, ...custom]
   return includeHidden ? all : all.filter((p) => !p.hidden)

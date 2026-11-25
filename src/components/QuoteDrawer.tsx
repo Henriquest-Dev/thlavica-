@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCatalog } from '../lib/catalog'
-import { useQuoteList } from '../lib/quotes'
+import { itemKey, useQuoteList } from '../lib/quotes'
+import { isMeters, picksLabel, qtyLabel } from '../lib/variants'
 import { wa } from '../data/site'
 import { useUi } from './Ui'
 import { Ico } from './Ico'
@@ -32,7 +33,11 @@ export function QuoteDrawer() {
     .filter((r): r is typeof r & { p: NonNullable<typeof r.p> } => Boolean(r.p))
 
   const message = () =>
-    ['Olá Tlhavika, gostaria de uma cotação para:', '', ...rows.map((r) => `• ${r.qtd} × ${r.p.name}${r.p.brand ? ` (${r.p.brand})` : ''}`)].join('\n')
+    [
+      'Olá Tlhavika, gostaria de uma cotação para:',
+      '',
+      ...rows.map((r) => `• ${qtyLabel(r.qtd, isMeters(r.p))}${isMeters(r.p) ? ' de' : ' ×'} ${r.p.name}${picksLabel(r.opcoes) ? ` (${picksLabel(r.opcoes)})` : r.p.brand ? ` (${r.p.brand})` : ''}`),
+    ].join('\n')
 
   return (
     <div className="ov ov--drawer" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && closeList()}>
@@ -61,27 +66,31 @@ export function QuoteDrawer() {
         ) : (
           <>
             <ul className="drawer__list">
-              {rows.map((r) => (
-                <li key={r.id}>
-                  <ProductThumb p={r.p} />
-                  <div className="drawer__info">
-                    <span className="drawer__name">{r.p.name}</span>
-                    <span className="muted">{r.p.brand ?? ''}</span>
-                    <div className="qty" role="group" aria-label={`Quantidade de ${r.p.name}`}>
-                      <button type="button" onClick={() => setQty(r.id, r.qtd - 1)} aria-label="Menos uma unidade">
-                        <Ico name="menos" size={14} />
-                      </button>
-                      <span aria-live="polite">{r.qtd}</span>
-                      <button type="button" onClick={() => setQty(r.id, r.qtd + 1)} aria-label="Mais uma unidade">
-                        <Ico name="mais" size={14} />
-                      </button>
+              {rows.map((r) => {
+                const key = itemKey(r)
+                const m = isMeters(r.p)
+                return (
+                  <li key={key}>
+                    <ProductThumb p={r.p} />
+                    <div className="drawer__info">
+                      <span className="drawer__name">{r.p.name}</span>
+                      <span className="muted">{picksLabel(r.opcoes) || (r.p.brand ?? '')}</span>
+                      <div className="qty" role="group" aria-label={`${m ? 'Metros' : 'Quantidade'} de ${r.p.name}`}>
+                        <button type="button" onClick={() => setQty(key, r.qtd - (m ? 5 : 1))} aria-label={m ? 'Menos 5 metros' : 'Menos uma unidade'}>
+                          <Ico name="menos" size={14} />
+                        </button>
+                        <span aria-live="polite">{qtyLabel(r.qtd, m)}</span>
+                        <button type="button" onClick={() => setQty(key, r.qtd + (m ? 5 : 1))} aria-label={m ? 'Mais 5 metros' : 'Mais uma unidade'}>
+                          <Ico name="mais" size={14} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <button type="button" className="drawer__rm" onClick={() => remove(r.id)} aria-label={`Retirar ${r.p.name}`}>
-                    <Ico name="fechar" size={16} />
-                  </button>
-                </li>
-              ))}
+                    <button type="button" className="drawer__rm" onClick={() => remove(key)} aria-label={`Retirar ${r.p.name}${picksLabel(r.opcoes) ? ` (${picksLabel(r.opcoes)})` : ''}`}>
+                      <Ico name="fechar" size={16} />
+                    </button>
+                  </li>
+                )
+              })}
             </ul>
             <footer className="drawer__foot">
               <button

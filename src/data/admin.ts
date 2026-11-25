@@ -13,7 +13,7 @@ export interface QuoteRequest {
   mensagem?: string
   /** Produtos da lista de cotação, com quantidade. */
   /** Preço (sem desconto) e desconto em vigor no site quando o cliente fez o pedido. */
-  itens?: { produtoId: string; nome: string; qtd: number; preco?: number; desconto?: number }[]
+  itens?: { produtoId: string; nome: string; qtd: number; preco?: number; desconto?: number; opcoes?: string; unidade?: 'm' }[]
   origem: 'formulario' | 'simulador' | 'lista'
   estado: QuoteStatus
   arquivada?: boolean
@@ -27,6 +27,8 @@ export interface ProposalLine {
   preco: number
   /** Desconto da linha em percentagem (0–100). */
   desconto?: number
+  /** "m" = a quantidade são metros e o preço é por metro. */
+  unidade?: 'm'
 }
 
 export interface Proposal {
@@ -88,6 +90,8 @@ export interface MediaItem {
   titulo: string
   legenda?: string
   ativo: boolean
+  /** Onde aparece: 'inicio' (secção na página inicial), 'topo' (por baixo do cartaz), 'produtos' (lista de produtos), 'produto:<id>'. Vazio = 'inicio'. */
+  locais?: string[]
 }
 
 export type CatalogOverride = Partial<Omit<Product, 'id'>> & { hidden?: boolean }

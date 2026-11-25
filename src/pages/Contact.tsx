@@ -5,6 +5,7 @@ import { categories, solutions, useContact, wa } from '../data/site'
 import { useCatalog } from '../lib/catalog'
 import { activeDiscount } from '../lib/pricing'
 import { saveQuoteRequest, takePrefill, useQuoteList } from '../lib/quotes'
+import { isMeters, picksLabel, qtyLabel } from '../lib/variants'
 import { useReveal } from '../lib/useReveal'
 import { useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
@@ -45,9 +46,20 @@ export default function Contact() {
 
   // produto escolhido no formulário (vindo da página do produto ou do campo Interesse)
   const picked = v.interesse.startsWith('produto:') ? products.find((p) => `produto:${p.id}` === v.interesse) : undefined
-  const itemOf = (p: (typeof products)[number], qtd: number) => {
+  // vindo da página do produto: a quantidade (ou metros) e as opções que o cliente já escolheu
+  const preQtd = Math.max(1, Math.min(9999, Math.round(Number(params.get('qtd'))) || 1))
+  const preOpcoes = (params.get('opcoes') ?? '').slice(0, 200)
+  const itemOf = (p: (typeof products)[number], qtd: number, opcoes = '') => {
     const desconto = activeDiscount(p)
-    return { produtoId: p.id, nome: p.name, qtd, ...(p.price ? { preco: p.price } : {}), ...(desconto ? { desconto } : {}) }
+    return {
+      produtoId: p.id,
+      nome: p.name,
+      qtd,
+      ...(opcoes ? { opcoes } : {}),
+      ...(isMeters(p) ? { unidade: 'm' as const } : {}),
+      ...(p.price ? { preco: p.price } : {}),
+      ...(desconto ? { desconto } : {}),
+    }
   }
 
   const label = (val: string) =>
@@ -69,9 +81,9 @@ export default function Contact() {
       return
     }
     const items = fromList
-      ? listLines.map((r) => itemOf(r.p, r.qtd))
+      ? listLines.map((r) => itemOf(r.p, r.qtd, picksLabel(r.opcoes)))
       : picked
-        ? [itemOf(picked, 1)]
+        ? [itemOf(picked, picked.id === params.get('produto') ? preQtd : 1, picked.id === params.get('produto') ? preOpcoes : '')]
         : undefined
     if (!trap)
       saveQuoteRequest({
@@ -99,7 +111,7 @@ export default function Contact() {
       'Olá Tlhavika, gostaria de uma cotação.',
       v.nome.trim() && `Nome: ${v.nome.trim()}`,
       v.interesse && `Interesse: ${label(v.interesse)}`,
-      fromList && listLines.length > 0 && `Produtos:\n${listLines.map((r) => `• ${r.qtd} × ${r.p.name}`).join('\n')}`,
+      fromList && listLines.length > 0 && `Produtos:\n${listLines.map((r) => `• ${qtyLabel(r.qtd, isMeters(r.p))}${isMeters(r.p) ? ' de' : ' ×'} ${r.p.name}${picksLabel(r.opcoes) ? ` (${picksLabel(r.opcoes)})` : ''}`).join('\n')}`,
       v.mensagem.trim() && `Detalhes: ${v.mensagem.trim()}`,
     ]
       .filter(Boolean)
@@ -175,6 +187,13 @@ export default function Contact() {
             </div>
           </div>
 
+          {picked && picked.id === params.get('produto') && (preOpcoes || isMeters(picked)) && (
+            <p className="promo-note" role="status">
+              {isMeters(picked) ? `${preQtd} m de ` : ''}
+              {picked.name}
+              {preOpcoes ? ` (${preOpcoes})` : ''}
+            </p>
+          )}
           {picked && activeDiscount(picked) > 0 && (
             <p className="promo-note" role="status">
               <span className="selo">-{activeDiscount(picked)}%</span> O produto escolhido tem desconto. Fica registado no seu pedido.
@@ -186,8 +205,9 @@ export default function Contact() {
               <p className="sol__h">Produtos da lista de cotação</p>
               <ul>
                 {listLines.map((r) => (
-                  <li key={r.id}>
-                    <span>{r.qtd} ×</span> {r.p.name}
+                  <li key={`${r.id}|${picksLabel(r.opcoes)}`}>
+                    <span>{qtyLabel(r.qtd, isMeters(r.p))}{isMeters(r.p) ? ' de' : ' ×'}</span> {r.p.name}
+                    {picksLabel(r.opcoes) && <span className="muted"> ({picksLabel(r.opcoes)})</span>}
                     {activeDiscount(r.p) > 0 && <span className="selo selo--sm"> -{activeDiscount(r.p)}%</span>}
                   </li>
                 ))}

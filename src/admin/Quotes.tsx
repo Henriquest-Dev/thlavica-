@@ -426,8 +426,10 @@ export default function Quotes() {
                   <h3 className="sub">Produtos pedidos</h3>
                   <ul className="plain">
                     {sel.itens.map((i) => (
-                      <li key={i.produtoId}>
-                        {i.qtd} × <Link to={`/produtos/${i.produtoId}`}>{i.nome}</Link>
+                      <li key={`${i.produtoId}|${i.opcoes ?? ''}`}>
+                        {i.qtd}
+                        {i.unidade === 'm' ? ' m de' : ' ×'} <Link to={`/produtos/${i.produtoId}`}>{i.nome}</Link>
+                        {i.opcoes ? <strong> ({i.opcoes})</strong> : null}
                       </li>
                     ))}
                   </ul>

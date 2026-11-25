@@ -7,6 +7,9 @@ import { breadcrumbSchema, fileUrl, productSchema, useSeo } from '../lib/seo'
 import { activeDiscount, finalPrice, priceLabel, untilLabel } from '../lib/pricing'
 import { useReveal } from '../lib/useReveal'
 import { AddToList, ProductCard } from '../components/ProductCard'
+import { BuyOptions } from '../components/BuyOptions'
+import { MediaSlot } from '../sections/Gallery'
+import { needsChoice, unitSuffix } from '../lib/variants'
 import { Ico } from '../components/Ico'
 import NotFound from './NotFound'
 
@@ -87,7 +90,7 @@ export default function ProductPage() {
               <div className="pdp__price">
                 {price !== undefined && (
                   <p className="pdp__now">
-                    {off > 0 && <s>{priceLabel(p.price!)}</s>} <strong>{priceLabel(price)}</strong>
+                    {off > 0 && <s>{priceLabel(p.price!)}</s>} <strong>{priceLabel(price)}{unitSuffix(p)}</strong>
                   </p>
                 )}
                 {off > 0 && (
@@ -98,12 +101,16 @@ export default function ProductPage() {
               </div>
             )}
 
-            <div className="pdp__ctas">
-              <Link className="pill pill--dark" to={`/contacto?produto=${p.id}`}>
-                Pedir cotação
-              </Link>
-              <AddToList p={p} className="addlist--lg" label />
-            </div>
+            {needsChoice(p) ? (
+              <BuyOptions p={p} />
+            ) : (
+              <div className="pdp__ctas">
+                <Link className="pill pill--dark" to={`/contacto?produto=${p.id}`}>
+                  Pedir cotação
+                </Link>
+                <AddToList p={p} className="addlist--lg" label />
+              </div>
+            )}
             <p className="pdp__note">
               {p.price ? 'Preço de referência. ' : ''}Os valores finais e a disponibilidade são confirmados na cotação.{' '}
               <a className="optional" href={wa(text)} target="_blank" rel="noopener noreferrer">
@@ -142,6 +149,8 @@ export default function ProductPage() {
             )}
           </div>
         </div>
+
+        <MediaSlot where={`produto:${p.id}`} title="Fotografias e vídeos" className="gal-sec--pdp" />
 
         {related.length > 0 && (
           <section className="related">

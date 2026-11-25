@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { useMedia, youtubeId } from '../lib/promos'
+import { MEDIA_PLACES, mediaPlaces, useMedia, youtubeId } from '../lib/promos'
+import { useCatalog, productImage } from '../lib/catalog'
 import { VIDEO_MAX_BYTES, humanSize, saveImage, saveVideo } from '../lib/images'
 import { uid } from '../lib/store'
 import { type MediaItem, type MediaKind } from '../data/admin'
@@ -7,11 +8,85 @@ import { MediaCarousel } from '../components/MediaCarousel'
 import { asset } from '../lib/asset'
 import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
-import { Empty, Field, PageTitle, Panel, Switch } from './ui'
+import { Choice, Empty, Field, Modal, PageTitle, Panel, Switch } from './ui'
 
 const KIND_LABEL: Record<MediaKind, string> = { imagem: 'Fotografia', video: 'Vídeo do telemóvel', youtube: 'Vídeo do YouTube' }
 const TIPOS: MediaKind[] = ['imagem', 'video', 'youtube']
 const src = (u: string) => (/^(https?:|data:|blob:)/.test(u) ? u : asset(u))
+
+const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+
+/** "Onde aparece?": cliques nos sítios do site e, se quiser, em quais produtos. */
+function PlacesChooser({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const catalog = useCatalog()
+  const [q, setQ] = useState('')
+  const prods = value.filter((v) => v.startsWith('produto:'))
+  const [showProds, setShowProds] = useState(prods.length > 0)
+  const toggle = (id: string) => onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id])
+  const list = catalog.filter((c) => !q || norm(`${c.name} ${c.brand ?? ''} ${c.model ?? ''}`).includes(norm(q)))
+  return (
+    <div className="places">
+      <div className="choices" role="group" aria-label="Onde aparece">
+        {MEDIA_PLACES.map((p) => (
+          <Choice key={p.id} on={value.includes(p.id)} onClick={() => toggle(p.id)}>
+            {p.label}
+          </Choice>
+        ))}
+        <Choice
+          on={showProds}
+          onClick={() => {
+            if (showProds) onChange(value.filter((v) => !v.startsWith('produto:')))
+            setShowProds(!showProds)
+          }}
+        >
+          Em produtos específicos
+        </Choice>
+      </div>
+      <ul className="places__hints">
+        {MEDIA_PLACES.filter((p) => value.includes(p.id)).map((p) => (
+          <li key={p.id}>
+            <strong>{p.label}:</strong> {p.hint}
+          </li>
+        ))}
+      </ul>
+      {showProds && (
+        <div className="picker">
+          <p className="picker__count" aria-live="polite">
+            {prods.length === 0 ? 'Escolha os produtos em cuja página isto vai aparecer.' : `${prods.length} produto${prods.length > 1 ? 's' : ''} escolhido${prods.length > 1 ? 's' : ''}`}
+          </p>
+          <input className="picker__search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Procurar produto pelo nome" aria-label="Procurar produto" />
+          <ul className="picker__grid">
+            {list.map((c) => {
+              const on = value.includes(`produto:${c.id}`)
+              const src = productImage(c, true)
+              return (
+                <li key={c.id}>
+                  <button type="button" className={`pick${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => toggle(`produto:${c.id}`)}>
+                    <span className="pick__img">{src ? <img src={src} alt="" loading="lazy" /> : <Ico name="caixa" size={26} />}</span>
+                    <span className="pick__name">{c.name}</span>
+                    {on && (
+                      <span className="pick__tick" aria-hidden="true">
+                        <Ico name="visto" size={14} />
+                      </span>
+                    )}
+                  </button>
+                </li>
+              )
+            })}
+            {list.length === 0 && <li className="picker__none">Nenhum produto com esse nome.</li>}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Texto curto com os sítios onde um item aparece. */
+function placesText(m: MediaItem, names: Record<string, string>): string {
+  return mediaPlaces(m)
+    .map((p) => (p.startsWith('produto:') ? `Produto: ${names[p.slice(8)] ?? '(retirado)'}` : (MEDIA_PLACES.find((x) => x.id === p)?.label ?? p)))
+    .join(' · ')
+}
 
 export default function MediaAdmin() {
   const [items, setItems] = useMedia()
@@ -22,6 +97,10 @@ export default function MediaAdmin() {
   const [legenda, setLegenda] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
+  const [locais, setLocais] = useState<string[]>(['inicio'])
+  const [editing, setEditing] = useState<MediaItem | null>(null)
+  const catalog = useCatalog(true)
+  const names = Object.fromEntries(catalog.map((c) => [c.id, c.name]))
   const file = useRef<HTMLInputElement>(null)
   const videoFile = useRef<HTMLInputElement>(null)
 
@@ -40,7 +119,8 @@ export default function MediaAdmin() {
     if (busy) return setErr('Espere que o envio termine.')
     if (!url.trim()) return setErr(tipo === 'imagem' ? 'Envie uma fotografia primeiro.' : tipo === 'video' ? 'Envie o vídeo primeiro.' : 'Cole o endereço do vídeo.')
     if (tipo === 'youtube' && !youtubeId(url.trim())) return setErr('Não reconheço esse endereço do YouTube. Cole o link da barra de endereços ou do botão Partilhar.')
-    const item: MediaItem = { id: uid(), tipo, url: url.trim(), titulo: titulo.trim(), legenda: legenda.trim() || undefined, ativo: true }
+    if (locais.length === 0) return setErr('Escolha onde isto vai aparecer no site.')
+    const item: MediaItem = { id: uid(), tipo, url: url.trim(), titulo: titulo.trim(), legenda: legenda.trim() || undefined, ativo: true, locais }
     if (!setItems((l) => [...l, item])) return setErr('A memória do navegador está cheia. Use uma imagem mais pequena ou um endereço em vez de enviar o ficheiro.')
     setUrl('')
     setTitulo('')
@@ -70,9 +150,13 @@ export default function MediaAdmin() {
                   <div className="arow__main">
                     <strong>{m.titulo}</strong>
                     <small>{KIND_LABEL[m.tipo]}</small>
+                    <small className="muted">Aparece em: {placesText(m, names)}</small>
                   </div>
                   <Switch on={m.ativo} label={m.ativo ? 'Visível' : 'Pausado'} onChange={(v) => setItems((l) => l.map((x) => (x.id === m.id ? { ...x, ativo: v } : x)))} />
                   <div className="arow__act">
+                    <button type="button" className="btn btn--line btn--sm" onClick={() => setEditing(m)}>
+                      Onde aparece
+                    </button>
                     <button type="button" className="icon" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Subir ${m.titulo}`} title="Subir">
                       <Ico name="cima" size={18} />
                     </button>
@@ -185,6 +269,10 @@ export default function MediaAdmin() {
                 <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" inputMode="url" />
               </Field>
             )}
+            <div className="f">
+              <span className="f__l">Onde aparece no site?</span>
+              <PlacesChooser value={locais} onChange={setLocais} />
+            </div>
             {err && (
               <p className="ferr" role="alert">
                 {err}
@@ -196,6 +284,29 @@ export default function MediaAdmin() {
           </form>
         </Panel>
       </div>
+      {editing && (
+        <Modal title={`Onde aparece: ${editing.titulo}`} onClose={() => setEditing(null)} wide>
+          <PlacesChooser value={editing.locais ?? mediaPlaces(editing)} onChange={(v) => setEditing({ ...editing, locais: v })} />
+          <div className="row row--end">
+            <button type="button" className="btn btn--line" onClick={() => setEditing(null)}>
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                if (editing.locais && editing.locais.length === 0) return toast('Escolha pelo menos um sítio.', 'erro')
+                if (!editing.locais) return setEditing(null)
+                setItems((l) => l.map((x) => (x.id === editing.id ? { ...x, locais: editing.locais } : x)))
+                setEditing(null)
+                toast('Guardado')
+              }}
+            >
+              Guardar
+            </button>
+          </div>
+        </Modal>
+      )}
     </>
   )
 }

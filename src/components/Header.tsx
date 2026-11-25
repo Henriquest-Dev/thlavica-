@@ -19,7 +19,7 @@ export function Header() {
   const [open, setOpen] = useState(false)
   const { openSearch, openList } = useUi()
   const { items } = useQuoteList()
-  const count = items.reduce((n, i) => n + i.qtd, 0)
+  const count = items.length
 
   useEffect(() => setOpen(false), [pathname])
 

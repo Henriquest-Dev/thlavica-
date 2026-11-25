@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Promo } from '../data/admin'
-import { endInDays, MAX_PROMO_PRODUCTS, normalizePromo, promoLink, promoLive, promoProducts, promoStyle } from './promos'
+import { endInDays, MAX_PROMO_PRODUCTS, normalizePromo, promoLink, promoLive, promoProducts, promoStyle, mediaAt, mediaPlaces } from './promos'
 
 const base: Promo = { id: 'p', formato: 'faixa', titulo: 'T', texto: '', cta: 'Ver', destino: '/produtos', ativo: true }
 
@@ -52,5 +52,20 @@ describe('promoStyle / normalizePromo / endInDays', () => {
     const fim = endInDays(1, new Date(2026, 9, 10))
     expect(promoLive({ ...base, fim }, new Date(2026, 9, 11, 22).getTime())).toBe(true)
     expect(promoLive({ ...base, fim }, new Date(2026, 9, 12, 1).getTime())).toBe(false)
+  })
+})
+
+describe('onde aparece o carrossel', () => {
+  const m = (locais?: string[], ativo = true) => ({ ativo, locais })
+  it('itens antigos (sem locais) aparecem na página inicial', () => {
+    expect(mediaPlaces(m())).toEqual(['inicio'])
+    expect(mediaAt([m(), m(['topo'])], 'inicio')).toHaveLength(1)
+  })
+  it('cada item só aparece onde foi escolhido, e só se estiver ativo', () => {
+    const l = [m(['topo', 'produto:cabo']), m(['produtos']), m(['topo'], false)]
+    expect(mediaAt(l, 'topo')).toHaveLength(1)
+    expect(mediaAt(l, 'produto:cabo')).toHaveLength(1)
+    expect(mediaAt(l, 'produto:outro')).toHaveLength(0)
+    expect(mediaAt(l, 'produtos')).toHaveLength(1)
   })
 })

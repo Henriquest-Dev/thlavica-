@@ -6,6 +6,7 @@ import { useQuoteList } from '../lib/quotes'
 import { Arrow } from './Arrow'
 import { ProductPic } from './ProductPic'
 import { Ico } from './Ico'
+import { needsChoice, unitSuffix } from '../lib/variants'
 import { useUi } from './Ui'
 
 export function AddToList({ p, className = '', label = false }: { p: CatalogProduct; className?: string; label?: boolean }) {
@@ -58,7 +59,7 @@ export function ProductCard({ p, size = 'md' }: { p: CatalogProduct; size?: 'md'
           <span className="pc__name">{p.name}</span>
           {price !== undefined && (
             <span className="pc__price">
-              {off > 0 && <s>{priceLabel(p.price!)}</s>} {priceLabel(price)}
+              {off > 0 && <s>{priceLabel(p.price!)}</s>} {priceLabel(price)}{unitSuffix(p)}
             </span>
           )}
         </span>
@@ -66,7 +67,13 @@ export function ProductCard({ p, size = 'md' }: { p: CatalogProduct; size?: 'md'
           <Arrow size={14} />
         </span>
       </Link>
-      <AddToList p={p} className="pc__add" />
+      {needsChoice(p) ? (
+        <Link to={`/produtos/${p.id}`} className="addlist pc__add" aria-label={`Escolher opções de ${p.name}`}>
+          <Ico name="mais" size={18} />
+        </Link>
+      ) : (
+        <AddToList p={p} className="pc__add" />
+      )}
     </div>
   )
 }

@@ -1,19 +1,23 @@
 import { MediaCarousel } from '../components/MediaCarousel'
-import { useMedia } from '../lib/promos'
+import { mediaAt, useMedia } from '../lib/promos'
 
-/** Fotografias e vídeos do trabalho da empresa (geridos em Vídeos e fotos, no painel). Só aparece se houver itens ativos. */
-export function Gallery() {
+/**
+ * Fotografias e vídeos geridos em "Vídeos e fotos" no painel, no sítio que a empresa escolheu:
+ * 'inicio' (secção na página inicial), 'topo' (por baixo do cartaz), 'produtos' (lista) ou 'produto:<id>'.
+ * Só aparece se houver itens ativos para esse sítio.
+ */
+export function MediaSlot({ where, title, lead, className = '' }: { where: string; title?: string; lead?: string; className?: string }) {
   const [items] = useMedia()
-  if (!items.some((m) => m.ativo)) return null
+  if (!mediaAt(items, where).length) return null
   return (
-    <section className="gal-sec" aria-labelledby="gal-title">
+    <section className={`gal-sec ${className}`} aria-label={title ?? 'Fotografias e vídeos'}>
       <div className="wrap">
-        <h2 id="gal-title" className="gal-sec__title">
-          O nosso trabalho
-        </h2>
-        <p className="gal-sec__lead muted">Fotografias e vídeos de instalações e equipamentos.</p>
-        <MediaCarousel />
+        {title && <h2 className="gal-sec__title">{title}</h2>}
+        {lead && <p className="gal-sec__lead muted">{lead}</p>}
+        <MediaCarousel where={where} />
       </div>
     </section>
   )
 }
+
+export const Gallery = () => <MediaSlot where="inicio" title="O nosso trabalho" lead="Fotografias e vídeos de instalações e equipamentos." />

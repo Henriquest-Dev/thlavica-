@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useMedia, youtubeId } from '../lib/promos'
+import { mediaAt, useMedia, youtubeId } from '../lib/promos'
 import { asset } from '../lib/asset'
 import type { MediaItem } from '../data/admin'
 import { Ico } from './Ico'
@@ -45,9 +45,10 @@ function Slide({ m, active, onPlaying, onEnded }: { m: MediaItem; active: boolea
 }
 
 /** Carrossel de fotografias e vídeos gerido no painel de administração. */
-export function MediaCarousel({ autoplay = true }: { autoplay?: boolean }) {
+export function MediaCarousel({ autoplay = true, where }: { autoplay?: boolean; where?: string }) {
   const [all] = useMedia()
-  const items = all.filter((m) => m.ativo)
+  // sem `where`, mostra tudo o que está ativo (pré-visualização do painel); com `where`, só o que foi escolhido para esse sítio
+  const items = where ? mediaAt(all, where) : all.filter((m) => m.ativo)
   const track = useRef<HTMLUListElement>(null)
   const [idx, setIdx] = useState(0)
   const [hold, setHold] = useState(false)

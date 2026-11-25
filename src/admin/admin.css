@@ -2148,3 +2148,42 @@
     justify-self: start;
   }
 }
+
+/* Opções do produto (cor…) */
+.optg {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.optg__grp {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--a-line);
+  border-radius: 14px;
+  background: #fff;
+}
+.optg__head {
+  display: flex;
+  gap: 8px;
+}
+.optg__head input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Onde aparece (vídeos e fotos) */
+.places {
+  display: grid;
+  gap: 10px;
+}
+.places__hints {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--a-muted);
+}

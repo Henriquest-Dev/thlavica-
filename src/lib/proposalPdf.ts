@@ -221,7 +221,7 @@ export async function buildProposalPdf(p: Proposal, { company, logo }: PdfOption
       font('italic', 8)
       r.lines.forEach((line, i) => text(line, L, base + i * 9.6))
       font('bold', 8)
-      text(String(r.l.qtd), COL.qtd - 2, base, 'right')
+      text(r.l.unidade === 'm' ? `${r.l.qtd} m` : String(r.l.qtd), COL.qtd - 2, base, 'right')
       font('normal', 8)
       text(pdfMoney(r.l.preco), COL.preco, base)
       text(`${(r.l.desconto ?? 0).toFixed(2).replace('.', ',')}%`, COL.desc, base)

@@ -41,6 +41,7 @@ interface CatalogRef {
   name: string
   brand?: string
   price?: number
+  unit?: 'm' | ''
   discount?: number
   discountUntil?: string
 }
@@ -52,8 +53,17 @@ export function newProposal(existing: Pick<Proposal, 'numero'>[], catalog: Catal
     const prod = catalog.find((c) => c.id === i.produtoId)
     // o preço e o desconto que o cliente viu no site passam para a cotação (a empresa ajusta, se precisar)
     const preco = i.preco ?? prod?.price ?? 0
+    const metros = i.unidade === 'm' || prod?.unit === 'm'
     const desconto = i.desconto ?? (prod ? activeDiscount(prod) : 0)
-    return { id: uid(), produtoId: i.produtoId, descricao: prod ? label(prod) : i.nome, qtd: i.qtd, preco, ...(desconto ? { desconto } : {}) }
+    return {
+      id: uid(),
+      produtoId: i.produtoId,
+      descricao: (prod ? label(prod) : i.nome) + (i.opcoes ? ` — ${i.opcoes}` : '') + (metros ? ' (preço por metro)' : ''),
+      qtd: i.qtd,
+      preco,
+      ...(metros ? { unidade: 'm' as const } : {}),
+      ...(desconto ? { desconto } : {}),
+    }
   })
   return {
     id: uid(),
@@ -72,7 +82,15 @@ export function newProposal(existing: Pick<Proposal, 'numero'>[], catalog: Catal
 
 export function lineFromProduct(p: CatalogRef): ProposalLine {
   const desconto = activeDiscount(p)
-  return { id: uid(), produtoId: p.id, descricao: label(p), qtd: 1, preco: p.price ?? 0, ...(desconto ? { desconto } : {}) }
+  return {
+    id: uid(),
+    produtoId: p.id,
+    descricao: label(p) + (p.unit === 'm' ? ' (preço por metro)' : ''),
+    qtd: 1,
+    preco: p.price ?? 0,
+    ...(p.unit === 'm' ? { unidade: 'm' as const } : {}),
+    ...(desconto ? { desconto } : {}),
+  }
 }
 
 export function proposalMessage(p: Proposal): string {
@@ -81,7 +99,7 @@ export function proposalMessage(p: Proposal): string {
     `Proposta ${p.numero} — Tlhavika`,
     `Cliente: ${p.cliente.nome}${p.cliente.local ? ` (${p.cliente.local})` : ''}`,
     '',
-    ...p.linhas.map((l) => `• ${l.qtd} × ${l.descricao}: ${money(l.qtd * l.preco)}`),
+    ...p.linhas.map((l) => `• ${l.qtd}${l.unidade === 'm' ? ' m de' : ' ×'} ${l.descricao}: ${money(l.qtd * l.preco)}`),
     '',
     `Subtotal: ${money(subtotal)}`,
     (p.iva ?? DEFAULT_IVA) ? `IVA (${p.iva ?? DEFAULT_IVA}%): ${money(tax)}` : '',

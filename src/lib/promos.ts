@@ -26,6 +26,19 @@ export function useMedia() {
   return useStored<MediaItem[]>('media', DEFAULT_MEDIA_LIST)
 }
 
+/** Onde um vídeo ou fotografia pode aparecer (além de 'produto:<id>', para um produto em concreto). */
+export const MEDIA_PLACES: { id: string; label: string; hint: string }[] = [
+  { id: 'inicio', label: 'Página inicial', hint: 'Na secção “O nosso trabalho”, mais abaixo' },
+  { id: 'topo', label: 'Topo da página inicial', hint: 'Logo por baixo do cartaz, a primeira coisa que o cliente vê' },
+  { id: 'produtos', label: 'Lista de produtos', hint: 'No início da página Produtos' },
+]
+
+/** Locais de um item; sem nada guardado (itens antigos), aparece na página inicial. */
+export const mediaPlaces = (m: { locais?: string[] }): string[] => (m.locais && m.locais.length ? m.locais : ['inicio'])
+
+/** Itens ativos que aparecem em determinado sítio. */
+export const mediaAt = <T extends { ativo: boolean; locais?: string[] }>(items: T[], where: string): T[] => items.filter((m) => m.ativo && mediaPlaces(m).includes(where))
+
 export function youtubeId(v: string): string | null {
   const m = v.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/) ?? v.match(/^([\w-]{11})$/)
   return m ? m[1] : null

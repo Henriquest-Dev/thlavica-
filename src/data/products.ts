@@ -28,6 +28,10 @@ export interface Product {
   illustrative?: boolean
   /** A imagem é uma fotografia (recorte retangular), não um recorte do produto sem fundo. */
   photo?: boolean
+  /** Escolhas do cliente (ex.: Cor: Preto, Branco, Vermelho). O cliente tem de escolher uma de cada grupo. */
+  options?: { name: string; values: string[] }[]
+  /** "m" = vendido ao metro: o preço é por metro e o cliente escolhe quantos metros. Vazio = por unidade. */
+  unit?: 'm' | ''
   /** Fotografias extra (endereços), até 4, mostradas por baixo da imagem principal na página do produto. */
   gallery?: string[]
 }
@@ -459,20 +463,24 @@ const catalogo: Product[] = [
   },
   {
     id: 'cabo-solar',
-    name: 'Cabo solar (vermelho e preto)',
+    name: 'Cabo solar',
     category: 'acessorios',
-    summary: 'Cabo para ligar os painéis solares, em bobina.',
+    summary: 'Cabo para ligar os painéis solares. Vendido ao metro: escolha a cor e quantos metros precisa.',
     img: 'cabo-solar',
-    specs: [{ label: 'Cores', value: 'Vermelho e preto' }],
+    unit: 'm',
+    options: [{ name: 'Cor', values: ['Vermelho', 'Preto'] }],
+    specs: [],
     source: 0,
   },
   {
     id: 'cabo-submersivel-plano',
     name: 'Cabo azul para bombas submersíveis',
     category: 'acessorios',
-    summary: 'Cabo flexível de cobre para ligar bombas submersíveis, vendido em bobina.',
+    summary: 'Cabo flexível de cobre para ligar bombas submersíveis. Vendido ao metro: escolha a cor e quantos metros precisa.',
     img: 'cabo-submersivel',
-    specs: [{ label: 'Cor', value: 'Azul' }],
+    unit: 'm',
+    options: [{ name: 'Cor', values: ['Azul', 'Preto', 'Branco', 'Vermelho'] }],
+    specs: [],
     source: 0,
   },
   {
@@ -711,6 +719,8 @@ const PRECOS_EXEMPLO: Record<string, [number, number?, string?]> = {
   'control-box-dym-s04': [4200],
   'control-box-dym-03': [3900],
   'quadro-protecao-dc': [7500],
+  'cabo-solar': [95],
+  'cabo-submersivel-plano': [110],
   'cabos-solares-mc4': [950],
   'bomba-pressurizadora-manometro': [12800],
 }

@@ -3,24 +3,37 @@ import { useStored, updateStored, uid } from './store'
 import { remoteEnabled } from './supabase'
 import { submitQuote } from './sync'
 import type { QuoteRequest } from '../data/admin'
+import { lineKey, type Picks } from './variants'
 
 export interface ListItem {
   id: string
   qtd: number
+  /** O que o cliente escolheu (ex.: { Cor: 'Preto' }). Cada combinação é uma linha da lista. */
+  opcoes?: Picks
 }
+
+export const itemKey = (i: ListItem) => lineKey(i.id, i.opcoes)
 const EMPTY_LIST: ListItem[] = []
 const EMPTY_QUOTES: QuoteRequest[] = []
 
 /** Lista de cotação do visitante: produtos que quer incluir no pedido. */
 export function useQuoteList() {
   const [items, setItems] = useStored<ListItem[]>('list', EMPTY_LIST)
+  /** Junta à lista. Se a mesma combinação já lá está, soma a quantidade. */
   const add = useCallback(
-    (id: string) => setItems((prev) => (prev.some((i) => i.id === id) ? prev : [...prev, { id, qtd: 1 }])),
+    (id: string, opcoes?: Picks, qtd = 1) =>
+      setItems((prev) => {
+        const key = lineKey(id, opcoes)
+        const n = Math.max(1, Math.min(9999, Math.round(qtd) || 1))
+        return prev.some((i) => itemKey(i) === key)
+          ? prev.map((i) => (itemKey(i) === key ? { ...i, qtd: Math.min(9999, i.qtd + n) } : i))
+          : [...prev, { id, qtd: n, ...(opcoes && Object.keys(opcoes).length ? { opcoes } : {}) }]
+      }),
     [setItems],
   )
-  const remove = useCallback((id: string) => setItems((prev) => prev.filter((i) => i.id !== id)), [setItems])
+  const remove = useCallback((key: string) => setItems((prev) => prev.filter((i) => itemKey(i) !== key)), [setItems])
   const setQty = useCallback(
-    (id: string, qtd: number) => setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qtd: Math.max(1, Math.min(999, qtd || 1)) } : i))),
+    (key: string, qtd: number) => setItems((prev) => prev.map((i) => (itemKey(i) === key ? { ...i, qtd: Math.max(1, Math.min(9999, Math.round(qtd) || 1)) } : i))),
     [setItems],
   )
   const clear = useCallback(() => setItems([]), [setItems])
