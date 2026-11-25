@@ -47,6 +47,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
     base: env.VITE_BASE_PATH || '/',
+    // muda a cada compilação: junta-se ao endereço das imagens dos produtos para o telemóvel nunca mostrar uma imagem antiga
+    define: { __BUILD__: JSON.stringify(Date.now().toString(36)) },
     plugins: [react(), csp(), pagesFiles()],
   }
 })

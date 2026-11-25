@@ -35,6 +35,6 @@ export function useProduct(id: string) {
 export function productImage(p: CatalogProduct, thumb = false): string | undefined {
   if (p.imgData) return p.imgData
   // miniatura (440 px, cerca de 10 KB) para listas e cartões; a página do produto usa a imagem inteira
-  if (p.img) return asset(`img/produtos/${p.img}${thumb ? '-t' : ''}.webp`)
+  if (p.img) return asset(`img/produtos/${p.img}${thumb ? '-t' : ''}.webp`) + `?v=${__BUILD__}`
   return undefined
 }

@@ -3,7 +3,7 @@
  * - imagens e letras: mostra a cópia e atualiza por trás;
  * - páginas: tenta a rede durante 4 s e, se demorar, mostra a última cópia guardada.
  * Pedidos à base de dados (outro endereço) nunca passam por aqui. */
-const V = 'tlh-v1'
+const V = 'tlh-v2'
 
 // guarda já a página inicial, para ela abrir mesmo sem rede logo na segunda visita
 self.addEventListener('install', (e) => {
