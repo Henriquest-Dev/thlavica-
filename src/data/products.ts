@@ -357,7 +357,6 @@ const catalogo: Product[] = [
     img: 'bomba-4sds',
     specs: [
       { label: 'Potência', value: '2200 W (3 HP)' },
-      { label: 'Alimentação', value: '220–400 V, 50 Hz' },
       { label: 'Caudal', value: '20 / 40 / 60 L/min' },
       { label: 'Altura', value: '194 / 152 / 99 m' },
     ],
@@ -469,14 +468,11 @@ const catalogo: Product[] = [
   },
   {
     id: 'cabo-submersivel-plano',
-    name: 'Cabo submersível plano azul',
+    name: 'Cabo azul para bombas submersíveis',
     category: 'acessorios',
-    summary: 'Cabo flexível para ligar bombas e motores submersíveis, em bobina.',
+    summary: 'Cabo flexível de cobre para ligar bombas submersíveis, vendido em bobina.',
     img: 'cabo-submersivel',
-    specs: [
-      { label: 'Cor', value: 'Azul' },
-      { label: 'Formato', value: 'Plano' },
-    ],
+    specs: [{ label: 'Cor', value: 'Azul' }],
     source: 0,
   },
   {
