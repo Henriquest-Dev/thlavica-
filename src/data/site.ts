@@ -49,6 +49,8 @@ export interface CompanyInfo {
   condicoes?: string
   /** Contas bancárias (até 3) que aparecem em "Dados bancários" na cotação. */
   bancos?: BankAccount[]
+  /** Categorias editadas ou criadas no painel (ver lib/categories). */
+  categorias?: unknown
 }
 
 export type Contact = typeof defaultContact & CompanyInfo
@@ -159,7 +161,8 @@ export const solutions: Solution[] = [
   },
 ]
 
-export type CategoryId =
+/** Categorias de origem; o painel pode criar outras (o id passa a ser qualquer texto curto). */
+export type BaseCategoryId =
   | 'paineis'
   | 'inversores'
   | 'baterias'
@@ -172,9 +175,22 @@ export type CategoryId =
   | 'termoacumuladores'
   | 'acessorios'
 
+export type CategoryId = BaseCategoryId | (string & {})
+
 export type Picto = 'painel' | 'inversor' | 'bateria' | 'bomba' | 'submersivel' | 'bombasolar' | 'termo' | 'candeeiro'
 
-export const categories: { id: CategoryId; name: string; solution: SolutionId; text: string; pic: Picto }[] = [
+export interface Category {
+  id: CategoryId
+  name: string
+  solution: SolutionId
+  text: string
+  pic: Picto
+  /** Criada no painel (pode ser apagada). */
+  custom?: boolean
+}
+
+/** Categorias de origem (o painel junta-lhes as suas: ver `useCategories`). */
+export const categories: Category[] = [
   { id: 'paineis', name: 'Painéis solares', solution: 'energia-solar', text: 'Módulos fotovoltaicos.', pic: 'painel' },
   { id: 'inversores', name: 'Inversores', solution: 'energia-solar', text: 'Conversão e gestão da energia.', pic: 'inversor' },
   { id: 'baterias', name: 'Baterias', solution: 'energia-solar', text: 'Armazenamento para a noite.', pic: 'bateria' },
@@ -215,4 +231,4 @@ export const PHOTOS = [
   { src: 'foto-34', alt: 'Vista aérea de uma torre com depósitos de água e painéis solares', caption: 'Depósitos elevados e painéis solares' },
 ]
 
-export const categoryPic = (id: CategoryId): Picto => categories.find((c) => c.id === id)?.pic ?? 'candeeiro'
+export const categoryPic = (id: CategoryId, list: Category[] = categories): Picto => list.find((c) => c.id === id)?.pic ?? 'candeeiro'

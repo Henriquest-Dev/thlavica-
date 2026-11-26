@@ -306,7 +306,7 @@ export async function buildProposalPdf(p: Proposal, { company, logo }: PdfOption
   }
 
   // dados bancários: até três contas lado a lado
-  const bancos = cleanBankAccounts(company.bancos)
+  const bancos = cleanBankAccounts(p.bancos ?? company.bancos)
   if (bancos.length) {
     fy += 8
     font('bold', 8.5)

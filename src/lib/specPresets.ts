@@ -1,4 +1,4 @@
-import type { CategoryId } from '../data/site'
+import type { BaseCategoryId, CategoryId } from '../data/site'
 
 /**
  * Ajudas para o painel de produtos: tipos de produto (um clique escolhe a categoria e põe as especificações
@@ -30,7 +30,7 @@ export const PRODUCT_TYPES: ProductType[] = [
 
 /** Nomes de especificações a sugerir, por categoria (a primeira lista é a mais usada). */
 const BASE = ['Potência', 'Alimentação', 'Peso', 'Garantia', 'Dimensões', 'Cor']
-export const SPEC_SUGGESTIONS: Record<CategoryId, string[]> = {
+export const SPEC_SUGGESTIONS: Record<BaseCategoryId, string[]> & Partial<Record<string, string[]>> = {
   paineis: ['Potência', 'Tecnologia', 'Dimensões', 'Peso', 'Eficiência', 'Garantia'],
   inversores: ['Potência', 'Tensão', 'Tipo', 'Bateria', 'Painéis', 'Eficiência', ...BASE.slice(2)],
   baterias: ['Capacidade', 'Tensão', 'Tecnologia', 'Ciclos de vida', 'Peso', 'Garantia'],

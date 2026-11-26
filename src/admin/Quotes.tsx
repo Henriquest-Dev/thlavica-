@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useStored, uid } from '../lib/store'
+import { updateStored, useStored, uid } from '../lib/store'
 import { useCatalog } from '../lib/catalog'
 import { STATUS_LABEL, type Proposal, type ProposalLine, type QuoteRequest, type QuoteStatus } from '../data/admin'
 import { DEFAULT_IVA, PAGAMENTOS, lineAmounts, lineFromProduct, newProposal, proposalMessage, proposalTotals } from '../lib/proposal'
 import { downloadProposalPdf } from '../lib/proposalPdf'
 import { telLink, whatsappLink } from '../lib/phone'
-import { useContact } from '../data/site'
+import { cleanBankAccounts, useContact } from '../data/site'
+import { BankAccountsEditor } from './BankAccountsEditor'
 import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
 import { useMatch } from '../lib/useMatch'
@@ -36,6 +37,7 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
   const { subtotal: sub, tax, total } = proposalTotals(p)
   const iva = p.iva ?? DEFAULT_IVA
   const text = () => proposalMessage(p)
+  const bancos = p.bancos ?? contact.bancos ?? []
 
   return (
     <Modal title={`Cotação ${p.numero}`} onClose={onClose} wide>
@@ -147,6 +149,30 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
               <textarea rows={3} value={p.notas} onChange={(e) => set('notas', e.target.value)} placeholder="Condições de pagamento, prazo de entrega, o que está incluído…" />
             </Field>
           </div>
+
+          <h3 className="sub">Dados bancários (para o cliente pagar)</h3>
+          <p className="muted small">
+            Aparecem no fim do PDF, como na fatura: titular, banco, conta, NIB e SWIFT. Já vêm preenchidos com as contas da empresa; pode mudar só nesta cotação.
+          </p>
+          <BankAccountsEditor value={bancos} onChange={(list) => set('bancos', list)} titular={contact.empresa?.trim() || ''} />
+          {p.bancos && (
+            <div className="row">
+              <button
+                type="button"
+                className="btn btn--line btn--sm"
+                onClick={() => {
+                  const list = cleanBankAccounts(p.bancos)
+                  const ok = updateStored<Record<string, unknown>>('settings', {}, (s) => ({ ...s, bancos: list }))
+                  toast(ok ? 'Contas guardadas para as próximas cotações.' : 'Não foi possível guardar.', ok ? 'ok' : 'erro')
+                }}
+              >
+                Usar estas contas em todas as cotações
+              </button>
+              <button type="button" className="linkbtn" onClick={() => set('bancos', undefined)}>
+                Voltar às contas da empresa
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="prop__side">
@@ -200,6 +226,15 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
               {p.termoPagamento ? ` Pagamento: ${p.termoPagamento}.` : ''}
               {p.prazoEntrega ? ` Entrega em ${p.prazoEntrega} dia(s).` : ''} {p.notas}
             </p>
+            {cleanBankAccounts(bancos).map((b, i) => (
+              <p key={i} className="sheet__n">
+                <b>{b.banco}</b>
+                {b.titular ? ` · ${b.titular}` : ''}
+                {b.conta ? ` · Conta ${b.conta}` : ''}
+                {b.nib ? ` · NIB ${b.nib}` : ''}
+                {b.swift ? ` · SWIFT ${b.swift}` : ''}
+              </p>
+            ))}
           </article>
           <div className="row row--end">
             <button type="button" className="btn btn--line" onClick={() => navigator.clipboard?.writeText(text()).then(() => toast('Texto copiado'), () => toast('Não foi possível copiar', 'erro'))}>

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Ico } from '../components/Ico'
-import { categories, type CategoryId } from '../data/site'
+import { type CategoryId } from '../data/site'
+import { useCategories } from '../lib/categories'
 import { useCatalog } from '../lib/catalog'
 import { useReveal } from '../lib/useReveal'
 import { breadcrumbSchema, useSeo } from '../lib/seo'
@@ -13,6 +14,7 @@ import NotFound from './NotFound'
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
 export default function Products() {
+  const categories = useCategories()
   const [params] = useSearchParams()
   const { cat: catParam } = useParams()
   const navigate = useNavigate()

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Ico } from '../components/Ico'
 import { useSearchParams } from 'react-router-dom'
-import { categories, solutions, useContact, wa } from '../data/site'
+import { solutions, useContact, wa } from '../data/site'
+import { useCategories } from '../lib/categories'
 import { useCatalog } from '../lib/catalog'
 import { activeDiscount } from '../lib/pricing'
 import { saveQuoteRequest, takePrefill, useQuoteList } from '../lib/quotes'
@@ -21,6 +22,7 @@ const PHONE_RE = /^(\+?258)?\s?8[2-7]\s?\d{3}\s?\d{4}$|^\+\d[\d\s]{7,16}$/
  * vê um agradecimento. O WhatsApp é só uma opção à parte, para quem preferir falar já.
  */
 export default function Contact() {
+  const categories = useCategories()
   const [params] = useSearchParams()
   const contact = useContact()
   useSeo({

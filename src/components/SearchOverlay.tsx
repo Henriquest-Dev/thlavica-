@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { categories } from '../data/site'
+import { useCategories } from '../lib/categories'
 import { useCatalog } from '../lib/catalog'
 import { useUi } from './Ui'
 import { Ico } from './Ico'
@@ -27,6 +27,7 @@ interface Hit {
 
 /** Pesquisa rápida (tecla "/" ou Ctrl+K): produtos e páginas. */
 export function SearchOverlay() {
+  const categories = useCategories()
   const { searchOpen, closeSearch } = useUi()
   const products = useCatalog()
   const nav = useNavigate()

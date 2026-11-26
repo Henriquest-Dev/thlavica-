@@ -159,6 +159,11 @@ export function useCatalogEditor() {
       if (p.custom) return setCustom((l) => l.map((x) => (x.id === p.id ? { ...x, price } : x)))
       return setOver((o) => ({ ...o, [p.id]: { ...o[p.id], price: price ?? 0 } }))
     },
+    /** Põe o produto noutra categoria. */
+    setCategory(p: CatalogProduct, category: CategoryId): boolean {
+      if (p.custom) return setCustom((l) => l.map((x) => (x.id === p.id ? { ...x, category } : x)))
+      return setOver((o) => ({ ...o, [p.id]: { ...o[p.id], category } }))
+    },
     toggleHidden(p: CatalogProduct) {
       if (p.custom) setCustom((l) => l.map((x) => (x.id === p.id ? { ...x, hidden: !x.hidden } : x)))
       else setOver((o) => ({ ...o, [p.id]: { ...o[p.id], hidden: !p.hidden } }))

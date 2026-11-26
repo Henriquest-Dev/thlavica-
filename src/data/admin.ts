@@ -1,3 +1,4 @@
+import type { BankAccount } from './site'
 import type { Product } from './products'
 
 export type QuoteStatus = 'nova' | 'em-preparacao' | 'enviada' | 'fechada'
@@ -49,6 +50,8 @@ export interface Proposal {
   prazoEntrega?: number
   notas: string
   estado: 'rascunho' | 'enviada'
+  /** Contas bancárias desta cotação (vazio = usa as contas guardadas em Contactos). */
+  bancos?: BankAccount[]
 }
 
 export type PromoFormat = 'faixa' | 'destaque' | 'popup'

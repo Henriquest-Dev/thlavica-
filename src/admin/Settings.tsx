@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { MAX_BANK_ACCOUNTS, cleanBankAccounts, defaultContact, useContact, type BankAccount, type Contact } from '../data/site'
-import { removeStored, writeStored } from '../lib/store'
+import { MAX_BANK_ACCOUNTS, cleanBankAccounts, defaultContact, useContact, type Contact } from '../data/site'
+import { BankAccountsEditor } from './BankAccountsEditor'
+import { readStored, removeStored, writeStored } from '../lib/store'
 import { useFeedback } from './feedback'
 import { whatsappDigits } from '../lib/phone'
 import { NotifyPanel } from './NotifyPanel'
@@ -21,9 +22,6 @@ export default function Settings() {
   }
 
   const bancos = v.bancos ?? []
-  const setBanco = (i: number, k: keyof BankAccount, value: string) => setV({ ...v, bancos: bancos.map((b, j) => (j === i ? { ...b, [k]: value } : b)) })
-  const addBanco = () => setV({ ...v, bancos: [...bancos, { titular: v.empresa?.trim() || '', banco: '', conta: '', nib: '', swift: '' }] })
-  const removeBanco = (i: number) => setV({ ...v, bancos: bancos.filter((_, j) => j !== i) })
 
   const save = (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,7 +48,8 @@ export default function Settings() {
       bancos: cleanBankAccounts(v.bancos),
     }
     setV(next)
-    const ok = writeStored('settings', next)
+    // as categorias também vivem nas definições: não se perdem ao gravar os contactos
+    const ok = writeStored('settings', { ...next, categorias: readStored<Partial<Contact>>('settings', {}).categorias })
     toast(ok ? 'Contactos guardados. Já aparecem no site.' : 'Não foi possível guardar.', ok ? 'ok' : 'erro')
   }
 
@@ -99,38 +98,7 @@ export default function Settings() {
           </div>
           <h3 className="sub">Dados bancários na cotação</h3>
           <p className="muted small">Aparecem no fim da cotação em PDF, em “Dados bancários” (até {MAX_BANK_ACCOUNTS} contas), para o cliente saber onde pagar.</p>
-          <div className="banks">
-            {bancos.map((b, i) => (
-              <fieldset key={i} className="bank">
-                <legend>Conta {i + 1}</legend>
-                <div className="grid2">
-                  <Field label="Titular" hint="Em nome de quem está a conta.">
-                    <input value={b.titular} onChange={(e) => setBanco(i, 'titular', e.target.value)} placeholder="Tlhavika Sociedade Unipessoal, LDA" />
-                  </Field>
-                  <Field label="Banco">
-                    <input value={b.banco} onChange={(e) => setBanco(i, 'banco', e.target.value)} placeholder="Millennium BIM" />
-                  </Field>
-                  <Field label="Número da conta">
-                    <input value={b.conta} onChange={(e) => setBanco(i, 'conta', e.target.value)} inputMode="numeric" />
-                  </Field>
-                  <Field label="NIB" hint="21 números.">
-                    <input value={b.nib} onChange={(e) => setBanco(i, 'nib', e.target.value)} inputMode="numeric" />
-                  </Field>
-                  <Field label="SWIFT" hint="Só para pagamentos do estrangeiro.">
-                    <input value={b.swift} onChange={(e) => setBanco(i, 'swift', e.target.value)} />
-                  </Field>
-                </div>
-                <button type="button" className="btn btn--line btn--sm" onClick={() => removeBanco(i)}>
-                  Tirar esta conta
-                </button>
-              </fieldset>
-            ))}
-            {bancos.length < MAX_BANK_ACCOUNTS && (
-              <button type="button" className="btn btn--line" onClick={addBanco}>
-                + Adicionar conta bancária
-              </button>
-            )}
-          </div>
+          <BankAccountsEditor value={bancos} onChange={(list) => setV({ ...v, bancos: list })} titular={v.empresa?.trim() || ''} />
           <div className="row">
             <button type="submit" className="btn">
               Guardar contactos
@@ -139,7 +107,9 @@ export default function Settings() {
               type="button"
               className="btn btn--line"
               onClick={() => {
-                removeStored('settings')
+                const categorias = readStored<Partial<Contact>>('settings', {}).categorias
+                if (categorias) writeStored('settings', { categorias })
+                else removeStored('settings')
                 setV(defaultContact)
                 toast('Contactos de origem repostos')
               }}

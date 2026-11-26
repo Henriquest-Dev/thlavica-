@@ -20,6 +20,7 @@ const AdminLayout = lazy(() => import('./admin/AdminLayout'))
 const Overview = lazy(() => import('./admin/Overview'))
 const Quotes = lazy(() => import('./admin/Quotes'))
 const CatalogAdmin = lazy(() => import('./admin/CatalogAdmin'))
+const CategoriesAdmin = lazy(() => import('./admin/CategoriesAdmin'))
 const PromosAdmin = lazy(() => import('./admin/PromosAdmin'))
 const MediaAdmin = lazy(() => import('./admin/MediaAdmin'))
 const Settings = lazy(() => import('./admin/Settings'))
@@ -55,6 +56,7 @@ createRoot(document.getElementById('root')!).render(
             <Route index element={<Overview />} />
             <Route path="cotacoes" element={<Quotes />} />
             <Route path="catalogo" element={<CatalogAdmin />} />
+            <Route path="categorias" element={<CategoriesAdmin />} />
             <Route path="promocoes" element={<PromosAdmin />} />
             <Route path="midia" element={<MediaAdmin />} />
             <Route path="contactos" element={<Settings />} />

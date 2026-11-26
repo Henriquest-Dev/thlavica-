@@ -2241,3 +2241,20 @@
   text-decoration: underline;
   cursor: pointer;
 }
+.catico {
+  display: grid;
+  place-items: center;
+  color: var(--a-ink, #0b2545);
+}
+.catp li {
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 11rem);
+}
+.catp select {
+  min-width: 0;
+  font-size: 14px;
+}
+.pick__from {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+}

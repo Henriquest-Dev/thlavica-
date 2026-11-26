@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { categories, categoryPic, type CategoryId } from '../data/site'
+import { categoryPic, type CategoryId } from '../data/site'
+import { useCategories } from '../lib/categories'
 import { MAX_GALLERY, blankDraft, draftFromProduct, parsePrice, useCatalogEditor, type ProductDraft } from '../lib/catalogEdit'
 import { MAX_KIT_ITEMS, kitSeparateTotal } from '../lib/kits'
 import { money } from '../lib/proposal'
@@ -218,6 +219,7 @@ function KitEditor({ selfId, value, onChange, onUseSum }: { selfId: string; valu
 
 /** Cartão tal como aparece na lista de produtos do site, para ver o resultado enquanto se escreve. */
 function Preview({ d, src }: { d: ProductDraft; src?: string }) {
+  const categories = useCategories()
   const price = parsePrice(d.price)
   const off = activeDiscount({ discount: d.discount, discountUntil: d.discountUntil })
   const final = price ? finalPrice({ price, discount: d.discount, discountUntil: d.discountUntil }) : undefined
@@ -227,7 +229,7 @@ function Preview({ d, src }: { d: ProductDraft; src?: string }) {
     <aside className="prev" aria-label="Pré-visualização">
       <p className="prev__h">Assim aparece no site</p>
       <div className="pc pc--md pcprev" aria-hidden="true">
-        <span className="pc__media">{src ? <img src={src} alt="" /> : <Ico name={categoryPic(d.category)} size={96} className="pc__picto" />}</span>
+        <span className="pc__media">{src ? <img src={src} alt="" /> : <Ico name={categoryPic(d.category, categories)} size={96} className="pc__picto" />}</span>
         {chip && <span className="pc__chip">{chip}</span>}
         {off > 0 && <span className="pc__sale">-{off}%</span>}
         <span className="pc__body">
@@ -249,6 +251,7 @@ function Preview({ d, src }: { d: ProductDraft; src?: string }) {
 }
 
 function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: (d: ProductDraft) => void; onClose: () => void }) {
+  const categories = useCategories()
   const [d, setD] = useState(draft)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
@@ -261,7 +264,7 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
   // tipo de produto: só ao criar (escolhe a categoria e as especificações com que começa)
   const [typeId, setTypeId] = useState<string | undefined>(draft.isNew ? undefined : typeOfCategory(draft.category)?.id)
   const lastSpec = useRef<HTMLInputElement>(null)
-  const sugest = SPEC_SUGGESTIONS[d.category]
+  const sugest = SPEC_SUGGESTIONS[d.category] ?? ['Potência', 'Alimentação', 'Dimensões', 'Peso', 'Garantia', 'Cor']
   const priceBad = d.price.trim() !== '' && parsePrice(d.price) === undefined
 
   const pickType = (id: string) => {
@@ -339,7 +342,7 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
               <Field label="Modelo">
                 <input value={d.model} onChange={(e) => set('model', e.target.value)} placeholder="Ex.: 4SA6/21" maxLength={60} />
               </Field>
-              <Field label="Categoria *">
+              <Field label="Categoria *" hint="Falta uma categoria? Crie-a em Mais → Categorias.">
                 <select value={d.category} onChange={(e) => set('category', e.target.value as CategoryId)}>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -591,11 +594,12 @@ function QuickPrice({ value, onSave, suffix = 'MZN' }: { value: number | undefin
 type Filter = 'todos' | 'visiveis' | 'ocultos' | 'novos' | 'sem-preco' | 'sem-imagem'
 
 export default function CatalogAdmin() {
+  const categories = useCategories()
   const { all, save, toggleHidden, remove, reset, duplicate, setPrice } = useCatalogEditor()
   const { toast, confirm } = useFeedback()
   const [params, setParams] = useSearchParams()
   const [q, setQ] = useState('')
-  const [cat, setCat] = useState<'' | CategoryId>('')
+  const [cat, setCat] = useState<'' | CategoryId>(() => params.get('categoria') ?? '')
   const [show, setShow] = useState<Filter>('todos')
   const [draft, setDraft] = useState<ProductDraft | null>(null)
 

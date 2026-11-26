@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
-import { categories, solutions, wa } from '../data/site'
+import { solutions, wa } from '../data/site'
+import { categoriesOfSolution, useCategories } from '../lib/categories'
 import { useCatalog } from '../lib/catalog'
 import { img } from '../lib/asset'
 import { useReveal } from '../lib/useReveal'
@@ -9,6 +10,7 @@ import { Arrow } from '../components/Arrow'
 import NotFound from './NotFound'
 
 export default function Solution() {
+  const categories = useCategories()
   const { id } = useParams()
   const models = useCatalog()
   const s = solutions.find((x) => x.id === id)
@@ -22,7 +24,7 @@ export default function Solution() {
   })
   useReveal(id)
   if (!s) return <NotFound />
-  const cats = categories.filter((c) => s.categories.includes(c.id))
+  const cats = categoriesOfSolution(categories, s.id, s.categories)
   const others = solutions.filter((x) => x.id !== s.id)
 
   return (

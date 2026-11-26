@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ProductPic } from '../components/ProductPic'
 import { Link, useParams } from 'react-router-dom'
-import { categories, categoryPic, wa } from '../data/site'
+import { categoryPic, wa } from '../data/site'
+import { useCategories } from '../lib/categories'
 import { productImage, useCatalog } from '../lib/catalog'
 import { breadcrumbSchema, fileUrl, productSchema, useSeo } from '../lib/seo'
 import { activeDiscount, finalPrice, priceLabel, untilLabel } from '../lib/pricing'
@@ -16,6 +17,7 @@ import { Ico } from '../components/Ico'
 import NotFound from './NotFound'
 
 export default function ProductPage() {
+  const categories = useCategories()
   const { id = '' } = useParams()
   const catalog = useCatalog()
   const p = catalog.find((x) => x.id === id)
@@ -65,7 +67,7 @@ export default function ProductPage() {
             ) : src ? (
               <ProductPic src={src} alt={p.name} photo={p.photo && !p.imgData} />
             ) : (
-              <Ico name={categoryPic(p.category)} size={160} className="pdp__picto" />
+              <Ico name={categoryPic(p.category, categories)} size={160} className="pdp__picto" />
             )}
             {(p.gallery?.length ?? 0) > 0 && (
               <div className="pdp__thumbs" role="group" aria-label="Fotografias do produto">
