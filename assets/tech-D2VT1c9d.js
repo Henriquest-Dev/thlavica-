@@ -1,1 +1,0 @@
-import{xt as e}from"./index-DQVQhYpx.js";function t(){let[t]=e();try{return t.get(`tecnico`)===`1`&&window.sessionStorage.setItem(`tlh:tech`,`1`),window.sessionStorage.getItem(`tlh:tech`)===`1`}catch{return t.get(`tecnico`)===`1`}}export{t};

@@ -41,6 +41,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://henriquest-dev.github.io/thlavica-/categoria/kits/</loc>
+    <lastmod>2026-11-26</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://henriquest-dev.github.io/thlavica-/categoria/motores/</loc>
     <lastmod>2026-11-26</lastmod>
     <priority>0.8</priority>
@@ -212,6 +217,11 @@
   </url>
   <url>
     <loc>https://henriquest-dev.github.io/thlavica-/produtos/inversor-luxpower-sna5000/</loc>
+    <lastmod>2026-11-26</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://henriquest-dev.github.io/thlavica-/produtos/kit-bomba-solar-2200w/</loc>
     <lastmod>2026-11-26</lastmod>
     <priority>0.6</priority>
   </url>
