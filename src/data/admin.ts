@@ -15,6 +15,8 @@ export interface QuoteRequest {
   /** Produtos da lista de cotação, com quantidade. */
   /** Preço (sem desconto) e desconto em vigor no site quando o cliente fez o pedido. */
   itens?: { produtoId: string; nome: string; qtd: number; preco?: number; desconto?: number; opcoes?: string; unidade?: 'm' }[]
+  /** Dados bancários que o cliente escreveu no pedido (aparecem na cotação; o painel não os muda). */
+  banco?: BankAccount
   origem: 'formulario' | 'simulador' | 'lista'
   estado: QuoteStatus
   arquivada?: boolean
@@ -37,7 +39,7 @@ export interface Proposal {
   numero: string
   pedidoId?: string
   criadaEm: string
-  cliente: { nome: string; telefone: string; local: string; nuit?: string }
+  cliente: { nome: string; telefone: string; local: string; nuit?: string; banco?: BankAccount }
   /** Quem fez a cotação (aparece no PDF). */
   vendedor?: string
   linhas: ProposalLine[]
@@ -50,8 +52,6 @@ export interface Proposal {
   prazoEntrega?: number
   notas: string
   estado: 'rascunho' | 'enviada'
-  /** Contas bancárias desta cotação (vazio = usa as contas guardadas em Contactos). */
-  bancos?: BankAccount[]
 }
 
 export type PromoFormat = 'faixa' | 'destaque' | 'popup'

@@ -2258,3 +2258,9 @@
   font-size: 11px;
   color: #6b7280;
 }
+.bankview {
+  padding: 10px 14px;
+  border: 1px solid var(--a-line);
+  border-radius: 12px;
+  background: #fff;
+}

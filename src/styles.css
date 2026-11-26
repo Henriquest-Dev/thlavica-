@@ -3976,3 +3976,17 @@ a.optional {
 .kitl__save strong {
   color: #1f7a3a;
 }
+.bankf {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.bankf legend {
+  padding: 0;
+  margin-bottom: 4px;
+}
+.bankf__lead {
+  margin: 0 0 14px;
+  font-size: 14px;
+}

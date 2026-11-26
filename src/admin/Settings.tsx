@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { MAX_BANK_ACCOUNTS, cleanBankAccounts, defaultContact, useContact, type Contact } from '../data/site'
-import { BankAccountsEditor } from './BankAccountsEditor'
+import { defaultContact, useContact, type Contact } from '../data/site'
 import { readStored, removeStored, writeStored } from '../lib/store'
 import { useFeedback } from './feedback'
 import { whatsappDigits } from '../lib/phone'
@@ -21,7 +20,6 @@ export default function Settings() {
     setErr({ ...err, [k]: undefined })
   }
 
-  const bancos = v.bancos ?? []
 
   const save = (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,7 +43,6 @@ export default function Settings() {
       nuit: v.nuit?.trim() || undefined,
       pagamento: v.pagamento?.trim() || undefined,
       condicoes: v.condicoes?.trim() || undefined,
-      bancos: cleanBankAccounts(v.bancos),
     }
     setV(next)
     // as categorias também vivem nas definições: não se perdem ao gravar os contactos
@@ -89,16 +86,13 @@ export default function Settings() {
             <Field label="NUIT da empresa">
               <input value={v.nuit ?? ''} onChange={set('nuit')} inputMode="numeric" />
             </Field>
-            <Field label="Outros dados para pagamento" hint="Opcional: referência de pagamento ou outro texto livre. As contas bancárias ficam em baixo." wide>
+            <Field label="Outros dados para pagamento" hint="Opcional: referência de pagamento ou outro texto livre." wide>
               <textarea rows={2} value={v.pagamento ?? ''} onChange={set('pagamento')} />
             </Field>
             <Field label="Condições" hint="Prazo de entrega, garantia, o que está incluído…" wide>
               <textarea rows={3} value={v.condicoes ?? ''} onChange={set('condicoes')} />
             </Field>
           </div>
-          <h3 className="sub">Dados bancários na cotação</h3>
-          <p className="muted small">Aparecem no fim da cotação em PDF, em “Dados bancários” (até {MAX_BANK_ACCOUNTS} contas), para o cliente saber onde pagar.</p>
-          <BankAccountsEditor value={bancos} onChange={(list) => setV({ ...v, bancos: list })} titular={v.empresa?.trim() || ''} />
           <div className="row">
             <button type="submit" className="btn">
               Guardar contactos

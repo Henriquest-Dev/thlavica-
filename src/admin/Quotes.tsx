@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { updateStored, useStored, uid } from '../lib/store'
+import { useStored, uid } from '../lib/store'
 import { useCatalog } from '../lib/catalog'
 import { STATUS_LABEL, type Proposal, type ProposalLine, type QuoteRequest, type QuoteStatus } from '../data/admin'
 import { DEFAULT_IVA, PAGAMENTOS, lineAmounts, lineFromProduct, newProposal, proposalMessage, proposalTotals } from '../lib/proposal'
 import { downloadProposalPdf } from '../lib/proposalPdf'
 import { telLink, whatsappLink } from '../lib/phone'
-import { cleanBankAccounts, useContact } from '../data/site'
-import { BankAccountsEditor } from './BankAccountsEditor'
+import { cleanBankAccounts, useContact, type BankAccount } from '../data/site'
 import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
 import { useMatch } from '../lib/useMatch'
@@ -26,6 +25,30 @@ const FILTERS: { id: 'todas' | QuoteStatus; label: string }[] = [
 
 /* ------------------------------------------------------------------ */
 
+/** Dados bancários do cliente, só para ler (foi o cliente que os escreveu no pedido). */
+function BankView({ b }: { b: BankAccount }) {
+  return (
+    <dl className="kv bankview">
+      {(
+        [
+          ['Titular', b.titular],
+          ['Banco', b.banco],
+          ['Conta', b.conta],
+          ['NIB', b.nib],
+          ['SWIFT', b.swift],
+        ] as const
+      )
+        .filter(([, v]) => v)
+        .map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+    </dl>
+  )
+}
+
 function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onSave: (p: Proposal, send?: boolean) => void; onClose: () => void }) {
   const { toast } = useFeedback()
   const catalog = useCatalog(true)
@@ -37,7 +60,7 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
   const { subtotal: sub, tax, total } = proposalTotals(p)
   const iva = p.iva ?? DEFAULT_IVA
   const text = () => proposalMessage(p)
-  const bancos = p.bancos ?? contact.bancos ?? []
+  const bancos = cleanBankAccounts(p.cliente.banco ? [p.cliente.banco] : [])
 
   return (
     <Modal title={`Cotação ${p.numero}`} onClose={onClose} wide>
@@ -150,28 +173,11 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
             </Field>
           </div>
 
-          <h3 className="sub">Dados bancários (para o cliente pagar)</h3>
-          <p className="muted small">
-            Aparecem no fim do PDF, como na fatura: titular, banco, conta, NIB e SWIFT. Já vêm preenchidos com as contas da empresa; pode mudar só nesta cotação.
-          </p>
-          <BankAccountsEditor value={bancos} onChange={(list) => set('bancos', list)} titular={contact.empresa?.trim() || ''} />
-          {p.bancos && (
-            <div className="row">
-              <button
-                type="button"
-                className="btn btn--line btn--sm"
-                onClick={() => {
-                  const list = cleanBankAccounts(p.bancos)
-                  const ok = updateStored<Record<string, unknown>>('settings', {}, (s) => ({ ...s, bancos: list }))
-                  toast(ok ? 'Contas guardadas para as próximas cotações.' : 'Não foi possível guardar.', ok ? 'ok' : 'erro')
-                }}
-              >
-                Usar estas contas em todas as cotações
-              </button>
-              <button type="button" className="linkbtn" onClick={() => set('bancos', undefined)}>
-                Voltar às contas da empresa
-              </button>
-            </div>
+          <h3 className="sub">Dados bancários do cliente</h3>
+          {bancos.length ? (
+            <BankView b={bancos[0]} />
+          ) : (
+            <p className="muted small">O cliente não escreveu dados bancários no pedido. Só o cliente os pode preencher, no formulário de pedido de cotação do site.</p>
           )}
         </div>
 
@@ -226,7 +232,7 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
               {p.termoPagamento ? ` Pagamento: ${p.termoPagamento}.` : ''}
               {p.prazoEntrega ? ` Entrega em ${p.prazoEntrega} dia(s).` : ''} {p.notas}
             </p>
-            {cleanBankAccounts(bancos).map((b, i) => (
+            {bancos.map((b, i) => (
               <p key={i} className="sheet__n">
                 <b>{b.banco}</b>
                 {b.titular ? ` · ${b.titular}` : ''}
@@ -449,6 +455,16 @@ export default function Quotes() {
                   <div>
                     <dt>Interesse</dt>
                     <dd>{sel.interesse}</dd>
+                  </div>
+                )}
+                {sel.banco && (
+                  <div>
+                    <dt>Dados bancários</dt>
+                    <dd>
+                      {[sel.banco.titular, sel.banco.banco, sel.banco.conta && `Conta ${sel.banco.conta}`, sel.banco.nib && `NIB ${sel.banco.nib}`, sel.banco.swift && `SWIFT ${sel.banco.swift}`]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </dd>
                   </div>
                 )}
                 <div>

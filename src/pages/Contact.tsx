@@ -38,7 +38,7 @@ export default function Contact() {
   const listLines = listed
     .map((i) => ({ ...i, p: products.find((p) => p.id === i.id) }))
     .filter((r): r is typeof r & { p: NonNullable<typeof r.p> } => Boolean(r.p))
-  const [v, setV] = useState(() => ({ nome: '', telefone: '', local: '', uso: '', interesse: pre, mensagem: takePrefill() }))
+  const [v, setV] = useState(() => ({ nome: '', telefone: '', local: '', uso: '', interesse: pre, mensagem: takePrefill(), titular: '', banco: '', conta: '', nib: '', swift: '' }))
   const [err, setErr] = useState<Record<string, string>>({})
   const [thanks, setThanks] = useState<null | { nome: string; telefone: string }>(null)
 
@@ -77,6 +77,10 @@ export default function Contact() {
     if (!PHONE_RE.test(v.telefone.trim())) n.telefone = 'Indique o número do seu WhatsApp, ex.: 84 123 4567.'
     if (!v.local.trim()) n.local = 'Indique a cidade ou província.'
     if (!v.uso) n.uso = 'Escolha uma opção.'
+    if (!v.titular.trim()) n.titular = 'Indique em nome de quem está a conta.'
+    if (!v.banco.trim()) n.banco = 'Indique o banco.'
+    if (!/^\d{5,25}$/.test(v.conta.replace(/[\s.-]/g, ''))) n.conta = 'Indique o número da conta (só números).'
+    if (v.nib.replace(/\D/g, '').length !== 21) n.nib = 'O NIB tem 21 números.'
     setErr(n)
     const first = Object.keys(n)[0]
     if (first) {
@@ -97,6 +101,13 @@ export default function Contact() {
         interesse: v.interesse ? label(v.interesse) : undefined,
         mensagem: v.mensagem.trim() || undefined,
         itens: items,
+        banco: {
+          titular: v.titular.trim().slice(0, 80),
+          banco: v.banco.trim().slice(0, 60),
+          conta: v.conta.replace(/[\s.-]/g, '').slice(0, 40),
+          nib: v.nib.replace(/\D/g, '').slice(0, 21),
+          swift: v.swift.trim().toUpperCase().slice(0, 20),
+        },
         origem: fromList ? 'lista' : v.mensagem.startsWith('Simulação') ? 'simulador' : 'formulario',
       })
     setThanks({ nome: v.nome.trim(), telefone: v.telefone.trim() })
@@ -105,7 +116,7 @@ export default function Contact() {
   const closeThanks = () => {
     setThanks(null)
     if (fromList) clearList()
-    setV({ nome: '', telefone: '', local: '', uso: '', interesse: '', mensagem: '' })
+    setV({ nome: '', telefone: '', local: '', uso: '', interesse: '', mensagem: '', titular: '', banco: '', conta: '', nib: '', swift: '' })
   }
 
   /** Para quem prefere falar já no WhatsApp (opcional): mensagem preparada com o que já escreveu. */
@@ -189,6 +200,29 @@ export default function Contact() {
               <textarea id="f-mensagem" rows={4} maxLength={3000} value={v.mensagem} onChange={set('mensagem')} placeholder="Ex.: aparelhos e horas de uso, profundidade do furo, pessoas em casa…" />
             </div>
           </div>
+
+          <fieldset className="bankf">
+            <legend className="sol__h">Dados bancários</legend>
+            <p className="muted bankf__lead">Aparecem na sua cotação e na fatura, como nos documentos da Tlhavika. Confirme-os no seu extrato ou na app do banco.</p>
+            <div className="form__grid">
+              {field('titular', 'Titular da conta *', <input id="f-titular" value={v.titular} onChange={set('titular')} maxLength={80} placeholder="Nome ou empresa" autoComplete="off" />)}
+              {field(
+                'banco',
+                'Banco *',
+                <>
+                  <input id="f-banco" value={v.banco} onChange={set('banco')} maxLength={60} list="f-bancos" placeholder="Ex.: Millennium BIM" autoComplete="off" />
+                  <datalist id="f-bancos">
+                    {['BCI', 'Millennium BIM', 'Standard Bank', 'Absa', 'MozaBanco', 'Nedbank', 'FNB', 'Access Bank', 'Ecobank', 'Banco Letshego', 'First Capital Bank', 'Banco Mais', 'Socremo'].map((b) => (
+                      <option key={b} value={b} />
+                    ))}
+                  </datalist>
+                </>,
+              )}
+              {field('conta', 'Número da conta *', <input id="f-conta" value={v.conta} onChange={set('conta')} inputMode="numeric" maxLength={40} autoComplete="off" />)}
+              {field('nib', 'NIB *', <input id="f-nib" value={v.nib} onChange={set('nib')} inputMode="numeric" maxLength={30} placeholder="21 números" autoComplete="off" />)}
+              {field('swift', 'SWIFT', <input id="f-swift" value={v.swift} onChange={set('swift')} maxLength={20} placeholder="Opcional" autoComplete="off" />)}
+            </div>
+          </fieldset>
 
           {picked && picked.id === params.get('produto') && (preOpcoes || isMeters(picked)) && (
             <p className="promo-note" role="status">

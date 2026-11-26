@@ -22,7 +22,13 @@ const base: Proposal = {
   id: 'p1',
   numero: 'COT-2026-001',
   criadaEm: '2026-10-11T10:00:00.000Z',
-  cliente: { nome: 'Maria da Conceição Silva', telefone: '+258 84 123 4567', local: 'Matola, Maputo', nuit: '' },
+  cliente: {
+    nome: 'Maria da Conceição Silva',
+    telefone: '+258 84 123 4567',
+    local: 'Matola, Maputo',
+    nuit: '',
+    banco: { titular: 'Maria da Conceição Silva', banco: 'BCI', conta: '12345678910', nib: '000800001234567891011', swift: '' },
+  },
   linhas: [
     { id: 'a', descricao: 'Bomba submersível 3" 3SDM2/11 (Dongyin)', qtd: 2, preco: 15500, desconto: 5 },
     { id: 'b', descricao: 'Painel bifacial ASTRON 7 2.0 (Astronergy), 625 W, com estrutura e cabos incluídos para instalação', qtd: 4, preco: 8200 },
