@@ -198,7 +198,7 @@ describe('avisos de novos pedidos (ntfy)', () => {
   it('cria o tópico aleatório uma vez e não o troca ao repetir a migração', async () => {
     const t = ((await db.query('select ntfy_topic from public.notify_config')).rows[0] as { ntfy_topic: string }).ntfy_topic
     expect(t).toMatch(/^tlhavika-[0-9a-f]{32}$/)
-    await db.exec(readFileSync('supabase/migrations/20261015000000_email_produtos.sql', 'utf8'))
+    await db.exec(readFileSync('supabase/migrations/20261016000000_email_banco.sql', 'utf8'))
     expect(((await db.query('select ntfy_topic from public.notify_config')).rows[0] as { ntfy_topic: string }).ntfy_topic).toBe(t)
   })
 
@@ -266,6 +266,23 @@ describe('avisos de novos pedidos (ntfy)', () => {
       expect(texto).toContain('Produtos:\n• 10 m de Cabo solar (Cor: Preto)\n• 2 × Bomba 3SDM2/11')
     })
 
+    it('o email mostra os dados bancários que o cliente escreveu', async () => {
+      await configurar()
+      const banco = JSON.stringify({ titular: 'Rui Matsinhe', banco: 'BCI', conta: '123456789', nib: '000800001234567891011', swift: '' })
+      await as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('n-12', '{"nome":"Rui","telefone":"+258 84 000 0000","estado":"nova","banco":${banco}}'::jsonb)`))
+      const texto = ((await calls())[0].body as { texto: string }).texto
+      expect(texto).toContain('Dados bancários do cliente:\n  Titular: Rui Matsinhe\n  Banco: BCI\n  Conta: 123456789\n  NIB: 000800001234567891011')
+      expect(texto).not.toContain('SWIFT')
+    })
+
+    it('dados bancários mal formados não impedem o aviso', async () => {
+      await configurar()
+      await as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('n-13', '{"nome":"Rui","telefone":"+258 84 000 0000","estado":"nova","banco":"lixo"}'::jsonb)`))
+      const c = await calls()
+      expect(c).toHaveLength(1)
+      expect((c[0].body as { texto: string }).texto).not.toContain('Dados bancários')
+    })
+
     it('itens mal formados não impedem o aviso nem o pedido', async () => {
       await configurar()
       await as('anon', null, () => ok(`insert into public.quote_requests (id, data) values ('n-11', '{"nome":"Rui","telefone":"+258 84 000 0000","estado":"nova","itens":"lixo"}'::jsonb)`))
@@ -306,7 +323,7 @@ describe('ficheiros de instalação (supabase/instalar)', () => {
   it('1-esquema.sql reúne as migrações certas, por ordem', () => {
     const sql = readFileSync('supabase/instalar/1-esquema.sql', 'utf8')
     let pos = -1
-    for (const m of ['20261009000000_inicio', '20261010000000_antiabuso', '20261012000000_avisos_email', '20261013000000_email_whatsapp', '20261014000000_videos', '20261015000000_email_produtos']) {
+    for (const m of ['20261009000000_inicio', '20261010000000_antiabuso', '20261012000000_avisos_email', '20261013000000_email_whatsapp', '20261014000000_videos', '20261015000000_email_produtos', '20261016000000_email_banco']) {
       const body = readFileSync(`supabase/migrations/${m}.sql`, 'utf8').trim()
       const i = sql.indexOf(body)
       expect(i).toBeGreaterThan(pos)
