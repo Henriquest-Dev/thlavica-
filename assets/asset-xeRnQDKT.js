@@ -1,0 +1,1 @@
+var e=e=>`/thlavica-/${e.replace(/^\//,``)}`,t=(t,n)=>e(`img/${t}${n?`-${n}`:``}.webp`);export{t as n,e as t};

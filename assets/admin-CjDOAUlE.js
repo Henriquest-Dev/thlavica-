@@ -1,0 +1,1 @@
+var e={nova:`Nova`,"em-preparacao":`Em preparação`,enviada:`Proposta enviada`,fechada:`Fechada`},t={faixa:`Faixa no topo`,destaque:`Banner na página inicial`,popup:`Pop-up`},n=[];export{t as n,e as r,n as t};
