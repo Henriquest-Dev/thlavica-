@@ -3,6 +3,7 @@ import { solutions } from '../data/site'
 import { useReveal } from '../lib/useReveal'
 import { useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
+import { MediaSlot } from '../sections/Gallery'
 import { Simulators } from '../components/Simulators'
 import { Ico } from '../components/Ico'
 import { Arrow } from '../components/Arrow'
@@ -17,6 +18,7 @@ export default function Services() {
   return (
     <div className="page">
       <PageHead title="O que fornecemos e como ajudamos a escolher" lead="Três áreas de trabalho e duas ferramentas para estimar o que precisa antes de pedir cotação." />
+      <MediaSlot where="servicos" />
 
       <section className="wrap svc" aria-label="Áreas de trabalho">
         {solutions.map((s) => (

@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
-import { MEDIA_PLACES, mediaPlaces, useMedia, youtubeId } from '../lib/promos'
+import { CAROUSEL_SECONDS, MEDIA_PLACES, mediaPlaces, safeLink, saveCarouselSettings, useCarouselSettings, useMedia, youtubeId } from '../lib/promos'
+import { useCategories } from '../lib/categories'
+import { solutions } from '../data/site'
 import { useCatalog, productImage } from '../lib/catalog'
 import { VIDEO_MAX_BYTES, humanSize, saveImage, saveVideo } from '../lib/images'
 import { uid } from '../lib/store'
@@ -19,8 +21,11 @@ const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 /** "Onde aparece?": cliques nos sítios do site e, se quiser, em quais produtos. */
 function PlacesChooser({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   const catalog = useCatalog()
+  const categories = useCategories()
   const [q, setQ] = useState('')
   const prods = value.filter((v) => v.startsWith('produto:'))
+  const cats = value.filter((v) => v.startsWith('categoria:'))
+  const [showCats, setShowCats] = useState(cats.length > 0)
   const [showProds, setShowProds] = useState(prods.length > 0)
   const toggle = (id: string) => onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id])
   const list = catalog.filter((c) => !q || norm(`${c.name} ${c.brand ?? ''} ${c.model ?? ''}`).includes(norm(q)))
@@ -41,7 +46,25 @@ function PlacesChooser({ value, onChange }: { value: string[]; onChange: (v: str
         >
           Em produtos específicos
         </Choice>
+        <Choice
+          on={showCats}
+          onClick={() => {
+            if (showCats) onChange(value.filter((v) => !v.startsWith('categoria:')))
+            setShowCats(!showCats)
+          }}
+        >
+          Em categorias
+        </Choice>
       </div>
+      {showCats && (
+        <div className="choices places__cats" role="group" aria-label="Categorias">
+          {categories.map((c) => (
+            <Choice key={c.id} on={value.includes(`categoria:${c.id}`)} onClick={() => toggle(`categoria:${c.id}`)}>
+              {c.name}
+            </Choice>
+          ))}
+        </div>
+      )}
       <ul className="places__hints">
         {MEDIA_PLACES.filter((p) => value.includes(p.id)).map((p) => (
           <li key={p.id}>
@@ -82,10 +105,80 @@ function PlacesChooser({ value, onChange }: { value: string[]; onChange: (v: str
 }
 
 /** Texto curto com os sítios onde um item aparece. */
-function placesText(m: MediaItem, names: Record<string, string>): string {
+function placesText(m: MediaItem, names: Record<string, string>, catNames: Record<string, string>): string {
   return mediaPlaces(m)
-    .map((p) => (p.startsWith('produto:') ? `Produto: ${names[p.slice(8)] ?? '(retirado)'}` : (MEDIA_PLACES.find((x) => x.id === p)?.label ?? p)))
+    .map((p) =>
+      p.startsWith('produto:')
+        ? `Produto: ${names[p.slice(8)] ?? '(retirado)'}`
+        : p.startsWith('categoria:')
+          ? `Categoria: ${catNames[p.slice(10)] ?? '(apagada)'}`
+          : (MEDIA_PLACES.find((x) => x.id === p)?.label ?? p),
+    )
     .join(' · ')
+}
+
+/** "Ao tocar, abre": uma página do site, à escolha (ou nada). */
+function LinkSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const catalog = useCatalog()
+  const categories = useCategories()
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">Não abre nada</option>
+      <optgroup label="Páginas">
+        <option value="/produtos">Todos os produtos</option>
+        <option value="/contacto">Pedir cotação</option>
+        <option value="/servicos">Serviços</option>
+        <option value="/sobre">Sobre nós</option>
+        {solutions.map((x) => (
+          <option key={x.id} value={`/solucoes/${x.id}`}>
+            {x.name}
+          </option>
+        ))}
+      </optgroup>
+      <optgroup label="Categorias">
+        {categories.map((c) => (
+          <option key={c.id} value={`/categoria/${c.id}`}>
+            {c.name}
+          </option>
+        ))}
+      </optgroup>
+      <optgroup label="Produtos">
+        {catalog.map((c) => (
+          <option key={c.id} value={`/produtos/${c.id}`}>
+            {c.name}
+          </option>
+        ))}
+      </optgroup>
+    </select>
+  )
+}
+
+/** Rotação automática, segundos em cada imagem e se o cartaz de origem continua no cartaz principal. */
+function CarouselSettingsPanel() {
+  const conf = useCarouselSettings()
+  const { toast } = useFeedback()
+  const save = (patch: Partial<typeof conf>) => {
+    if (!saveCarouselSettings({ ...conf, ...patch })) toast('Não foi possível guardar.', 'erro')
+  }
+  return (
+    <Panel title="Como passa o carrossel">
+      <div className="cconf">
+        <Switch on={conf.auto} label="Passar sozinho de uma imagem para a seguinte" onChange={(v) => save({ auto: v })} />
+        <div className="f">
+          <span className="f__l">Tempo em cada fotografia</span>
+          <div className="choices">
+            {CAROUSEL_SECONDS.map((n) => (
+              <Choice key={n} on={conf.segundos === n} disabled={!conf.auto} onClick={() => save({ segundos: n })}>
+                {n} segundos
+              </Choice>
+            ))}
+          </div>
+        </div>
+        <Switch on={conf.cartazOrigem} label="No cartaz principal, mostrar também o cartaz de origem da Tlhavika" onChange={(v) => save({ cartazOrigem: v })} />
+        <p className="muted small">Os vídeos não passam a meio: o carrossel espera que acabem.</p>
+      </div>
+    </Panel>
+  )
 }
 
 export default function MediaAdmin() {
@@ -98,6 +191,9 @@ export default function MediaAdmin() {
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [locais, setLocais] = useState<string[]>(['inicio'])
+  const [link, setLink] = useState('')
+  const categories = useCategories()
+  const catNames = Object.fromEntries(categories.map((c) => [c.id, c.name]))
   const [editing, setEditing] = useState<MediaItem | null>(null)
   const catalog = useCatalog(true)
   const names = Object.fromEntries(catalog.map((c) => [c.id, c.name]))
@@ -120,17 +216,21 @@ export default function MediaAdmin() {
     if (!url.trim()) return setErr(tipo === 'imagem' ? 'Envie uma fotografia primeiro.' : tipo === 'video' ? 'Envie o vídeo primeiro.' : 'Cole o endereço do vídeo.')
     if (tipo === 'youtube' && !youtubeId(url.trim())) return setErr('Não reconheço esse endereço do YouTube. Cole o link da barra de endereços ou do botão Partilhar.')
     if (locais.length === 0) return setErr('Escolha onde isto vai aparecer no site.')
-    const item: MediaItem = { id: uid(), tipo, url: url.trim(), titulo: titulo.trim(), legenda: legenda.trim() || undefined, ativo: true, locais }
+    if (tipo !== 'imagem' && locais.includes('cartaz')) return setErr('O cartaz principal só aceita fotografias. Tire “Cartaz principal” ou escolha Fotografia.')
+    const item: MediaItem = { id: uid(), tipo, url: url.trim(), titulo: titulo.trim(), legenda: legenda.trim() || undefined, ativo: true, locais, ...(safeLink(link) ? { link } : {}) }
     if (!setItems((l) => [...l, item])) return setErr('A memória do navegador está cheia. Use uma imagem mais pequena ou um endereço em vez de enviar o ficheiro.')
     setUrl('')
     setTitulo('')
     setLegenda('')
+    setLink('')
     toast('Acrescentado ao carrossel')
   }
 
   return (
     <>
-      <PageTitle title="Vídeos e fotos" lead="Fotografias e vídeos que aparecem na página inicial, na secção “O nosso trabalho”. Mude a ordem com as setas e pause o que não quer mostrar." />
+      <PageTitle title="Vídeos e fotos" lead="Fotografias e vídeos dos carrosséis do site, incluindo o cartaz principal do início. Escolha onde cada um aparece, mude a ordem com as setas e pause o que não quer mostrar." />
+
+      <CarouselSettingsPanel />
 
       {items.some((m) => m.ativo) && (
         <Panel title="Em rotação automática">
@@ -145,17 +245,18 @@ export default function MediaAdmin() {
           ) : (
             <ul className="alist">
               {items.map((m, i) => (
-                <li key={m.id} className={`arow${m.ativo ? '' : ' is-off'}`}>
+                <li key={m.id} className={`arow arow--media${m.ativo ? '' : ' is-off'}`}>
                   <span className="arow__thumb">{m.tipo === 'imagem' ? <img src={src(m.url)} alt="" /> : m.tipo === 'video' ? <video src={`${src(m.url)}#t=0.1`} preload="metadata" muted playsInline aria-hidden="true" /> : <Ico name="video" size={24} />}</span>
                   <div className="arow__main">
                     <strong>{m.titulo}</strong>
                     <small>{KIND_LABEL[m.tipo]}</small>
-                    <small className="muted">Aparece em: {placesText(m, names)}</small>
+                    <small className="muted">Aparece em: {placesText(m, names, catNames)}</small>
+                    {m.link && <small className="muted">Ao tocar abre: {m.link}</small>}
                   </div>
                   <Switch on={m.ativo} label={m.ativo ? 'Visível' : 'Pausado'} onChange={(v) => setItems((l) => l.map((x) => (x.id === m.id ? { ...x, ativo: v } : x)))} />
                   <div className="arow__act">
                     <button type="button" className="btn btn--line btn--sm" onClick={() => setEditing(m)}>
-                      Onde aparece
+                      Editar
                     </button>
                     <button type="button" className="icon" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Subir ${m.titulo}`} title="Subir">
                       <Ico name="cima" size={18} />
@@ -273,6 +374,11 @@ export default function MediaAdmin() {
               <span className="f__l">Onde aparece no site?</span>
               <PlacesChooser value={locais} onChange={setLocais} />
             </div>
+            {tipo === 'imagem' && (
+              <Field label="Ao tocar na fotografia, abre" hint="Opcional. Por exemplo, a página de um produto em promoção.">
+                <LinkSelect value={link} onChange={setLink} />
+              </Field>
+            )}
             {err && (
               <p className="ferr" role="alert">
                 {err}
@@ -285,8 +391,26 @@ export default function MediaAdmin() {
         </Panel>
       </div>
       {editing && (
-        <Modal title={`Onde aparece: ${editing.titulo}`} onClose={() => setEditing(null)} wide>
-          <PlacesChooser value={editing.locais ?? mediaPlaces(editing)} onChange={(v) => setEditing({ ...editing, locais: v })} />
+        <Modal title={`Editar: ${editing.titulo}`} onClose={() => setEditing(null)} wide>
+          <div className="pform">
+            <div className="grid2">
+              <Field label="Título *">
+                <input value={editing.titulo} onChange={(e) => setEditing({ ...editing, titulo: e.target.value })} />
+              </Field>
+              <Field label="Legenda">
+                <input value={editing.legenda ?? ''} onChange={(e) => setEditing({ ...editing, legenda: e.target.value })} />
+              </Field>
+            </div>
+            {editing.tipo === 'imagem' && (
+              <Field label="Ao tocar na fotografia, abre" hint="Opcional.">
+                <LinkSelect value={editing.link ?? ''} onChange={(v) => setEditing({ ...editing, link: v || undefined })} />
+              </Field>
+            )}
+            <div className="f">
+              <span className="f__l">Onde aparece no site?</span>
+              <PlacesChooser value={editing.locais ?? mediaPlaces(editing)} onChange={(v) => setEditing({ ...editing, locais: v })} />
+            </div>
+          </div>
           <div className="row row--end">
             <button type="button" className="btn btn--line" onClick={() => setEditing(null)}>
               Cancelar
@@ -295,9 +419,12 @@ export default function MediaAdmin() {
               type="button"
               className="btn"
               onClick={() => {
-                if (editing.locais && editing.locais.length === 0) return toast('Escolha pelo menos um sítio.', 'erro')
-                if (!editing.locais) return setEditing(null)
-                setItems((l) => l.map((x) => (x.id === editing.id ? { ...x, locais: editing.locais } : x)))
+                const locs = editing.locais ?? mediaPlaces(editing)
+                if (!editing.titulo.trim()) return toast('Escreva um título.', 'erro')
+                if (locs.length === 0) return toast('Escolha pelo menos um sítio.', 'erro')
+                if (editing.tipo !== 'imagem' && locs.includes('cartaz')) return toast('O cartaz principal só aceita fotografias.', 'erro')
+                const next: MediaItem = { ...editing, titulo: editing.titulo.trim(), legenda: editing.legenda?.trim() || undefined, locais: locs, link: safeLink(editing.link) }
+                setItems((l) => l.map((x) => (x.id === editing.id ? next : x)))
                 setEditing(null)
                 toast('Guardado')
               }}

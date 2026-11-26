@@ -93,8 +93,10 @@ export interface MediaItem {
   titulo: string
   legenda?: string
   ativo: boolean
-  /** Onde aparece: 'inicio' (secção na página inicial), 'topo' (por baixo do cartaz), 'produtos' (lista de produtos), 'produto:<id>'. Vazio = 'inicio'. */
+  /** Onde aparece: 'cartaz', 'topo', 'inicio', 'produtos', 'servicos', 'sobre', 'contacto', 'produto:<id>' ou 'categoria:<id>'. Vazio = 'inicio'. */
   locais?: string[]
+  /** Página do site que abre ao tocar (ex.: /produtos/x). Vazio = não abre nada. */
+  link?: string
 }
 
 export type CatalogOverride = Partial<Omit<Product, 'id'>> & { hidden?: boolean }

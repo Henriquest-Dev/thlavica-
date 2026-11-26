@@ -11,6 +11,7 @@ import { kitContents } from '../lib/kits'
 import { useReveal } from '../lib/useReveal'
 import { useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
+import { MediaSlot } from '../sections/Gallery'
 import { Arrow } from '../components/Arrow'
 import { ThankYou } from '../components/ThankYou'
 
@@ -142,6 +143,7 @@ export default function Contact() {
   return (
     <div className="page">
       <PageHead title="Pedir cotação" lead="Diga-nos o local, o uso e o que precisa. Respondemos com uma proposta." />
+      <MediaSlot where="contacto" />
       <div className="wrap contact">
         <form className="form reveal" onSubmit={submit} noValidate>
           <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hp" />

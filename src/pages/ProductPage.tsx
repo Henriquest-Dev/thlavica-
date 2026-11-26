@@ -14,6 +14,7 @@ import { needsChoice, unitSuffix } from '../lib/variants'
 import { kitLines, kitSeparateTotal } from '../lib/kits'
 import { ProductThumb } from '../components/ProductThumb'
 import { Ico } from '../components/Ico'
+import { ImageZoom } from '../components/ImageZoom'
 import NotFound from './NotFound'
 
 export default function ProductPage() {
@@ -44,7 +45,11 @@ export default function ProductPage() {
   useReveal(id)
   // fotografia extra escolhida (-1 = a principal); volta à principal ao mudar de produto
   const [gi, setGi] = useState(-1)
-  useEffect(() => setGi(-1), [id])
+  const [zoom, setZoom] = useState(false)
+  useEffect(() => {
+    setGi(-1)
+    setZoom(false)
+  }, [id])
   if (!p) return <NotFound />
   const related = catalog.filter((x) => x.id !== p.id && x.category === p.category).slice(0, 4)
   const off = activeDiscount(p)
@@ -53,6 +58,9 @@ export default function ProductPage() {
   const src = productImage(p)
   const kit = kitLines(p.kit, catalog)
   const separate = kitSeparateTotal(p.kit, catalog)
+  // imagens que se podem ampliar: a principal e as fotografias extra
+  const zoomImgs = [...(src ? [{ src, alt: p.name }] : []), ...(p.gallery ?? []).map((g, i) => ({ src: g, alt: `${p.name}, fotografia ${i + 1}` }))]
+  const zoomStart = gi >= 0 ? gi + (src ? 1 : 0) : 0
 
   return (
     <div className="page">
@@ -68,6 +76,14 @@ export default function ProductPage() {
               <ProductPic src={src} alt={p.name} photo={p.photo && !p.imgData} />
             ) : (
               <Ico name={categoryPic(p.category, categories)} size={160} className="pdp__picto" />
+            )}
+            {zoomImgs.length > 0 && (
+              <button type="button" className="pdp__zoom" onClick={() => setZoom(true)} aria-label={`Ampliar a imagem de ${p.name}`}>
+                <span className="pdp__zoomicon" aria-hidden="true">
+                  <Ico name="pesquisa" size={18} />
+                  <Ico name="mais" size={12} />
+                </span>
+              </button>
             )}
             {(p.gallery?.length ?? 0) > 0 && (
               <div className="pdp__thumbs" role="group" aria-label="Fotografias do produto">
@@ -195,6 +211,7 @@ export default function ProductPage() {
           </section>
         )}
       </div>
+      {zoom && zoomImgs.length > 0 && <ImageZoom images={zoomImgs} start={zoomStart} onClose={() => setZoom(false)} />}
     </div>
   )
 }

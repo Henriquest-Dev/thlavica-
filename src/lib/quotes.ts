@@ -37,7 +37,9 @@ export function useQuoteList() {
     [setItems],
   )
   const clear = useCallback(() => setItems([]), [setItems])
-  return { items, add, remove, setQty, clear, has: (id: string) => items.some((i) => i.id === id) }
+  /** Repõe a lista como estava (para "Desfazer"). */
+  const restore = useCallback((list: ListItem[]) => setItems(list), [setItems])
+  return { items, add, remove, setQty, clear, restore, has: (id: string) => items.some((i) => i.id === id) }
 }
 
 /** Guarda o pedido para o painel de administração (neste dispositivo, até ligar ao Supabase). */

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { mediaAt, useMedia, youtubeId } from '../lib/promos'
+import { Link } from 'react-router-dom'
+import { mediaAt, safeLink, useCarouselSettings, useMedia, youtubeId } from '../lib/promos'
 import { asset } from '../lib/asset'
 import type { MediaItem } from '../data/admin'
 import { Ico } from './Ico'
@@ -18,7 +19,17 @@ function Slide({ m, active, onPlaying, onEnded }: { m: MediaItem; active: boolea
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active])
 
-  if (m.tipo === 'imagem') return <img src={src(m.url)} alt={m.titulo} loading="lazy" draggable={false} />
+  if (m.tipo === 'imagem') {
+    const pic = <img src={src(m.url)} alt={m.titulo} loading="lazy" draggable={false} />
+    const to = safeLink(m.link)
+    return to ? (
+      <Link to={to} className="mc__link" tabIndex={active ? 0 : -1}>
+        {pic}
+      </Link>
+    ) : (
+      pic
+    )
+  }
 
   if (m.tipo === 'video')
     return <video src={src(m.url)} controls muted playsInline preload="metadata" aria-label={m.titulo} onPlay={() => onPlaying(true)} onPause={() => onPlaying(false)} onEnded={() => { onPlaying(false); onEnded() }} />
@@ -47,6 +58,7 @@ function Slide({ m, active, onPlaying, onEnded }: { m: MediaItem; active: boolea
 /** Carrossel de fotografias e vídeos gerido no painel de administração. */
 export function MediaCarousel({ autoplay = true, where }: { autoplay?: boolean; where?: string }) {
   const [all] = useMedia()
+  const conf = useCarouselSettings()
   // sem `where`, mostra tudo o que está ativo (pré-visualização do painel); com `where`, só o que foi escolhido para esse sítio
   const items = where ? mediaAt(all, where) : all.filter((m) => m.ativo)
   const track = useRef<HTMLUListElement>(null)
@@ -89,10 +101,10 @@ export function MediaCarousel({ autoplay = true, where }: { autoplay?: boolean; 
   const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const current = items[idx]
   useEffect(() => {
-    if (!autoplay || reduce || hold || playing || items.length < 2) return
-    const t = window.setTimeout(() => go(idx + 1), current?.tipo === 'imagem' ? 5000 : 7000)
+    if (!autoplay || !conf.auto || reduce || hold || playing || items.length < 2) return
+    const t = window.setTimeout(() => go(idx + 1), (current?.tipo === 'imagem' ? conf.segundos : Math.max(7, conf.segundos)) * 1000)
     return () => window.clearTimeout(t)
-  }, [autoplay, reduce, hold, playing, idx, items.length, current?.tipo, go])
+  }, [autoplay, conf.auto, conf.segundos, reduce, hold, playing, idx, items.length, current?.tipo, go])
 
   if (!items.length) return <p className="muted">Sem itens ativos no carrossel.</p>
 

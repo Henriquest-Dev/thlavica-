@@ -2512,7 +2512,7 @@ main:focus {
 }
 .drawer__list li {
   display: grid;
-  grid-template-columns: 56px 1fr auto;
+  grid-template-columns: 56px minmax(0, 1fr) auto auto;
   gap: 14px;
   align-items: start;
   padding: 14px 0;
@@ -3989,4 +3989,284 @@ a.optional {
 .bankf__lead {
   margin: 0 0 14px;
   font-size: 14px;
+}
+
+/* ---------- ampliar a imagem do produto ---------- */
+.pdp__zoom {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.pdp__zoomicon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 92%);
+  color: var(--ink, #0b2545);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 22%);
+  transition: transform 0.2s ease;
+}
+.pdp__zoomicon svg:last-child {
+  position: absolute;
+  top: 11px;
+  left: 13px;
+  stroke-width: 3;
+}
+.pdp__zoom:hover .pdp__zoomicon,
+.pdp__zoom:focus-visible .pdp__zoomicon {
+  transform: scale(1.08);
+}
+.pdp__zoom:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: -3px;
+  border-radius: 28px;
+}
+.zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  background: rgb(6 18 36 / 96%);
+  color: #fff;
+  overscroll-behavior: contain;
+  animation: zoom-in 0.18s ease-out;
+}
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+  }
+}
+.zoom__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(10px, env(safe-area-inset-top)) 12px 6px 18px;
+}
+.zoom__count {
+  font-size: 14px;
+  opacity: 0.8;
+}
+.zoom__btn,
+.zoom__pct {
+  display: grid;
+  place-items: center;
+  min-width: 46px;
+  height: 46px;
+  padding: 0 10px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.zoom__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.zoom__btn:not(:disabled):hover,
+.zoom__pct:hover {
+  background: rgb(255 255 255 / 20%);
+}
+.zoom__btn:focus-visible,
+.zoom__pct:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 2px;
+}
+.zoom__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  touch-action: none;
+  cursor: zoom-in;
+  user-select: none;
+}
+.zoom__stage.is-zoomed {
+  cursor: grab;
+}
+.zoom__stage.is-zoomed:active {
+  cursor: grabbing;
+}
+.zoom__stage img {
+  max-width: min(94vw, 1400px);
+  max-height: 100%;
+  object-fit: contain;
+  transform-origin: center;
+  transition: transform 0.18s ease-out;
+  will-change: transform;
+  -webkit-user-drag: none;
+}
+.zoom__stage img.is-moving {
+  transition: none;
+}
+.zoom__nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.zoom__nav--prev {
+  left: 12px;
+}
+.zoom__nav--next {
+  right: 12px;
+}
+.zoom__tools {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 10px;
+}
+.zoom__pct {
+  min-width: 76px;
+}
+.zoom__hint {
+  margin: 0;
+  padding: 8px 16px max(14px, env(safe-area-inset-bottom));
+  text-align: center;
+  font-size: 13px;
+  opacity: 0.7;
+}
+@media (prefers-reduced-motion: reduce) {
+  .zoom,
+  .zoom__stage img {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* ---------- cartaz principal com fotografias do painel ---------- */
+.hs {
+  position: relative;
+  aspect-ratio: 1983 / 793;
+  overflow: hidden;
+  background: #081c36;
+}
+.hs__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.7s ease, visibility 0s linear 0.7s;
+}
+.hs__slide.is-on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.7s ease;
+}
+.hs__slide a {
+  display: block;
+  height: 100%;
+}
+.hs__slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hs__ctrl {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(8px, 1.6vw, 18px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgb(8 28 54 / 55%);
+  transform: translateX(-50%);
+  backdrop-filter: blur(4px);
+}
+.hs__ctrl > button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 14%);
+  color: #fff;
+  cursor: pointer;
+}
+.hs__ctrl > button:hover {
+  background: rgb(255 255 255 / 26%);
+}
+.hs__dots {
+  display: flex;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hs__dots button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.hs__dots button::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 55%);
+  transition: width 0.25s ease;
+}
+.hs__dots button.is-on::before {
+  width: 20px;
+  background: var(--amber);
+}
+.hs button:focus-visible,
+.hs a:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hs__slide,
+  .hs__slide.is-on {
+    transition: none;
+  }
+}
+.mc__link {
+  display: block;
+  height: 100%;
+}
+.drawer__price {
+  padding-top: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+}
+.drawer__price .muted {
+  font-weight: 400;
+  font-size: 12px;
+}
+.drawer__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+.drawer__total strong {
+  font-size: 18px;
+  color: var(--navy);
 }

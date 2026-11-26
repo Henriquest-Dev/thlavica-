@@ -45,8 +45,8 @@ export default function Settings() {
       condicoes: v.condicoes?.trim() || undefined,
     }
     setV(next)
-    // as categorias também vivem nas definições: não se perdem ao gravar os contactos
-    const ok = writeStored('settings', { ...next, categorias: readStored<Partial<Contact>>('settings', {}).categorias })
+    // as categorias e o carrossel também vivem nas definições: não se perdem ao gravar os contactos
+    const ok = writeStored('settings', { ...readStored<Record<string, unknown>>('settings', {}), ...next })
     toast(ok ? 'Contactos guardados. Já aparecem no site.' : 'Não foi possível guardar.', ok ? 'ok' : 'erro')
   }
 
@@ -101,8 +101,9 @@ export default function Settings() {
               type="button"
               className="btn btn--line"
               onClick={() => {
-                const categorias = readStored<Partial<Contact>>('settings', {}).categorias
-                if (categorias) writeStored('settings', { categorias })
+                // repõe só os contactos: as categorias e o carrossel ficam como estão
+                const { categorias, carrossel } = readStored<Record<string, unknown>>('settings', {})
+                if (categorias || carrossel) writeStored('settings', { categorias, carrossel })
                 else removeStored('settings')
                 setV(defaultContact)
                 toast('Contactos de origem repostos')

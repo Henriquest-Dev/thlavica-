@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Promo } from '../data/admin'
-import { endInDays, MAX_PROMO_PRODUCTS, normalizePromo, promoLink, promoLive, promoProducts, promoStyle, mediaAt, mediaPlaces } from './promos'
+import { endInDays, MAX_PROMO_PRODUCTS, normalizePromo, promoLink, promoLive, promoProducts, promoStyle, mediaAt, mediaPlaces, cleanCarousel, safeLink } from './promos'
 
 const base: Promo = { id: 'p', formato: 'faixa', titulo: 'T', texto: '', cta: 'Ver', destino: '/produtos', ativo: true }
 
@@ -67,5 +67,31 @@ describe('onde aparece o carrossel', () => {
     expect(mediaAt(l, 'produto:cabo')).toHaveLength(1)
     expect(mediaAt(l, 'produto:outro')).toHaveLength(0)
     expect(mediaAt(l, 'produtos')).toHaveLength(1)
+  })
+})
+
+describe('carrossel e cartaz principal', () => {
+  it('aceita só definições bem formadas', () => {
+    expect(cleanCarousel(undefined)).toEqual({ auto: true, segundos: 5, cartazOrigem: true })
+    expect(cleanCarousel({ auto: false, segundos: 99, cartazOrigem: 'x' })).toEqual({ auto: false, segundos: 30, cartazOrigem: true })
+    expect(cleanCarousel({ segundos: 1 }).segundos).toBe(2)
+  })
+
+  it('as ligações só levam a páginas do próprio site', () => {
+    expect(safeLink('/produtos/bomba-1')).toBe('/produtos/bomba-1')
+    expect(safeLink('https://exemplo.com')).toBeUndefined()
+    expect(safeLink('//exemplo.com')).toBeUndefined()
+    expect(safeLink('javascript:alert(1)')).toBeUndefined()
+    expect(safeLink(3)).toBeUndefined()
+  })
+
+  it('o cartaz principal só mostra fotografias', () => {
+    const items = [
+      { id: 'a', tipo: 'imagem', ativo: true, locais: ['cartaz'] },
+      { id: 'b', tipo: 'video', ativo: true, locais: ['cartaz', 'inicio'] },
+      { id: 'c', tipo: 'imagem', ativo: false, locais: ['cartaz'] },
+    ]
+    expect(mediaAt(items, 'cartaz').map((m) => m.id)).toEqual(['a'])
+    expect(mediaAt(items, 'inicio').map((m) => m.id)).toEqual(['b'])
   })
 })

@@ -2264,3 +2264,21 @@
   border-radius: 12px;
   background: #fff;
 }
+.cconf {
+  display: grid;
+  gap: 14px;
+}
+.places__cats {
+  margin-top: 10px;
+}
+/* Vídeos e fotos: o painel é estreito, por isso o interruptor e as ações vão por baixo do texto */
+.arow.arow--media {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+.arow--media > .switch,
+.arow--media > .arow__act {
+  grid-column: 2;
+  justify-content: flex-start;
+  justify-self: start;
+}

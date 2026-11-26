@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useStored } from './store'
+import { updateStored, useStored } from './store'
 import type { Promo, PromoFormat, PromoStyle, PromoTarget, MediaItem } from '../data/admin'
 import { DEFAULT_MEDIA } from '../data/admin'
 
@@ -27,17 +27,61 @@ export function useMedia() {
 }
 
 /** Onde um vídeo ou fotografia pode aparecer (além de 'produto:<id>', para um produto em concreto). */
-export const MEDIA_PLACES: { id: string; label: string; hint: string }[] = [
-  { id: 'inicio', label: 'Página inicial', hint: 'Na secção “O nosso trabalho”, mais abaixo' },
+export const MEDIA_PLACES: { id: string; label: string; hint: string; onlyImages?: boolean }[] = [
+  { id: 'cartaz', label: 'Cartaz principal (banner)', hint: 'No lugar do cartaz grande do início, a passar uns atrás dos outros. Só fotografias; use imagens largas, por exemplo 2000 × 800.', onlyImages: true },
   { id: 'topo', label: 'Topo da página inicial', hint: 'Logo por baixo do cartaz, a primeira coisa que o cliente vê' },
+  { id: 'inicio', label: 'Página inicial (mais abaixo)', hint: 'Na secção “O nosso trabalho”' },
   { id: 'produtos', label: 'Lista de produtos', hint: 'No início da página Produtos' },
+  { id: 'servicos', label: 'Serviços', hint: 'No início da página Serviços' },
+  { id: 'sobre', label: 'Sobre nós', hint: 'No início da página Sobre' },
+  { id: 'contacto', label: 'Pedir cotação', hint: 'No início da página do formulário' },
 ]
+
+/* ---------------------------------------------------------------- como passa o carrossel */
+
+export interface CarouselSettings {
+  /** Passa sozinho de uma imagem para a seguinte. */
+  auto: boolean
+  /** Segundos em cada fotografia (os vídeos esperam pelo menos 7). */
+  segundos: number
+  /** O cartaz de origem continua a aparecer no cartaz principal, antes das fotografias do painel. */
+  cartazOrigem: boolean
+}
+
+export const CAROUSEL_DEFAULTS: CarouselSettings = { auto: true, segundos: 5, cartazOrigem: true }
+export const CAROUSEL_SECONDS = [3, 5, 8, 12]
+
+/** Os dados vêm do servidor: só se aceita o que está bem formado. */
+export function cleanCarousel(v: unknown): CarouselSettings {
+  const o = (v && typeof v === 'object' ? v : {}) as Partial<Record<keyof CarouselSettings, unknown>>
+  const seg = Number(o.segundos)
+  return {
+    auto: typeof o.auto === 'boolean' ? o.auto : CAROUSEL_DEFAULTS.auto,
+    segundos: Number.isFinite(seg) ? Math.min(30, Math.max(2, Math.round(seg))) : CAROUSEL_DEFAULTS.segundos,
+    cartazOrigem: typeof o.cartazOrigem === 'boolean' ? o.cartazOrigem : CAROUSEL_DEFAULTS.cartazOrigem,
+  }
+}
+
+const NO_SETTINGS: { carrossel?: unknown } = {}
+
+export function useCarouselSettings(): CarouselSettings {
+  const [s] = useStored<{ carrossel?: unknown }>('settings', NO_SETTINGS)
+  return useMemo(() => cleanCarousel(s.carrossel), [s.carrossel])
+}
+
+export function saveCarouselSettings(c: CarouselSettings): boolean {
+  return updateStored<{ carrossel?: unknown }>('settings', NO_SETTINGS, (s) => ({ ...s, carrossel: cleanCarousel(c) }))
+}
+
+/** Ligação de uma fotografia: só endereços do próprio site (ex.: /produtos/x), nunca externos. */
+export const safeLink = (v: unknown): string | undefined => (typeof v === 'string' && /^\/[a-z0-9/_-]*$/i.test(v) && !v.startsWith('//') ? v : undefined)
 
 /** Locais de um item; sem nada guardado (itens antigos), aparece na página inicial. */
 export const mediaPlaces = (m: { locais?: string[] }): string[] => (m.locais && m.locais.length ? m.locais : ['inicio'])
 
 /** Itens ativos que aparecem em determinado sítio. */
-export const mediaAt = <T extends { ativo: boolean; locais?: string[] }>(items: T[], where: string): T[] => items.filter((m) => m.ativo && mediaPlaces(m).includes(where))
+export const mediaAt = <T extends { ativo: boolean; locais?: string[]; tipo?: string }>(items: T[], where: string): T[] =>
+  items.filter((m) => m.ativo && mediaPlaces(m).includes(where) && (where !== 'cartaz' || m.tipo === 'imagem'))
 
 export function youtubeId(v: string): string | null {
   const m = v.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/) ?? v.match(/^([\w-]{11})$/)

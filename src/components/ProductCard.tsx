@@ -11,7 +11,7 @@ import { needsChoice, unitSuffix } from '../lib/variants'
 import { useUi } from './Ui'
 
 export function AddToList({ p, className = '', label = false }: { p: CatalogProduct; className?: string; label?: boolean }) {
-  const { has, add, remove } = useQuoteList()
+  const { items, has, add, remove, restore } = useQuoteList()
   const { toast, openList } = useUi()
   const on = has(p.id)
   return (
@@ -27,8 +27,11 @@ export function AddToList({ p, className = '', label = false }: { p: CatalogProd
             : `Adicionar ${p.name} à lista de cotação`
       }
       onClick={() => {
-        if (on) remove(p.id)
-        else {
+        if (on) {
+          const before = items
+          remove(p.id)
+          toast('Retirado da lista de cotação', { label: 'Desfazer', run: () => restore(before) })
+        } else {
           add(p.id)
           toast('Adicionado à lista de cotação', { label: 'Ver lista', run: openList })
         }

@@ -4,14 +4,15 @@ import { useCatalog } from '../lib/catalog'
 import { itemKey, useQuoteList } from '../lib/quotes'
 import { isMeters, picksLabel, qtyLabel } from '../lib/variants'
 import { wa } from '../data/site'
+import { finalPrice, priceLabel } from '../lib/pricing'
 import { useUi } from './Ui'
 import { Ico } from './Ico'
 import { ProductThumb } from './ProductThumb'
 
 /** Painel lateral com a lista de cotação do visitante. */
 export function QuoteDrawer() {
-  const { listOpen, closeList } = useUi()
-  const { items, remove, setQty, clear } = useQuoteList()
+  const { listOpen, closeList, toast } = useUi()
+  const { items, remove, setQty, clear, restore } = useQuoteList()
   const catalog = useCatalog(true)
   const nav = useNavigate()
 
@@ -31,6 +32,18 @@ export function QuoteDrawer() {
   const rows = items
     .map((i) => ({ ...i, p: catalog.find((p) => p.id === i.id) }))
     .filter((r): r is typeof r & { p: NonNullable<typeof r.p> } => Boolean(r.p))
+
+  // preço de referência de cada linha (com desconto em vigor); o total só aparece se todas tiverem preço
+  const lineTotal = (r: (typeof rows)[number]) => {
+    const u = finalPrice(r.p)
+    return u === undefined ? undefined : Math.round(u * r.qtd * 100) / 100
+  }
+  const totals = rows.map(lineTotal)
+  const total = totals.every((t) => t !== undefined) ? totals.reduce<number>((a, t) => a + (t ?? 0), 0) : undefined
+  const undo = (text: string) => {
+    const before = items
+    return () => toast(text, { label: 'Desfazer', run: () => restore(before) })
+  }
 
   const message = () =>
     [
@@ -85,7 +98,15 @@ export function QuoteDrawer() {
                         </button>
                       </div>
                     </div>
-                    <button type="button" className="drawer__rm" onClick={() => remove(key)} aria-label={`Retirar ${r.p.name}${picksLabel(r.opcoes) ? ` (${picksLabel(r.opcoes)})` : ''}`}>
+                    <span className="drawer__price">{lineTotal(r) !== undefined ? priceLabel(lineTotal(r)!) : <span className="muted">Na cotação</span>}</span>
+                    <button
+                      type="button"
+                      className="drawer__rm"
+                      onClick={() => {
+                        const done = undo(`${r.p.name} retirado da lista`)
+                        remove(key)
+                        done()
+                      }} aria-label={`Retirar ${r.p.name}${picksLabel(r.opcoes) ? ` (${picksLabel(r.opcoes)})` : ''}`}>
                       <Ico name="fechar" size={16} />
                     </button>
                   </li>
@@ -93,6 +114,13 @@ export function QuoteDrawer() {
               })}
             </ul>
             <footer className="drawer__foot">
+              <p className="drawer__total">
+                <span>
+                  {rows.length} {rows.length === 1 ? 'produto' : 'produtos'}
+                  {total !== undefined ? ' · total de referência' : ''}
+                </span>
+                {total !== undefined ? <strong>{priceLabel(total)}</strong> : <span className="muted">Alguns preços vêm na cotação</span>}
+              </p>
               <button
                 type="button"
                 className="pill pill--dark"
@@ -106,7 +134,15 @@ export function QuoteDrawer() {
               <a className="drawer__alt optional" href={wa(message())} target="_blank" rel="noopener noreferrer">
                 Prefere falar no WhatsApp?
               </a>
-              <button type="button" className="drawer__clear" onClick={clear}>
+              <button
+                type="button"
+                className="drawer__clear"
+                onClick={() => {
+                  const done = undo('Lista limpa')
+                  clear()
+                  done()
+                }}
+              >
                 Limpar a lista
               </button>
             </footer>

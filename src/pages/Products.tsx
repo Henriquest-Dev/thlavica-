@@ -57,7 +57,7 @@ export default function Products() {
         title={current ? current.name : 'Produtos'}
         lead="Painéis, inversores, baterias, bombas e termoacumuladores. Escolha o que precisa e peça a sua cotação."
       />
-      {!current && <MediaSlot where="produtos" />}
+      {current ? <MediaSlot where={`categoria:${current.id}`} /> : <MediaSlot where="produtos" />}
       <div className="wrap">
         <div className="cat-bar">
           <div className="tabs" role="tablist" aria-label="Categorias">

@@ -4,6 +4,7 @@ import { img } from '../lib/asset'
 import { useReveal } from '../lib/useReveal'
 import { useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
+import { MediaSlot } from '../sections/Gallery'
 import { Arrow } from '../components/Arrow'
 import { Ico } from '../components/Ico'
 
@@ -21,6 +22,7 @@ export default function About() {
         title="Sobre a Tlhavika"
         lead="Empresa moçambicana de energia solar e soluções de água, em Maputo. Fornece painéis, inversores, baterias, bombas de água e termoacumuladores solares."
       />
+      <MediaSlot where="sobre" />
       <section className="wrap about">
         <figure className="about__photo reveal">
           <img src={img('foto-16')} alt="Técnico junto a um termoacumulador solar Tlhavika num telhado de telha" loading="lazy" width={900} height={900} />
