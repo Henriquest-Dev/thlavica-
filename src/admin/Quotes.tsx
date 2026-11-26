@@ -95,7 +95,7 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
               value=""
               onChange={(e) => {
                 const prod = catalog.find((c) => c.id === e.target.value)
-                if (prod) set('linhas', [...p.linhas, lineFromProduct(prod)])
+                if (prod) set('linhas', [...p.linhas, lineFromProduct(prod, catalog)])
               }}
               aria-label="Acrescentar produto"
             >

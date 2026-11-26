@@ -4,6 +4,7 @@ import type { CatalogOverride, CustomProduct } from '../data/admin'
 import { useStored } from './store'
 import { asset } from './asset'
 import { cleanOptions } from './variants'
+import { cleanKit } from './kits'
 
 const NO_CUSTOM: CustomProduct[] = []
 const NO_OVERRIDES: Record<string, CatalogOverride> = {}
@@ -18,8 +19,14 @@ export function mergeCatalog(baseList: Product[], custom: CustomProduct[], over:
     // os dados das opções e da unidade vêm do servidor: só se aceita o que está bem formado
     return m.options || m.unit ? { ...m, options: cleanOptions(m.options), unit: m.unit === 'm' ? ('m' as const) : undefined } : m
   })
-  const all = [...merged, ...custom]
-  return includeHidden ? all : all.filter((p) => !p.hidden)
+  const all: CatalogProduct[] = [...merged, ...custom].map((p) => (p.kit ? { ...p, kit: cleanKit(p.kit, p.id) } : p))
+  // um kit sem imagem própria mostra a do primeiro produto que inclui
+  const withImg = all.map((p) => {
+    if (!p.kit?.length || p.img || p.imgData) return p
+    const first = all.find((x) => x.id === p.kit![0].id)
+    return first ? { ...p, img: first.img, imgData: first.imgData } : p
+  })
+  return includeHidden ? withImg : withImg.filter((p) => !p.hidden)
 }
 
 /** Catálogo do site (sem ocultos) ou do painel (`includeHidden`). */

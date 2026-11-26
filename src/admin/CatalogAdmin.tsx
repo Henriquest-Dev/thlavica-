@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { categories, categoryPic, type CategoryId } from '../data/site'
 import { MAX_GALLERY, blankDraft, draftFromProduct, parsePrice, useCatalogEditor, type ProductDraft } from '../lib/catalogEdit'
+import { MAX_KIT_ITEMS, kitSeparateTotal } from '../lib/kits'
+import { money } from '../lib/proposal'
+import { useCatalog, productImage } from '../lib/catalog'
 import { MAX_OPTION_GROUPS, MAX_OPTION_VALUES, OPTION_PRESETS } from '../lib/variants'
 import { PRODUCT_TYPES, SPEC_SUGGESTIONS, exampleFor, typeOfCategory } from '../lib/specPresets'
 import { asset } from '../lib/asset'
@@ -141,6 +144,78 @@ function OptionsEditor({ value, onChange }: { value: { name: string; values: str
   )
 }
 
+/** Kit: escolher os produtos incluídos (pesquisa com foto) e a quantidade de cada um. */
+function KitEditor({ selfId, value, onChange, onUseSum }: { selfId: string; value: { id: string; qtd: number }[]; onChange: (v: { id: string; qtd: number }[]) => void; onUseSum: (sum: number) => void }) {
+  const catalog = useCatalog(true)
+  const [q, setQ] = useState('')
+  const list = catalog.filter((c) => c.id !== selfId && !c.kit?.length && (!q || norm(`${c.name} ${c.brand ?? ''} ${c.model ?? ''}`).includes(norm(q)))).slice(0, 24)
+  const setQty = (id: string, qtd: number) => onChange(value.map((k) => (k.id === id ? { ...k, qtd: Math.max(1, Math.min(999, Math.round(qtd) || 1)) } : k)))
+  const sum = kitSeparateTotal(value, catalog)
+  return (
+    <div className="kited">
+      {value.length > 0 && (
+        <ul className="kited__list">
+          {value.map((k) => {
+            const c = catalog.find((x) => x.id === k.id)
+            const src = c ? productImage(c, true) : undefined
+            return (
+              <li key={k.id}>
+                <span className="kited__img">{src ? <img src={src} alt="" /> : <Ico name="caixa" size={20} />}</span>
+                <span className="kited__name">{c?.name ?? '(produto retirado)'}</span>
+                <span className="qty" role="group" aria-label={`Quantidade de ${c?.name ?? ''}`}>
+                  <button type="button" onClick={() => setQty(k.id, k.qtd - 1)} aria-label="Menos">
+                    <Ico name="menos" size={14} />
+                  </button>
+                  <span>{k.qtd}</span>
+                  <button type="button" onClick={() => setQty(k.id, k.qtd + 1)} aria-label="Mais">
+                    <Ico name="mais" size={14} />
+                  </button>
+                </span>
+                <button type="button" className="icon" aria-label={`Tirar ${c?.name ?? ''} do kit`} onClick={() => onChange(value.filter((x) => x.id !== k.id))}>
+                  <Ico name="fechar" size={16} />
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      {sum !== undefined && (
+        <p className="muted small">
+          Em separado custaria {money(sum)}.{' '}
+          <button type="button" className="linkbtn" onClick={() => onUseSum(sum)}>
+            Usar este valor como preço do kit
+          </button>
+        </p>
+      )}
+      {value.length < MAX_KIT_ITEMS && (
+        <div className="picker">
+          <input className="picker__search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Procurar produto para juntar ao kit" aria-label="Procurar produto" />
+          <ul className="picker__grid">
+            {list.map((c) => {
+              const on = value.some((k) => k.id === c.id)
+              const src = productImage(c, true)
+              return (
+                <li key={c.id}>
+                  <button type="button" className={`pick${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => onChange(on ? value.filter((k) => k.id !== c.id) : [...value, { id: c.id, qtd: 1 }])}>
+                    <span className="pick__img">{src ? <img src={src} alt="" loading="lazy" /> : <Ico name="caixa" size={26} />}</span>
+                    <span className="pick__name">{c.name}</span>
+                    {on && (
+                      <span className="pick__tick" aria-hidden="true">
+                        <Ico name="visto" size={14} />
+                      </span>
+                    )}
+                  </button>
+                </li>
+              )
+            })}
+            {list.length === 0 && <li className="picker__none">Nenhum produto com esse nome.</li>}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /** Cartão tal como aparece na lista de produtos do site, para ver o resultado enquanto se escreve. */
 function Preview({ d, src }: { d: ProductDraft; src?: string }) {
   const price = parsePrice(d.price)
@@ -233,6 +308,7 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
           e.preventDefault()
           if (!d.name.trim()) return setErr('Indique o nome do produto.')
           if (priceBad) return setErr('O preço não é válido. Escreva só números, por exemplo 15 500.')
+          if (d.category === 'kits' && (d.kit.length === 0 || (d.kit.length === 1 && d.kit[0].qtd < 2))) return setErr('Um kit precisa de pelo menos dois produtos (ou um produto em quantidade maior que 1).')
           onSave(d)
         }}
       >
@@ -326,6 +402,14 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
                 {dur === 'data' && <input type="date" value={d.discountUntil} onChange={(e) => set('discountUntil', e.target.value)} aria-label="Último dia do desconto" />}
                 {dur !== 'sem' && dur !== 'data' && d.discountUntil && <small className="muted">Termina no dia {new Date(d.discountUntil + 'T12:00').toLocaleDateString('pt-PT')}.</small>}
               </div>
+            )}
+
+            {(d.category === 'kits' || d.kit.length > 0) && (
+              <>
+                <h3 className="sub">Produtos do kit</h3>
+                <p className="muted small">Escolha os produtos que vêm no kit e quantos de cada. O cliente vê a lista na página do kit e quanto poupa.</p>
+                <KitEditor selfId={d.id} value={d.kit} onChange={(v) => set('kit', v)} onUseSum={(sum) => set('price', String(sum))} />
+              </>
             )}
 
             <h3 className="sub">Como se vende</h3>

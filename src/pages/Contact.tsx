@@ -6,6 +6,7 @@ import { useCatalog } from '../lib/catalog'
 import { activeDiscount } from '../lib/pricing'
 import { saveQuoteRequest, takePrefill, useQuoteList } from '../lib/quotes'
 import { isMeters, picksLabel, qtyLabel } from '../lib/variants'
+import { kitContents } from '../lib/kits'
 import { useReveal } from '../lib/useReveal'
 import { useSeo } from '../lib/seo'
 import { PageHead } from '../components/PageHead'
@@ -53,7 +54,7 @@ export default function Contact() {
     const desconto = activeDiscount(p)
     return {
       produtoId: p.id,
-      nome: p.name,
+      nome: p.kit?.length ? `${p.name} (inclui ${kitContents(p.kit, products)})` : p.name,
       qtd,
       ...(opcoes ? { opcoes } : {}),
       ...(isMeters(p) ? { unidade: 'm' as const } : {}),

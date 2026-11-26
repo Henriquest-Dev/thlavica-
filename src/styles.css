@@ -3937,3 +3937,42 @@ a.optional {
   padding-block: 24px 8px;
   background: transparent;
 }
+
+/* Kits: o que inclui */
+.kitl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.kitl li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+}
+.kitl__name {
+  color: var(--navy);
+  text-decoration: none;
+  font-weight: 500;
+}
+.kitl__name:hover {
+  text-decoration: underline;
+}
+.kitl__price {
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.kitl__save {
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+.kitl__save strong {
+  color: #1f7a3a;
+}

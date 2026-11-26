@@ -2187,3 +2187,57 @@
   font-size: 13px;
   color: var(--a-muted);
 }
+
+/* Editor de kits */
+.kited {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.kited__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.kited__list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 8px;
+  border: 1px solid var(--a-line);
+  border-radius: 12px;
+  background: #fff;
+}
+.kited__img {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--a-bg);
+  overflow: hidden;
+}
+.kited__img img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+}
+.kited__name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.kited .qty {
+  margin-top: 0;
+}
+.linkbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #1d5fb0;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

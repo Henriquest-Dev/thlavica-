@@ -10,6 +10,8 @@ import { AddToList, ProductCard } from '../components/ProductCard'
 import { BuyOptions } from '../components/BuyOptions'
 import { MediaSlot } from '../sections/Gallery'
 import { needsChoice, unitSuffix } from '../lib/variants'
+import { kitLines, kitSeparateTotal } from '../lib/kits'
+import { ProductThumb } from '../components/ProductThumb'
 import { Ico } from '../components/Ico'
 import NotFound from './NotFound'
 
@@ -47,6 +49,8 @@ export default function ProductPage() {
   const price = finalPrice(p)
   const text = `Olá Tlhavika, gostaria de uma cotação para: ${p.name}${p.brand ? ` (${p.brand})` : ''}.`
   const src = productImage(p)
+  const kit = kitLines(p.kit, catalog)
+  const separate = kitSeparateTotal(p.kit, catalog)
 
   return (
     <div className="page">
@@ -117,6 +121,30 @@ export default function ProductPage() {
                 Prefere falar no WhatsApp?
               </a>
             </p>
+
+            {kit.length > 0 && (
+              <section className="pdp__block" aria-labelledby="kit-t">
+                <h2 id="kit-t" className="h3">
+                  Este kit inclui
+                </h2>
+                <ul className="kitl">
+                  {kit.map(({ item, p: c }) => (
+                    <li key={c.id}>
+                      <ProductThumb p={c} size={52} />
+                      <Link to={`/produtos/${c.id}`} className="kitl__name">
+                        <strong>{item.qtd}×</strong> {c.name}
+                      </Link>
+                      {finalPrice(c) !== undefined && <span className="kitl__price">{priceLabel(finalPrice(c)! * item.qtd)}</span>}
+                    </li>
+                  ))}
+                </ul>
+                {separate !== undefined && price !== undefined && separate > price && (
+                  <p className="kitl__save">
+                    Comprados em separado: <s>{priceLabel(separate)}</s> · No kit poupa <strong>{priceLabel(separate - price)}</strong>
+                  </p>
+                )}
+              </section>
+            )}
 
             {p.specs.length > 0 && (
               <section className="pdp__block" aria-labelledby="specs-t">

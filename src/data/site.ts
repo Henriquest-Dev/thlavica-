@@ -168,6 +168,7 @@ export type CategoryId =
   | 'bombas-solares'
   | 'partes-hidraulicas'
   | 'motores'
+  | 'kits'
   | 'termoacumuladores'
   | 'acessorios'
 
@@ -181,6 +182,7 @@ export const categories: { id: CategoryId; name: string; solution: SolutionId; t
   { id: 'bombas-submersiveis', name: 'Bombas submersíveis', solution: 'bombagem', text: 'Extração de furos e poços.', pic: 'submersivel' },
   { id: 'bombas-solares', name: 'Bombas solares', solution: 'bombagem', text: 'Alimentadas por painéis.', pic: 'bombasolar' },
   { id: 'partes-hidraulicas', name: 'Partes hidráulicas', solution: 'bombagem', text: 'Corpos de bomba de 4", sem motor.', pic: 'submersivel' },
+  { id: 'kits', name: 'Kits e combos', solution: 'bombagem', text: 'Vários produtos num só, a preço de kit.', pic: 'bombasolar' },
   { id: 'motores', name: 'Motores submersíveis', solution: 'bombagem', text: 'Motores de 4", 220 V e 380 V.', pic: 'submersivel' },
   { id: 'termoacumuladores', name: 'Termoacumuladores', solution: 'aquecimento-solar', text: 'Água quente solar.', pic: 'termo' },
   { id: 'acessorios', name: 'Acessórios', solution: 'energia-solar', text: 'Cabos, quadros de proteção e caixas de comando.', pic: 'candeeiro' },

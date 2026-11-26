@@ -1,6 +1,7 @@
 import type { Proposal, ProposalLine, QuoteRequest } from '../data/admin'
 import { activeDiscount } from './pricing'
 import { uid } from './store'
+import { kitContents } from './kits'
 
 /** Cotações preparadas no painel: numeração, totais e texto para enviar ao cliente. */
 
@@ -42,11 +43,13 @@ interface CatalogRef {
   brand?: string
   price?: number
   unit?: 'm' | ''
+  kit?: { id: string; qtd: number }[]
   discount?: number
   discountUntil?: string
 }
 
-const label = (p: CatalogRef) => p.name + (p.brand ? ` (${p.brand})` : '')
+const label = (p: CatalogRef, catalog: CatalogRef[] = []) =>
+  p.name + (p.brand ? ` (${p.brand})` : '') + (p.kit?.length && catalog.length ? ` — inclui ${kitContents(p.kit, catalog)}` : '')
 
 export function newProposal(existing: Pick<Proposal, 'numero'>[], catalog: CatalogRef[], request?: QuoteRequest): Proposal {
   const linhas: ProposalLine[] = (request?.itens ?? []).map((i) => {
@@ -58,7 +61,7 @@ export function newProposal(existing: Pick<Proposal, 'numero'>[], catalog: Catal
     return {
       id: uid(),
       produtoId: i.produtoId,
-      descricao: (prod ? label(prod) : i.nome) + (i.opcoes ? ` — ${i.opcoes}` : '') + (metros ? ' (preço por metro)' : ''),
+      descricao: (prod ? label(prod, catalog) : i.nome) + (i.opcoes ? ` — ${i.opcoes}` : '') + (metros ? ' (preço por metro)' : ''),
       qtd: i.qtd,
       preco,
       ...(metros ? { unidade: 'm' as const } : {}),
@@ -80,12 +83,12 @@ export function newProposal(existing: Pick<Proposal, 'numero'>[], catalog: Catal
   }
 }
 
-export function lineFromProduct(p: CatalogRef): ProposalLine {
+export function lineFromProduct(p: CatalogRef, catalog: CatalogRef[] = []): ProposalLine {
   const desconto = activeDiscount(p)
   return {
     id: uid(),
     produtoId: p.id,
-    descricao: label(p) + (p.unit === 'm' ? ' (preço por metro)' : ''),
+    descricao: label(p, catalog) + (p.unit === 'm' ? ' (preço por metro)' : ''),
     qtd: 1,
     preco: p.price ?? 0,
     ...(p.unit === 'm' ? { unidade: 'm' as const } : {}),

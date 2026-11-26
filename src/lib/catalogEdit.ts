@@ -2,6 +2,7 @@ import type { CategoryId } from '../data/site'
 import type { CatalogOverride, CustomProduct } from '../data/admin'
 import { updateStored, uid } from './store'
 import { cleanOptions } from './variants'
+import { cleanKit } from './kits'
 import { useCatalog, type CatalogProduct } from './catalog'
 
 /**
@@ -36,6 +37,8 @@ export interface ProductDraft {
   options: { name: string; values: string[] }[]
   /** 'm' = vendido ao metro. */
   unit: '' | 'm'
+  /** Kit: produtos incluídos e quantidades (vazio = produto normal). */
+  kit: { id: string; qtd: number }[]
   imgData?: string
   /** Recorte de origem (só leitura, para pré-visualizar). */
   img: string
@@ -64,6 +67,7 @@ export const blankDraft = (): ProductDraft => ({
   includes: '',
   gallery: [],
   options: [],
+  kit: [],
   unit: '',
   img: '',
 })
@@ -86,6 +90,7 @@ export const draftFromProduct = (p: CatalogProduct): ProductDraft => ({
   includes: (p.includes ?? []).join('\n'),
   gallery: [...(p.gallery ?? [])],
   options: (p.options ?? []).map((g) => ({ name: g.name, values: [...g.values] })),
+  kit: (p.kit ?? []).map((k) => ({ ...k })),
   unit: p.unit === 'm' ? 'm' : '',
   imgData: p.imgData,
   img: p.img,
@@ -104,6 +109,7 @@ export function draftFields(d: ProductDraft) {
     includes: includes.length ? includes : undefined,
     gallery: d.gallery.filter(Boolean).slice(0, MAX_GALLERY).length ? d.gallery.filter(Boolean).slice(0, MAX_GALLERY) : undefined,
     options: cleanOptions(d.options).length ? cleanOptions(d.options) : undefined,
+    kit: cleanKit(d.kit, d.id).length ? cleanKit(d.kit, d.id) : undefined,
     unit: d.unit === 'm' ? ('m' as const) : undefined,
     featured: d.featured,
     hidden: d.hidden,
@@ -144,7 +150,7 @@ export function useCatalogEditor() {
         return setCustom((l) => (l.some((x) => x.id === d.id) ? l.map((x) => (x.id === d.id ? prod : x)) : [prod, ...l]))
       }
       // num produto de origem só se guarda a diferença; "vazio" tem de ser escrito (um campo em falta repunha o valor de origem)
-      const edit = { ...f, price: f.price ?? 0, discount: f.discount ?? 0, discountUntil: f.discountUntil ?? '', includes: f.includes ?? [], gallery: f.gallery ?? [], options: f.options ?? [], unit: f.unit ?? ('' as const), brand: f.brand ?? '', model: f.model ?? '' }
+      const edit = { ...f, price: f.price ?? 0, discount: f.discount ?? 0, discountUntil: f.discountUntil ?? '', includes: f.includes ?? [], gallery: f.gallery ?? [], options: f.options ?? [], kit: f.kit ?? [], unit: f.unit ?? ('' as const), brand: f.brand ?? '', model: f.model ?? '' }
       return setOver((o) => ({ ...o, [d.id]: edit }))
     },
     /** Muda só o preço (edição rápida na lista). Texto vazio tira o preço. */
