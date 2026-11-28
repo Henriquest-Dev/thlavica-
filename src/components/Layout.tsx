@@ -5,7 +5,7 @@ import { Footer } from './Footer'
 import { UiProvider } from './Ui'
 import { SearchOverlay } from './SearchOverlay'
 import { QuoteDrawer } from './QuoteDrawer'
-import { PromoPopup } from './Promos'
+import { MediaPopup, PromoPopup } from './Promos'
 import { AdminLogin } from './AdminLogin'
 import { scrollTop } from '../lib/smooth'
 
@@ -36,6 +36,7 @@ export function Layout() {
       <SearchOverlay />
       <QuoteDrawer />
       <PromoPopup />
+      <MediaPopup />
       <AdminLogin />
     </UiProvider>
   )

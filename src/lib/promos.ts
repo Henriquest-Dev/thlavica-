@@ -27,15 +27,30 @@ export function useMedia() {
 }
 
 /** Onde um vídeo ou fotografia pode aparecer (além de 'produto:<id>', para um produto em concreto). */
-export const MEDIA_PLACES: { id: string; label: string; hint: string; onlyImages?: boolean }[] = [
-  { id: 'cartaz', label: 'Cartaz principal (banner)', hint: 'No lugar do cartaz grande do início, a passar uns atrás dos outros. Só fotografias; use imagens largas, por exemplo 2000 × 800.', onlyImages: true },
-  { id: 'topo', label: 'Topo da página inicial', hint: 'Logo por baixo do cartaz, a primeira coisa que o cliente vê' },
-  { id: 'inicio', label: 'Página inicial (mais abaixo)', hint: 'Na secção “O nosso trabalho”' },
-  { id: 'produtos', label: 'Lista de produtos', hint: 'No início da página Produtos' },
-  { id: 'servicos', label: 'Serviços', hint: 'No início da página Serviços' },
-  { id: 'sobre', label: 'Sobre nós', hint: 'No início da página Sobre' },
-  { id: 'contacto', label: 'Pedir cotação', hint: 'No início da página do formulário' },
+export type PlaceKind = 'imagem' | 'video' | 'youtube'
+
+/** Medidas recomendadas: o cartaz é largo (5:2), os carrosséis 3:2, o pop-up quadrado. */
+export const SIZE_CARTAZ = '5:2 · 2000 × 800 px'
+export const SIZE_CARROSSEL = '3:2 · 1500 × 1000 px'
+export const SIZE_POPUP = '1:1 · 1080 × 1080 px'
+
+export const MEDIA_PLACES: { id: string; label: string; hint: string; size: string; kinds?: PlaceKind[] }[] = [
+  { id: 'cartaz', label: 'Cartaz principal (banner)', hint: 'No lugar do cartaz grande do início, a passar uns atrás dos outros. Fotografias ou vídeos curtos do telemóvel (sem som).', size: SIZE_CARTAZ, kinds: ['imagem', 'video'] },
+  { id: 'popup', label: 'Pop-up', hint: 'Abre por cima do site, uma vez por visita, uns segundos depois de o cliente entrar. Fotografia ou vídeo do telemóvel.', size: SIZE_POPUP, kinds: ['imagem', 'video'] },
+  { id: 'topo', label: 'Topo da página inicial', hint: 'Logo por baixo do cartaz e dos botões', size: SIZE_CARROSSEL },
+  { id: 'destaques', label: 'Antes dos produtos em destaque', hint: 'Na página inicial, mesmo antes dos cartões dos produtos em destaque', size: SIZE_CARROSSEL },
+  { id: 'inicio', label: 'Página inicial (mais abaixo)', hint: 'Na secção “O nosso trabalho”', size: SIZE_CARROSSEL },
+  { id: 'produtos', label: 'Lista de produtos', hint: 'No início da página Produtos', size: SIZE_CARROSSEL },
+  { id: 'servicos', label: 'Serviços', hint: 'No início da página Serviços', size: SIZE_CARROSSEL },
+  { id: 'sobre', label: 'Sobre nós', hint: 'No início da página Sobre', size: SIZE_CARROSSEL },
+  { id: 'contacto', label: 'Pedir cotação', hint: 'No início da página do formulário', size: SIZE_CARROSSEL },
 ]
+
+/** Se um sítio aceita este tipo (o cartaz e o pop-up não aceitam YouTube). */
+export function placeAccepts(where: string, tipo?: string): boolean {
+  const kinds = MEDIA_PLACES.find((p) => p.id === where)?.kinds
+  return !kinds || !tipo || (kinds as string[]).includes(tipo)
+}
 
 /* ---------------------------------------------------------------- como passa o carrossel */
 
@@ -81,7 +96,7 @@ export const mediaPlaces = (m: { locais?: string[] }): string[] => (m.locais && 
 
 /** Itens ativos que aparecem em determinado sítio. */
 export const mediaAt = <T extends { ativo: boolean; locais?: string[]; tipo?: string }>(items: T[], where: string): T[] =>
-  items.filter((m) => m.ativo && mediaPlaces(m).includes(where) && (where !== 'cartaz' || m.tipo === 'imagem'))
+  items.filter((m) => m.ativo && mediaPlaces(m).includes(where) && placeAccepts(where, m.tipo))
 
 export function youtubeId(v: string): string | null {
   const m = v.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/) ?? v.match(/^([\w-]{11})$/)

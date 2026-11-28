@@ -22,6 +22,7 @@ export default function Home() {
       <Intro />
       <Brands />
       <Solutions />
+      <MediaSlot where="destaques" />
       <Featured />
       <Gallery />
       <Tools />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Ico } from '../components/Ico'
 import { asset } from '../lib/asset'
@@ -29,13 +29,35 @@ function MobileBanner() {
 
 const fileSrc = (u: string) => (/^(https?:|data:|blob:)/.test(u) ? u : asset(u))
 
-type Slide = { key: string; src?: string; alt: string; link?: string; original?: boolean }
+export type Slide = { key: string; src?: string; alt: string; link?: string; original?: boolean; video?: boolean }
+
+/** Vídeo do cartaz: sem som, só corre quando está à vista; ao acabar passa ao seguinte. */
+function HeroVideo({ src, on, loop, onEnded, label }: { src: string; on: boolean; loop: boolean; onEnded: () => void; label: string }) {
+  const ref = useRef<HTMLVideoElement>(null)
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    if (on) {
+      v.currentTime = 0
+      void v.play().catch(() => {})
+    } else v.pause()
+  }, [on])
+  return <video ref={ref} src={src} muted playsInline loop={loop} preload="metadata" aria-label={label} onEnded={onEnded} />
+}
+
+/** Slides do cartaz principal: o de origem (se estiver ligado) e as fotografias e vídeos escolhidos no painel. */
+export function useHeroSlides(): Slide[] {
+  const [media] = useMedia()
+  const conf = useCarouselSettings()
+  const custom: Slide[] = mediaAt(media, 'cartaz').map((m) => ({ key: m.id, src: fileSrc(m.url), alt: m.titulo, link: safeLink(m.link), video: m.tipo === 'video' }))
+  return custom.length ? [...(conf.cartazOrigem ? [{ key: 'origem', alt: ALT, original: true }] : []), ...custom] : []
+}
 
 /**
  * Cartaz principal com as fotografias escolhidas no painel ("Cartaz principal"): passam umas atrás das outras,
  * com setas e pontos; o cartaz de origem pode continuar a ser o primeiro.
  */
-function HeroSlides({ slides, mobile }: { slides: Slide[]; mobile: boolean }) {
+export function HeroSlides({ slides, mobile }: { slides: Slide[]; mobile: boolean }) {
   const conf = useCarouselSettings()
   const [i, setI] = useState(0)
   const [hold, setHold] = useState(false)
@@ -45,11 +67,14 @@ function HeroSlides({ slides, mobile }: { slides: Slide[]; mobile: boolean }) {
     if (i >= n) setI(0)
   }, [i, n])
   useEffect(() => {
-    if (!conf.auto || reduce || hold || n < 2) return
+    // num vídeo espera que ele acabe
+    if (!conf.auto || reduce || hold || n < 2 || slides[i]?.video) return
     const t = window.setTimeout(() => setI((x) => (x + 1) % n), conf.segundos * 1000)
     return () => window.clearTimeout(t)
-  }, [conf.auto, conf.segundos, reduce, hold, n, i])
+  }, [conf.auto, conf.segundos, reduce, hold, n, i, slides])
   const go = (d: number) => setI((x) => (x + d + n) % n)
+  // deslizar com o dedo muda de imagem
+  const tx = useRef<number | null>(null)
 
   return (
     <div
@@ -61,6 +86,14 @@ function HeroSlides({ slides, mobile }: { slides: Slide[]; mobile: boolean }) {
       onMouseLeave={() => setHold(false)}
       onFocusCapture={() => setHold(true)}
       onBlurCapture={() => setHold(false)}
+      onTouchStart={(e) => (tx.current = e.touches[0].clientX)}
+      onTouchEnd={(e) => {
+        const start = tx.current
+        tx.current = null
+        if (start === null || n < 2) return
+        const dx = e.changedTouches[0].clientX - start
+        if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1)
+      }}
     >
       {slides.map((s, k) => {
         const on = k === i
@@ -78,6 +111,8 @@ function HeroSlides({ slides, mobile }: { slides: Slide[]; mobile: boolean }) {
               fetchPriority={k === 0 ? 'high' : undefined}
             />
           )
+        ) : s.video ? (
+          <HeroVideo src={s.src!} on={on} loop={n < 2} label={s.alt} onEnded={() => conf.auto && go(1)} />
         ) : (
           <img src={s.src} alt={s.alt} loading={k === 0 ? 'eager' : 'lazy'} decoding="async" draggable={false} />
         )
@@ -120,10 +155,7 @@ function HeroSlides({ slides, mobile }: { slides: Slide[]; mobile: boolean }) {
  */
 export function Hero() {
   const mobile = useMatch('(max-width: 760px)')
-  const [media] = useMedia()
-  const conf = useCarouselSettings()
-  const custom: Slide[] = mediaAt(media, 'cartaz').map((m) => ({ key: m.id, src: fileSrc(m.url), alt: m.titulo, link: safeLink(m.link) }))
-  const slides: Slide[] = custom.length ? [...(conf.cartazOrigem ? [{ key: 'origem', alt: ALT, original: true }] : []), ...custom] : []
+  const slides = useHeroSlides()
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero__banner">

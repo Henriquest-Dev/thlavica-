@@ -1,4 +1,5 @@
 import { Ico } from '../components/Ico'
+import { MEDIA_PLACES, SIZE_CARROSSEL, placeAccepts } from '../lib/promos'
 
 /**
  * Mapa das páginas do site, em blocos: mostra onde uma fotografia ou vídeo pode aparecer
@@ -6,20 +7,28 @@ import { Ico } from '../components/Ico'
  */
 
 type Block = { label: string; place?: string; tall?: boolean; note?: string }
-type Page = { title: string; blocks: Block[] }
+type Page = { title: string; blocks: Block[]; popup?: boolean }
 
 const PAGES: Page[] = [
   {
     title: 'Página inicial',
     blocks: [
       { label: 'Menu do site' },
-      { label: 'Cartaz principal', place: 'cartaz', tall: true, note: 'Só fotografias' },
+      { label: 'Cartaz principal', place: 'cartaz', tall: true },
+      { label: 'Solar · Bombas · Água quente' },
+      { label: 'Título e botões' },
       { label: 'Topo da página', place: 'topo' },
-      { label: 'Texto, marcas e áreas' },
-      { label: 'Produtos em destaque' },
+      { label: 'Texto, marcas e soluções' },
+      { label: 'Antes dos destaques', place: 'destaques' },
+      { label: 'Produtos em destaque', tall: true },
       { label: 'O nosso trabalho', place: 'inicio' },
-      { label: 'Perguntas e rodapé' },
+      { label: 'Simuladores, perguntas e rodapé' },
     ],
+  },
+  {
+    title: 'Pop-up (por cima do site)',
+    popup: true,
+    blocks: [{ label: 'Pop-up', place: 'popup', tall: true }],
   },
   {
     title: 'Lista de produtos',
@@ -68,7 +77,7 @@ const PAGES: Page[] = [
 export function PlacesMap({
   value,
   onToggle,
-  video,
+  kind,
   prodsOn,
   catsOn,
   onProds,
@@ -76,8 +85,8 @@ export function PlacesMap({
 }: {
   value: string[]
   onToggle: (place: string) => void
-  /** É um vídeo: o cartaz principal não o aceita. */
-  video?: boolean
+  /** Tipo do item: o cartaz e o pop-up não aceitam vídeos do YouTube. */
+  kind?: string
   prodsOn: boolean
   catsOn: boolean
   onProds: () => void
@@ -100,7 +109,8 @@ export function PlacesMap({
         {PAGES.map((pg) => (
           <figure key={pg.title} className="pmap__page">
             <figcaption>{pg.title}</figcaption>
-            <div className="pmap__frame">
+            <div className={`pmap__frame${pg.popup ? ' pmap__frame--popup' : ''}`}>
+              {pg.popup && <div className="pmap__ghost" aria-hidden="true" />}
               {pg.blocks.map((b, i) => {
                 if (!b.place) {
                   return (
@@ -111,7 +121,8 @@ export function PlacesMap({
                 }
                 const special = b.place.startsWith('@')
                 const on = b.place === '@produtos' ? prodsOn : b.place === '@categorias' ? catsOn : value.includes(b.place)
-                const blocked = video && b.place === 'cartaz'
+                const blocked = !special && !placeAccepts(b.place, kind)
+                const size = special ? SIZE_CARROSSEL : MEDIA_PLACES.find((x) => x.id === b.place)?.size
                 return (
                   <button
                     key={i}
@@ -120,11 +131,12 @@ export function PlacesMap({
                     aria-pressed={on}
                     disabled={blocked && !on}
                     onClick={() => (b.place === '@produtos' ? onProds() : b.place === '@categorias' ? onCats() : onToggle(b.place!))}
-                    title={blocked ? 'O cartaz principal só aceita fotografias' : undefined}
+                    title={blocked ? 'Aqui não aceita vídeos do YouTube' : undefined}
                   >
                     {on && <Ico name="visto" size={14} />}
                     <span>{b.label}</span>
-                    {(b.note || blocked) && <small>{blocked ? 'Só fotografias' : b.note}</small>}
+                    {(b.note || blocked) && <small>{blocked ? 'Sem YouTube' : b.note}</small>}
+                    {size && <small className="pmap__size">{size}</small>}
                     {special && on && <small>(escolha em baixo)</small>}
                   </button>
                 )

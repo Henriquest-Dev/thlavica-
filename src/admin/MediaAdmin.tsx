@@ -1,7 +1,7 @@
+import { Link } from 'react-router-dom'
 import { useRef, useState } from 'react'
-import { CAROUSEL_SECONDS, MEDIA_PLACES, mediaPlaces, safeLink, saveCarouselSettings, useCarouselSettings, useMedia, youtubeId } from '../lib/promos'
+import { MEDIA_PLACES, mediaPlaces, placeAccepts, safeLink, useMedia, youtubeId } from '../lib/promos'
 import { useCategories } from '../lib/categories'
-import { solutions } from '../data/site'
 import { useCatalog, productImage } from '../lib/catalog'
 import { VIDEO_MAX_BYTES, humanSize, saveImage, saveVideo } from '../lib/images'
 import { uid } from '../lib/store'
@@ -12,6 +12,7 @@ import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
 import { Choice, Empty, Field, Modal, PageTitle, Panel, Switch } from './ui'
 import { PlacesMap } from './PlacesMap'
+import { CarouselSettingsPanel, LinkSelect } from './mediaShared'
 
 const KIND_LABEL: Record<MediaKind, string> = { imagem: 'Fotografia', video: 'Vídeo do telemóvel', youtube: 'Vídeo do YouTube' }
 const TIPOS: MediaKind[] = ['imagem', 'video', 'youtube']
@@ -20,7 +21,7 @@ const src = (u: string) => (/^(https?:|data:|blob:)/.test(u) ? u : asset(u))
 const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
 /** "Onde aparece?": cliques nos sítios do site e, se quiser, em quais produtos. */
-function PlacesChooser({ value, onChange, video }: { value: string[]; onChange: (v: string[]) => void; video?: boolean }) {
+function PlacesChooser({ value, onChange, kind }: { value: string[]; onChange: (v: string[]) => void; kind: MediaKind }) {
   const catalog = useCatalog()
   const categories = useCategories()
   const [q, setQ] = useState('')
@@ -34,7 +35,7 @@ function PlacesChooser({ value, onChange, video }: { value: string[]; onChange: 
     <div className="places">
       <PlacesMap
         value={value}
-        video={video}
+        kind={kind}
         onToggle={toggle}
         prodsOn={showProds}
         catsOn={showCats}
@@ -109,70 +110,6 @@ function placesText(m: MediaItem, names: Record<string, string>, catNames: Recor
     .join(' · ')
 }
 
-/** "Ao tocar, abre": uma página do site, à escolha (ou nada). */
-function LinkSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const catalog = useCatalog()
-  const categories = useCategories()
-  return (
-    <select value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">Não abre nada</option>
-      <optgroup label="Páginas">
-        <option value="/produtos">Todos os produtos</option>
-        <option value="/contacto">Pedir cotação</option>
-        <option value="/servicos">Serviços</option>
-        <option value="/sobre">Sobre nós</option>
-        {solutions.map((x) => (
-          <option key={x.id} value={`/solucoes/${x.id}`}>
-            {x.name}
-          </option>
-        ))}
-      </optgroup>
-      <optgroup label="Categorias">
-        {categories.map((c) => (
-          <option key={c.id} value={`/categoria/${c.id}`}>
-            {c.name}
-          </option>
-        ))}
-      </optgroup>
-      <optgroup label="Produtos">
-        {catalog.map((c) => (
-          <option key={c.id} value={`/produtos/${c.id}`}>
-            {c.name}
-          </option>
-        ))}
-      </optgroup>
-    </select>
-  )
-}
-
-/** Rotação automática, segundos em cada imagem e se o cartaz de origem continua no cartaz principal. */
-function CarouselSettingsPanel() {
-  const conf = useCarouselSettings()
-  const { toast } = useFeedback()
-  const save = (patch: Partial<typeof conf>) => {
-    if (!saveCarouselSettings({ ...conf, ...patch })) toast('Não foi possível guardar.', 'erro')
-  }
-  return (
-    <Panel title="Como passa o carrossel">
-      <div className="cconf">
-        <Switch on={conf.auto} label="Passar sozinho de uma imagem para a seguinte" onChange={(v) => save({ auto: v })} />
-        <div className="f">
-          <span className="f__l">Tempo em cada fotografia</span>
-          <div className="choices">
-            {CAROUSEL_SECONDS.map((n) => (
-              <Choice key={n} on={conf.segundos === n} disabled={!conf.auto} onClick={() => save({ segundos: n })}>
-                {n} segundos
-              </Choice>
-            ))}
-          </div>
-        </div>
-        <Switch on={conf.cartazOrigem} label="No cartaz principal, mostrar também o cartaz de origem da Tlhavika" onChange={(v) => save({ cartazOrigem: v })} />
-        <p className="muted small">Os vídeos não passam a meio: o carrossel espera que acabem.</p>
-      </div>
-    </Panel>
-  )
-}
-
 export default function MediaAdmin() {
   const [items, setItems] = useMedia()
   const { toast, confirm } = useFeedback()
@@ -208,7 +145,8 @@ export default function MediaAdmin() {
     if (!url.trim()) return setErr(tipo === 'imagem' ? 'Envie uma fotografia primeiro.' : tipo === 'video' ? 'Envie o vídeo primeiro.' : 'Cole o endereço do vídeo.')
     if (tipo === 'youtube' && !youtubeId(url.trim())) return setErr('Não reconheço esse endereço do YouTube. Cole o link da barra de endereços ou do botão Partilhar.')
     if (locais.length === 0) return setErr('Escolha onde isto vai aparecer no site.')
-    if (tipo !== 'imagem' && locais.includes('cartaz')) return setErr('O cartaz principal só aceita fotografias. Tire “Cartaz principal” ou escolha Fotografia.')
+    const bad = locais.find((l) => !placeAccepts(l, tipo))
+    if (bad) return setErr(`${MEDIA_PLACES.find((x) => x.id === bad)?.label ?? 'Esse sítio'} não aceita vídeos do YouTube. Envie o vídeo do telemóvel ou tire esse sítio.`)
     const item: MediaItem = { id: uid(), tipo, url: url.trim(), titulo: titulo.trim(), legenda: legenda.trim() || undefined, ativo: true, locais, ...(safeLink(link) ? { link } : {}) }
     if (!setItems((l) => [...l, item])) return setErr('A memória do navegador está cheia. Use uma imagem mais pequena ou um endereço em vez de enviar o ficheiro.')
     setUrl('')
@@ -220,7 +158,10 @@ export default function MediaAdmin() {
 
   return (
     <>
-      <PageTitle title="Vídeos e fotos" lead="Fotografias e vídeos dos carrosséis do site, incluindo o cartaz principal do início. Escolha onde cada um aparece, mude a ordem com as setas e pause o que não quer mostrar." />
+      <PageTitle title="Vídeos e fotos" lead="Fotografias e vídeos dos carrosséis do site, do cartaz principal e do pop-up. Escolha no mapa onde cada um aparece, mude a ordem com as setas e pause o que não quer mostrar." />
+      <p className="note-link">
+        Para mudar só o cartaz grande do início, use a página <Link to="/admin/cartaz">Cartaz do início</Link>: é mais simples.
+      </p>
 
       <CarouselSettingsPanel />
 
@@ -364,7 +305,7 @@ export default function MediaAdmin() {
             )}
             <div className="f">
               <span className="f__l">Onde aparece no site?</span>
-              <PlacesChooser value={locais} onChange={setLocais} video={tipo !== 'imagem'} />
+              <PlacesChooser value={locais} onChange={setLocais} kind={tipo} />
             </div>
             {tipo === 'imagem' && (
               <Field label="Ao tocar na fotografia, abre" hint="Opcional. Por exemplo, a página de um produto em promoção.">
@@ -400,7 +341,7 @@ export default function MediaAdmin() {
             )}
             <div className="f">
               <span className="f__l">Onde aparece no site?</span>
-              <PlacesChooser value={editing.locais ?? mediaPlaces(editing)} onChange={(v) => setEditing({ ...editing, locais: v })} video={editing.tipo !== 'imagem'} />
+              <PlacesChooser value={editing.locais ?? mediaPlaces(editing)} onChange={(v) => setEditing({ ...editing, locais: v })} kind={editing.tipo} />
             </div>
           </div>
           <div className="row row--end">
@@ -414,7 +355,7 @@ export default function MediaAdmin() {
                 const locs = editing.locais ?? mediaPlaces(editing)
                 if (!editing.titulo.trim()) return toast('Escreva um título.', 'erro')
                 if (locs.length === 0) return toast('Escolha pelo menos um sítio.', 'erro')
-                if (editing.tipo !== 'imagem' && locs.includes('cartaz')) return toast('O cartaz principal só aceita fotografias.', 'erro')
+                if (locs.some((l) => !placeAccepts(l, editing.tipo))) return toast('O cartaz principal e o pop-up não aceitam vídeos do YouTube.', 'erro')
                 const next: MediaItem = { ...editing, titulo: editing.titulo.trim(), legenda: editing.legenda?.trim() || undefined, locais: locs, link: safeLink(editing.link) }
                 setItems((l) => l.map((x) => (x.id === editing.id ? next : x)))
                 setEditing(null)

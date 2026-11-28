@@ -32,6 +32,7 @@ const MAIN: Item[] = [
   { to: '/admin/promocoes', label: 'Promoções', icon: 'etiqueta' },
 ]
 const MORE: Item[] = [
+  { to: '/admin/cartaz', label: 'Cartaz do início', icon: 'olho' },
   { to: '/admin/categorias', label: 'Categorias', icon: 'lista' },
   { to: '/admin/midia', label: 'Vídeos e fotos', icon: 'video' },
   { to: '/admin/contactos', label: 'Contactos', icon: 'telefone' },

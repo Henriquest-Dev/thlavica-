@@ -85,13 +85,15 @@ describe('carrossel e cartaz principal', () => {
     expect(safeLink(3)).toBeUndefined()
   })
 
-  it('o cartaz principal só mostra fotografias', () => {
+  it('o cartaz principal e o pop-up mostram fotografias e vídeos do telemóvel, mas não o YouTube', () => {
     const items = [
       { id: 'a', tipo: 'imagem', ativo: true, locais: ['cartaz'] },
-      { id: 'b', tipo: 'video', ativo: true, locais: ['cartaz', 'inicio'] },
+      { id: 'b', tipo: 'video', ativo: true, locais: ['cartaz', 'inicio', 'popup'] },
       { id: 'c', tipo: 'imagem', ativo: false, locais: ['cartaz'] },
+      { id: 'd', tipo: 'youtube', ativo: true, locais: ['cartaz', 'popup', 'inicio'] },
     ]
-    expect(mediaAt(items, 'cartaz').map((m) => m.id)).toEqual(['a'])
-    expect(mediaAt(items, 'inicio').map((m) => m.id)).toEqual(['b'])
+    expect(mediaAt(items, 'cartaz').map((m) => m.id)).toEqual(['a', 'b'])
+    expect(mediaAt(items, 'popup').map((m) => m.id)).toEqual(['b'])
+    expect(mediaAt(items, 'inicio').map((m) => m.id)).toEqual(['b', 'd'])
   })
 })

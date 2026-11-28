@@ -144,6 +144,11 @@ export default function Overview() {
               </Link>
             </li>
             <li>
+              <Link to="/admin/cartaz">
+                <Ico name="olho" size={20} /> Mudar o cartaz do início
+              </Link>
+            </li>
+            <li>
               <Link to="/admin/midia">
                 <Ico name="video" size={20} /> Pôr um vídeo no carrossel
               </Link>

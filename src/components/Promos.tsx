@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { promoLink, promoProducts, promoStyle, useLivePromo } from '../lib/promos'
+import { mediaAt, promoLink, promoProducts, promoStyle, safeLink, useLivePromo, useMedia } from '../lib/promos'
+import { asset } from '../lib/asset'
+import type { MediaItem } from '../data/admin'
 import { productImage, useCatalog, type CatalogProduct } from '../lib/catalog'
 import { categoryPic } from '../data/site'
 import type { Promo } from '../data/admin'
@@ -132,6 +134,78 @@ export function PromoPopup() {
           </SmartLink>
           {shown.fim && <p className="popup__until">Válida até {new Date(shown.fim + 'T12:00:00').toLocaleDateString('pt-PT')}</p>}
         </div>
+      </div>
+    </div>
+  )
+}
+
+const fileSrc = (u: string) => (/^(https?:|data:|blob:)/.test(u) ? u : asset(u))
+
+/**
+ * Pop-up de "Vídeos e fotos" (sítio "Pop-up"): uma fotografia ou vídeo por cima do site, uma vez por visita.
+ * Se houver uma promoção em pop-up ativa, essa tem prioridade (nunca aparecem os dois).
+ */
+export function MediaPopup() {
+  const promo = useLivePromo('popup')
+  const [media] = useMedia()
+  const item = mediaAt(media, 'popup')[0]
+  const [shown, setShown] = useState<MediaItem | null>(null)
+  const closeBtn = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (promo || !item || seen('media-popup-' + item.id)) return
+    const t = window.setTimeout(() => setShown(item), 2500)
+    return () => window.clearTimeout(t)
+  }, [promo, item])
+
+  const close = () => {
+    if (shown) markSeen('media-popup-' + shown.id)
+    setShown(null)
+  }
+
+  useEffect(() => {
+    if (!shown) return
+    closeBtn.current?.focus()
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && close()
+    window.addEventListener('keydown', esc)
+    return () => window.removeEventListener('keydown', esc)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown])
+
+  if (!shown) return null
+  const to = safeLink(shown.link)
+  const pic =
+    shown.tipo === 'video' ? (
+      <video src={fileSrc(shown.url)} autoPlay muted loop playsInline controls aria-label={shown.titulo} />
+    ) : (
+      <img src={fileSrc(shown.url)} alt={shown.titulo} />
+    )
+  return (
+    <div className="ov ov--center" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && close()}>
+      <div className="mpop" role="dialog" aria-modal="true" aria-label={shown.titulo}>
+        <button ref={closeBtn} type="button" className="popup__close" onClick={close} aria-label="Fechar">
+          <Ico name="fechar" size={18} />
+        </button>
+        {to && shown.tipo !== 'video' ? (
+          <Link to={to} onClick={close} className="mpop__media">
+            {pic}
+          </Link>
+        ) : (
+          <div className="mpop__media">{pic}</div>
+        )}
+        {(shown.legenda || to) && (
+          <div className="mpop__cap">
+            {shown.legenda && <p>{shown.legenda}</p>}
+            {to && (
+              <Link to={to} className="pill pill--dark" onClick={close}>
+                Ver mais
+                <span className="pill__icon">
+                  <Arrow size={12} />
+                </span>
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -4154,7 +4154,8 @@ a.optional {
   display: block;
   height: 100%;
 }
-.hs__slide img {
+.hs__slide img,
+.hs__slide video {
   display: block;
   width: 100%;
   height: 100%;
@@ -4267,4 +4268,63 @@ a.optional {
 }
 .pdp__thumbs button {
   flex: 0 0 auto;
+}
+
+/* pop-up de "Vídeos e fotos": imagem ou vídeo quadrado, com legenda e botão opcionais */
+.mpop {
+  position: relative;
+  display: grid;
+  width: min(460px, 100%);
+  max-height: 92vh;
+  border-radius: 22px;
+  background: var(--white);
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 40%);
+  animation: pop 0.4s var(--ease) both;
+}
+.mpop__media {
+  display: block;
+  aspect-ratio: 1;
+  max-height: 70vh;
+  background: #06152a;
+}
+.mpop__media img,
+.mpop__media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mpop__cap {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  padding: 16px 20px 20px;
+}
+.mpop__cap p {
+  margin: 0;
+  color: var(--navy);
+}
+/* telemóvel: só os pontos, pequenos e encostados ao fundo (desliza-se com o dedo) */
+@media (max-width: 760px) {
+  .hs__ctrl {
+    bottom: 4px;
+    gap: 0;
+    padding: 0 4px;
+    background: rgb(8 28 54 / 45%);
+  }
+  .hs__ctrl > button {
+    display: none;
+  }
+  .hs__dots button {
+    width: 18px;
+    height: 16px;
+  }
+  .hs__dots button::before {
+    width: 6px;
+    height: 6px;
+  }
+  .hs__dots button.is-on::before {
+    width: 14px;
+  }
 }
