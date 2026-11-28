@@ -3976,21 +3976,6 @@ a.optional {
 .kitl__save strong {
   color: #1f7a3a;
 }
-.bankf {
-  margin: 0 0 8px;
-  padding: 0;
-  border: 0;
-  min-width: 0;
-}
-.bankf legend {
-  padding: 0;
-  margin-bottom: 4px;
-}
-.bankf__lead {
-  margin: 0 0 14px;
-  font-size: 14px;
-}
-
 /* ---------- ampliar a imagem do produto ---------- */
 .pdp__zoom {
   position: absolute;
@@ -4269,4 +4254,17 @@ a.optional {
 .drawer__total strong {
   font-size: 18px;
   color: var(--navy);
+}
+/* várias fotografias: as miniaturas deslizam para o lado em vez de saírem da moldura */
+.pdp__thumbs {
+  max-width: calc(100% - 28px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px;
+}
+.pdp__thumbs::-webkit-scrollbar {
+  display: none;
+}
+.pdp__thumbs button {
+  flex: 0 0 auto;
 }

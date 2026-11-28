@@ -305,11 +305,10 @@ export async function buildProposalPdf(p: Proposal, { company, logo }: PdfOption
     fy += h + 4
   }
 
-  // dados bancários: até três contas lado a lado
-  // dados bancários escritos pelo cliente no pedido de cotação
-  const bancos = cleanBankAccounts(p.cliente.banco ? [p.cliente.banco] : [])
+  // dados bancários da Tlhavika (Contactos no painel): até três contas lado a lado, no fundo da página, como na fatura
+  const bancos = cleanBankAccounts(company.bancos)
   if (bancos.length) {
-    fy += 8
+    fy = Math.max(fy + 8, 842 - 36 - 70)
     font('bold', 8.5)
     text('Dados bancários', L, fy)
     fy += 8
@@ -324,7 +323,7 @@ export async function buildProposalPdf(p: Proposal, { company, logo }: PdfOption
         ['Titular:', b.titular],
         ['Banco:', b.banco],
         ['Conta:', b.conta],
-        ['NIB:', b.nib],
+        ['Nib:', b.nib],
         ['Swift:', b.swift],
       ] as const) {
         if (!v) continue

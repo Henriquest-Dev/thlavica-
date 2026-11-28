@@ -12,11 +12,14 @@ describe('saveVideo', () => {
     await expect(saveVideo(file('application/pdf', 1000))).rejects.toThrow(/MP4/)
     await expect(saveVideo(file('video/x-msvideo', 1000))).rejects.toThrow(/MP4/)
   })
-  it('recusa vídeos acima de 50 MB e diz o tamanho', async () => {
-    await expect(saveVideo(file('video/mp4', VIDEO_MAX_BYTES + 1))).rejects.toThrow(/máximo é 50 MB/)
+  it('recusa vídeos acima de 5 MB e diz o tamanho', async () => {
+    await expect(saveVideo(file('video/mp4', VIDEO_MAX_BYTES + 1))).rejects.toThrow(/máximo é 5 MB/)
   })
   it('sem ligação ao servidor não guarda (não cabe no navegador)', async () => {
     await expect(saveVideo(file('video/mp4', 1000))).rejects.toThrow(/ligado ao servidor/)
+  })
+  it('o limite é 5 MB', () => {
+    expect(VIDEO_MAX_BYTES).toBe(5 * 1024 * 1024)
   })
   it('formata tamanhos', () => {
     expect(humanSize(52428800)).toBe('50,0 MB')

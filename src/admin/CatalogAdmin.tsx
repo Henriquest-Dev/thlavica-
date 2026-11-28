@@ -290,6 +290,31 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
   }
   const usedLabels = new Set(d.specs.map((s) => norm(s.label.trim())))
 
+  /** Várias fotografias de uma vez (até ao máximo); as que falharem dizem porquê. */
+  const uploadGallery = async (files: File[]) => {
+    const room = MAX_GALLERY - d.gallery.length
+    if (room <= 0) return
+    setBusy(true)
+    const urls: string[] = []
+    let fail = ''
+    for (const f of files.slice(0, room)) {
+      try {
+        urls.push(await saveImage(f, { folder: 'produtos', max: 1100 }))
+      } catch (e) {
+        fail = e instanceof Error ? e.message : 'Não foi possível processar uma das imagens.'
+      }
+    }
+    if (urls.length) set('gallery', [...d.gallery, ...urls].slice(0, MAX_GALLERY))
+    setErr(files.length > room ? `Só cabem mais ${room} fotografia(s); as outras ficaram de fora.` : fail)
+    setBusy(false)
+  }
+  const moveGallery = (i: number, to: number) => {
+    if (to < 0 || to >= d.gallery.length) return
+    const next = [...d.gallery]
+    ;[next[i], next[to]] = [next[to], next[i]]
+    set('gallery', next)
+  }
+
   const upload = async (f: File, target: 'main' | 'gallery') => {
     setBusy(true)
     try {
@@ -461,7 +486,10 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
               </div>
             </div>
             <div className="f">
-              <span className="f__l">Mais fotografias (até {MAX_GALLERY})</span>
+              <span className="f__l">
+                Mais fotografias do produto ({d.gallery.length} de {MAX_GALLERY})
+              </span>
+              <p className="muted small">Pode escolher várias de uma vez. Aparecem por baixo da imagem principal, na página do produto, e o cliente pode ampliá-las.</p>
               <ul className="gal">
                 {d.gallery.map((g, i) => (
                   <li key={g + i}>
@@ -469,13 +497,18 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
                     <button type="button" aria-label={`Retirar fotografia ${i + 1}`} onClick={() => set('gallery', d.gallery.filter((_, j) => j !== i))}>
                       <Ico name="fechar" size={12} />
                     </button>
+                    {i > 0 && (
+                      <button type="button" className="gal__left" aria-label={`Passar a fotografia ${i + 1} para trás`} title="Mudar a ordem" onClick={() => moveGallery(i, i - 1)}>
+                        <Ico name="esq" size={12} />
+                      </button>
+                    )}
                   </li>
                 ))}
                 {d.gallery.length < MAX_GALLERY && (
                   <li>
                     <button type="button" className="gal__add" disabled={busy} onClick={() => galleryFile.current?.click()}>
                       <Ico name="mais" size={20} />
-                      <span>Adicionar</span>
+                      <span>{busy ? 'A enviar…' : 'Adicionar'}</span>
                     </button>
                   </li>
                 )}
@@ -484,11 +517,12 @@ function ProductForm({ draft, onSave, onClose }: { draft: ProductDraft; onSave: 
                 ref={galleryFile}
                 type="file"
                 accept="image/*"
+                multiple
                 hidden
                 onChange={async (e) => {
-                  const f = e.target.files?.[0]
+                  const files = Array.from(e.target.files ?? [])
                   e.target.value = ''
-                  if (f) await upload(f, 'gallery')
+                  if (files.length) await uploadGallery(files)
                 }}
               />
             </div>

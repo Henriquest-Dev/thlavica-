@@ -25,17 +25,17 @@ const FILTERS: { id: 'todas' | QuoteStatus; label: string }[] = [
 
 /* ------------------------------------------------------------------ */
 
-/** Dados bancários do cliente, só para ler (foi o cliente que os escreveu no pedido). */
+/** Uma conta bancária da Tlhavika, como aparece na fatura (só para ler). */
 function BankView({ b }: { b: BankAccount }) {
   return (
-    <dl className="kv bankview">
+    <dl className="bankview">
       {(
         [
-          ['Titular', b.titular],
-          ['Banco', b.banco],
-          ['Conta', b.conta],
-          ['NIB', b.nib],
-          ['SWIFT', b.swift],
+          ['Titular:', b.titular],
+          ['Banco:', b.banco],
+          ['Conta:', b.conta],
+          ['Nib:', b.nib],
+          ['Swift:', b.swift],
         ] as const
       )
         .filter(([, v]) => v)
@@ -60,7 +60,8 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
   const { subtotal: sub, tax, total } = proposalTotals(p)
   const iva = p.iva ?? DEFAULT_IVA
   const text = () => proposalMessage(p)
-  const bancos = cleanBankAccounts(p.cliente.banco ? [p.cliente.banco] : [])
+  // contas da Tlhavika, predefinidas em todas as cotações (mudam-se em Contactos)
+  const bancos = cleanBankAccounts(contact.bancos)
 
   return (
     <Modal title={`Cotação ${p.numero}`} onClose={onClose} wide>
@@ -173,12 +174,19 @@ function ProposalEditor({ proposal, onSave, onClose }: { proposal: Proposal; onS
             </Field>
           </div>
 
-          <h3 className="sub">Dados bancários do cliente</h3>
+          <h3 className="sub">Dados bancários (já vêm na cotação)</h3>
           {bancos.length ? (
-            <BankView b={bancos[0]} />
+            <div className="bankcols">
+              {bancos.map((b, i) => (
+                <BankView key={i} b={b} />
+              ))}
+            </div>
           ) : (
-            <p className="muted small">O cliente não escreveu dados bancários no pedido. Só o cliente os pode preencher, no formulário de pedido de cotação do site.</p>
+            <p className="muted small">Ainda não há contas da Tlhavika guardadas.</p>
           )}
+          <p className="muted small">
+            São as contas da Tlhavika e aparecem iguais em todas as cotações. Para as mudar: <Link to="/admin/contactos#dados-bancarios">Contactos → Dados bancários</Link>.
+          </p>
         </div>
 
         <div className="prop__side">
@@ -455,16 +463,6 @@ export default function Quotes() {
                   <div>
                     <dt>Interesse</dt>
                     <dd>{sel.interesse}</dd>
-                  </div>
-                )}
-                {sel.banco && (
-                  <div>
-                    <dt>Dados bancários</dt>
-                    <dd>
-                      {[sel.banco.titular, sel.banco.banco, sel.banco.conta && `Conta ${sel.banco.conta}`, sel.banco.nib && `NIB ${sel.banco.nib}`, sel.banco.swift && `SWIFT ${sel.banco.swift}`]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </dd>
                   </div>
                 )}
                 <div>

@@ -26,8 +26,7 @@ const base: Proposal = {
     nome: 'Maria da Conceição Silva',
     telefone: '+258 84 123 4567',
     local: 'Matola, Maputo',
-    nuit: '',
-    banco: { titular: 'Maria da Conceição Silva', banco: 'BCI', conta: '12345678910', nib: '000800001234567891011', swift: '' },
+    nuit: ''
   },
   linhas: [
     { id: 'a', descricao: 'Bomba submersível 3" 3SDM2/11 (Dongyin)', qtd: 2, preco: 15500, desconto: 5 },

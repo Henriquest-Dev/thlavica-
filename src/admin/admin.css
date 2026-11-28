@@ -2258,11 +2258,31 @@
   font-size: 11px;
   color: #6b7280;
 }
+.bankcols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  margin-bottom: 8px;
+}
+/* como na fatura: uma barra à esquerda e "Titular: / Banco: / Conta: / Nib: / Swift:" */
 .bankview {
-  padding: 10px 14px;
-  border: 1px solid var(--a-line);
-  border-radius: 12px;
-  background: #fff;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 10px;
+  margin: 0;
+  padding: 2px 0 2px 10px;
+  border-left: 2px solid var(--navy);
+  font-size: 13.5px;
+}
+.bankview div {
+  display: contents;
+}
+.bankview dt {
+  color: var(--a-muted);
+}
+.bankview dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 .cconf {
   display: grid;
@@ -2281,4 +2301,126 @@
   grid-column: 2;
   justify-content: flex-start;
   justify-self: start;
+}
+/* Vídeos e fotos: lista e formulário um por baixo do outro (o mapa dos sítios precisa de largura) */
+.mstack {
+  display: grid;
+  gap: 20px;
+}
+
+/* mapa dos sítios onde aparece (blocos) */
+.pmap {
+  display: grid;
+  gap: 12px;
+}
+.pmap__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--a-muted);
+}
+.pmap__legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pmap__key {
+  width: 18px;
+  height: 12px;
+  border-radius: 3px;
+}
+.pmap__key--free {
+  border: 2px dashed #e0a100;
+  background: #fff8e6;
+}
+.pmap__key--on {
+  background: var(--navy);
+}
+.pmap__key--no {
+  background: repeating-linear-gradient(45deg, #e6e9ef 0 4px, #f3f5f8 4px 8px);
+  border: 1px solid #d7dce4;
+}
+.pmap__pages {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+  gap: 14px;
+}
+.pmap__page {
+  margin: 0;
+}
+.pmap__page figcaption {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.pmap__frame {
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--a-line);
+  border-radius: 10px;
+  background: #fff;
+}
+.pmap__b {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1px;
+  min-height: 30px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1.2;
+  text-align: center;
+}
+.pmap__b.is-tall {
+  min-height: 54px;
+}
+.pmap__b small {
+  font-size: 10.5px;
+  opacity: 0.8;
+}
+.pmap__b--no {
+  border: 1px solid #d7dce4;
+  background: repeating-linear-gradient(45deg, #e6e9ef 0 4px, #f3f5f8 4px 8px);
+  color: #8a93a3;
+}
+.pmap__b--free {
+  border: 2px dashed #e0a100;
+  background: #fff8e6;
+  color: #6b4b00;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pmap__b--free:hover {
+  background: #ffefc2;
+}
+.pmap__b--free.is-on {
+  border: 2px solid var(--navy);
+  background: var(--navy);
+  color: #fff;
+  grid-auto-flow: row;
+}
+.pmap__b--free.is-blocked:not(.is-on) {
+  border-style: dotted;
+  border-color: #c9ced8;
+  background: #f6f7f9;
+  color: #9aa2b1;
+  cursor: not-allowed;
+}
+.pmap__b--free:focus-visible {
+  outline: 3px solid #1d5fb0;
+  outline-offset: 2px;
+}
+.gal li > button.gal__left {
+  top: auto;
+  right: auto;
+  bottom: -6px;
+  left: -6px;
 }

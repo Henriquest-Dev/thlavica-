@@ -73,7 +73,7 @@ export function newProposal(existing: Pick<Proposal, 'numero'>[], catalog: Catal
     numero: nextNumber(existing),
     pedidoId: request?.id,
     criadaEm: new Date().toISOString(),
-    cliente: { nome: request?.nome ?? '', telefone: request?.telefone ?? '', local: request?.local ?? '', ...(request?.banco ? { banco: request.banco } : {}) },
+    cliente: { nome: request?.nome ?? '', telefone: request?.telefone ?? '', local: request?.local ?? '' },
     linhas: linhas.length ? linhas : [{ id: uid(), descricao: '', qtd: 1, preco: 0 }],
     iva: DEFAULT_IVA,
     validadeDias: 15,

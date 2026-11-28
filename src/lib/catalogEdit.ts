@@ -44,7 +44,7 @@ export interface ProductDraft {
   img: string
 }
 
-export const MAX_GALLERY = 4
+export const MAX_GALLERY = 8
 
 const NO_CUSTOM: CustomProduct[] = []
 const NO_OVER: Record<string, CatalogOverride> = {}

@@ -58,11 +58,6 @@ describe('newProposal', () => {
     expect(p.iva).toBe(DEFAULT_IVA)
   })
 
-  it('passa para a cotação os dados bancários que o cliente escreveu', () => {
-    const banco = { titular: 'Maria', banco: 'BCI', conta: '123456', nib: '000800001234567891011', swift: '' }
-    expect(newProposal([], [], { ...request, banco }).cliente.banco).toEqual(banco)
-  })
-
   it('sem pedido começa com uma linha livre', () => {
     expect(newProposal([], []).linhas).toHaveLength(1)
   })

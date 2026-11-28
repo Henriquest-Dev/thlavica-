@@ -11,6 +11,7 @@ import { asset } from '../lib/asset'
 import { Ico } from '../components/Ico'
 import { useFeedback } from './feedback'
 import { Choice, Empty, Field, Modal, PageTitle, Panel, Switch } from './ui'
+import { PlacesMap } from './PlacesMap'
 
 const KIND_LABEL: Record<MediaKind, string> = { imagem: 'Fotografia', video: 'Vídeo do telemóvel', youtube: 'Vídeo do YouTube' }
 const TIPOS: MediaKind[] = ['imagem', 'video', 'youtube']
@@ -19,7 +20,7 @@ const src = (u: string) => (/^(https?:|data:|blob:)/.test(u) ? u : asset(u))
 const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
 /** "Onde aparece?": cliques nos sítios do site e, se quiser, em quais produtos. */
-function PlacesChooser({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+function PlacesChooser({ value, onChange, video }: { value: string[]; onChange: (v: string[]) => void; video?: boolean }) {
   const catalog = useCatalog()
   const categories = useCategories()
   const [q, setQ] = useState('')
@@ -31,33 +32,24 @@ function PlacesChooser({ value, onChange }: { value: string[]; onChange: (v: str
   const list = catalog.filter((c) => !q || norm(`${c.name} ${c.brand ?? ''} ${c.model ?? ''}`).includes(norm(q)))
   return (
     <div className="places">
-      <div className="choices" role="group" aria-label="Onde aparece">
-        {MEDIA_PLACES.map((p) => (
-          <Choice key={p.id} on={value.includes(p.id)} onClick={() => toggle(p.id)}>
-            {p.label}
-          </Choice>
-        ))}
-        <Choice
-          on={showProds}
-          onClick={() => {
-            if (showProds) onChange(value.filter((v) => !v.startsWith('produto:')))
-            setShowProds(!showProds)
-          }}
-        >
-          Em produtos específicos
-        </Choice>
-        <Choice
-          on={showCats}
-          onClick={() => {
-            if (showCats) onChange(value.filter((v) => !v.startsWith('categoria:')))
-            setShowCats(!showCats)
-          }}
-        >
-          Em categorias
-        </Choice>
-      </div>
+      <PlacesMap
+        value={value}
+        video={video}
+        onToggle={toggle}
+        prodsOn={showProds}
+        catsOn={showCats}
+        onProds={() => {
+          if (showProds) onChange(value.filter((v) => !v.startsWith('produto:')))
+          setShowProds(!showProds)
+        }}
+        onCats={() => {
+          if (showCats) onChange(value.filter((v) => !v.startsWith('categoria:')))
+          setShowCats(!showCats)
+        }}
+      />
       {showCats && (
-        <div className="choices places__cats" role="group" aria-label="Categorias">
+        <div className="choices places__cats" role="group" aria-label="Em que categorias aparece">
+          <p className="picker__count">Escolha as categorias em cuja página isto vai aparecer.</p>
           {categories.map((c) => (
             <Choice key={c.id} on={value.includes(`categoria:${c.id}`)} onClick={() => toggle(`categoria:${c.id}`)}>
               {c.name}
@@ -238,7 +230,7 @@ export default function MediaAdmin() {
         </Panel>
       )}
 
-      <div className="two two--wide">
+      <div className="mstack">
         <Panel title="Itens do carrossel">
           {items.length === 0 ? (
             <Empty title="Ainda não há fotografias nem vídeos" text="Acrescente a primeira fotografia ou vídeo ao lado." />
@@ -359,7 +351,7 @@ export default function MediaAdmin() {
                   <button type="button" className="btn btn--line" onClick={() => videoFile.current?.click()} disabled={busy}>
                     <Ico name="carregar" size={16} /> {busy ? 'A enviar o vídeo… não feche' : url ? 'Trocar o vídeo' : 'Escolher vídeo do telemóvel'}
                   </button>
-                  <p className="muted small">MP4 ou WebM, até {humanSize(VIDEO_MAX_BYTES).replace(',0', '')}. Um vídeo de 1 minuto em 720p costuma ter 20 a 40 MB. Demora um pouco a enviar.</p>
+                  <p className="muted small">MP4 ou WebM, até {humanSize(VIDEO_MAX_BYTES).replace(',0', '')}. Cabe um vídeo curto: 15 a 30 segundos em 720p ou 480p. Se o telemóvel gravar em 4K, mude para 720p nas definições da câmara.</p>
                 </div>
               </div>
             ) : (
@@ -372,7 +364,7 @@ export default function MediaAdmin() {
             )}
             <div className="f">
               <span className="f__l">Onde aparece no site?</span>
-              <PlacesChooser value={locais} onChange={setLocais} />
+              <PlacesChooser value={locais} onChange={setLocais} video={tipo !== 'imagem'} />
             </div>
             {tipo === 'imagem' && (
               <Field label="Ao tocar na fotografia, abre" hint="Opcional. Por exemplo, a página de um produto em promoção.">
@@ -408,7 +400,7 @@ export default function MediaAdmin() {
             )}
             <div className="f">
               <span className="f__l">Onde aparece no site?</span>
-              <PlacesChooser value={editing.locais ?? mediaPlaces(editing)} onChange={(v) => setEditing({ ...editing, locais: v })} />
+              <PlacesChooser value={editing.locais ?? mediaPlaces(editing)} onChange={(v) => setEditing({ ...editing, locais: v })} video={editing.tipo !== 'imagem'} />
             </div>
           </div>
           <div className="row row--end">
